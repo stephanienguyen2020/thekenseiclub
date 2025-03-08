@@ -1,0 +1,22 @@
+.env
+/env/*
+/app/audio/*
+/app/logs/*
+!.gitkeep
+OAI_CONFIG_LIST.json
+/tmp/*
+*.ipynb
+/test/*
+*.wav
+/pgvector/*
+/bin/*
+/static/*
+*.crt.pem
+*.pdf
+/output/*
+/__pycache__/*
+*/__pycache__/*
+
+# Start Generation Here
+**/__pycache__/*
+# End Generation Here
