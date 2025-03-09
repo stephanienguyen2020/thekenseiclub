@@ -5,6 +5,7 @@
     "type": "module",
     "types": "dist/index.d.ts",
     "dependencies": {
+        "@alloralabs/allora-sdk": "^0.1.0",
         "@elizaos/core": "workspace:*",
         "tsup": "8.3.5"
     },
