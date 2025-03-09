@@ -36,9 +36,7 @@ interface BaseTokenInfo {
 }
 
 export async function fetchTokenInfo(token_address: string) {
-  const url =
-    "http://localhost:8000/coins/token?network=sonic&token_address=" +
-    token_address;
+  const url = `/api/coingecko/token?network=sonic&token_address=${token_address}`;
 
   try {
     const response = await fetch(url);
@@ -105,7 +103,7 @@ export async function fetchTokenInfo(token_address: string) {
 }
 
 export async function fetchTrendingTokens(): Promise<BaseTokenInfo[]> {
-  const endpoint = "http://localhost:8000/coins/trending_pools";
+  const endpoint = "/api/coingecko/trending-pools";
 
   try {
     const response = await fetch(endpoint);
