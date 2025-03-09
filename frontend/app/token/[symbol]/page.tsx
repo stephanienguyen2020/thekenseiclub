@@ -169,7 +169,7 @@ export default function TokenDetailPage() {
           marketCap: marketData.marketCap + " S",
           priceChange: Math.random() * 20 - 10, // Random price change for now
           fundingRaised: tokenData.raised.toString(),
-          chain: "ethereum",
+          chain: "Sonic",
           volume24h: marketData.volume24h + "$",
           holders: marketData.holders,
           launchDate: new Date().toISOString().split("T")[0],

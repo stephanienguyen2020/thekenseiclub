@@ -12,24 +12,13 @@ export const config = {
   },
   57054: {
     factory: {
-      address: "0x922D6956C99E12DFeB3224DEA977D0939758A1Fe",
+      address: "0x202CCe504e04bEd6fC0521238dDf04Bc9E8E15aB",
     },
     nativeLiquidityPool: {
-      address: "0x1fA02b2d6A771842690194Cf62D91bdd92BfE28d",
+      address: "0x172076E0166D1F9Cc711C77Adf8488051744980C",
     },
     LaunchpadAgent: {
-      address: "0x5081a39b8A5f0E35a8D959395a630b68B74Dd30f",
+      address: "0xf4B146FbA71F41E0592668ffbF264F1D186b2Ca8",
     },
-  },
-  5201420: {
-    factory: {
-      address: "0xC699def0dB413Bff70192Fd986a20d4bFFa02641",
-    },
-    nativeLiquidityPool: {
-      address: "0x2e4c31F33080462dc3f658D283397B532d9C6182",
-    },
-    LaunchpadAgent: {
-      address: "0xaC348bAB58b649a41DC23D108e90d949A8852fa0",
-    },
-  },
+  }
 };

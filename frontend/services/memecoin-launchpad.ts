@@ -594,7 +594,13 @@ export async function getTokenDetails(tokenAddress: string): Promise<{
     const metadata = await fetchMetadata(metadataURI);
     
     // Calculate market data
-    const price = await factoryContract.getPriceForTokens(tokenAddress, ethers.parseUnits("1", 18)); // in wei
+    let price
+    if (tokenSale.isOpen) {
+      price = await factoryContract.getPriceForTokens(tokenAddress, ethers.parseUnits("1", 18)); // in wei
+    } else {
+      price = ethers.parseUnits("0", 18); // in wei
+    }
+    
     const marketCap = ethers.formatUnits(tokenSale.raised, 18)
     return {
       token: {
