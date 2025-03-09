@@ -4,7 +4,7 @@ import BettingABI from "@/abi/Betting.json";
 import { pinFileToIPFS } from "@/app/lib/pinata"; // Import your IPFS upload function
 
 // Contract address from the BettingService
-const contractAddress = "0xe1C31E56De989192946f096eBA8Ed709C2Ec9003";
+const contractAddress = "0xd1b6BEa5A3b3dd4836100f5C55877c59d4666569";
 
 async function generateImage(prompt: string): Promise<string> {
   try {
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     console.log("Final image URL", finalImageURL);
     // Connect to the provider - use environment variable for RPC URL
     const provider = new ethers.JsonRpcProvider(
-      "https://rpc.ankr.com/electroneum_testnet/a37dd6e77e11f999c0ca58d263db0f160cd081bb788feecd4c256902084993b9"
+      "https://rpc.blaze.soniclabs.com"
     );
 
     // Use your agent private key from environment variables
