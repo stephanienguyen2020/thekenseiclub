@@ -463,7 +463,7 @@ export default function MarketplacePage() {
         dataFetched.current = true;
 
         const tokens = await testTokenService.testGetTokens({ isOpen: true });
-        console.log("tokens line 466", tokens);
+        
         if (!tokens || tokens.length === 0) {
           setRealTokens([]);
           setIsLoading(false);

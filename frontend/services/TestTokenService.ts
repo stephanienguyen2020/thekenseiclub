@@ -141,7 +141,7 @@ export const useTestTokenService = () => {
         return tokensWithMetadata.reverse();
       } catch (error) {
         console.warn("Error in testGetTokens:", error);
-        return { success: false, error: "Wallet client not found" };
+        return [];
       }
     },
     [walletClient, getContractAddress, initializeProvider]
@@ -259,7 +259,7 @@ export const useTestTokenService = () => {
   const testGetPriceForTokens = useCallback(
     async (tokenSale: TokenSale, amount: bigint): Promise<bigint> => {
       if (!walletClient) {
-        return BigInt(0);
+        throw new Error("Wallet client not found");
       }
 
       try {

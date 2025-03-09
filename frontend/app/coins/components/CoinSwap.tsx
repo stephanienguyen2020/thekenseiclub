@@ -1317,7 +1317,7 @@ const CoinSwap = ({
                 <h2 className="text-2xl font-medium text-white">
                   Transfer has been completed!
                 </h2>
-                <p className="text-gray-400 flex items-center justify-center gap-2">
+                <div className="text-gray-400 flex items-center justify-center gap-2">
                   <span className="flex items-center gap-1">
                     {renderTokenIcon(fromToken)} {fromAmount} {fromToken.symbol}
                   </span>
@@ -1325,7 +1325,7 @@ const CoinSwap = ({
                   <span className="flex items-center gap-1">
                     {renderTokenIcon(toToken)} {toAmount} {toToken.symbol}
                   </span>
-                </p>
+                </div>
               </div>
 
               <div className="space-y-4 w-full">
