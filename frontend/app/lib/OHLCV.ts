@@ -29,10 +29,10 @@ export interface OHLCVEntry {
     timeframe: string
   ): Promise<OHLCVEntry[]> {
     const network = 'aurora'; // Fixed parameter
-    const baseUrl = 'http://localhost:8000/coins/ohlcv';
+    const baseUrl = '/api/coingecko/ohlcv';
   
     // Build the URL with query parameters
-    const url = new URL(baseUrl);
+    const url = new URL(baseUrl, window.location.origin);
     url.searchParams.append('network', network);
     url.searchParams.append('pool_address', poolAddress);
     url.searchParams.append('limit', limit.toString());

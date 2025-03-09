@@ -23,20 +23,6 @@ interface GetTokensOptions {
   isOpen?: boolean;
 }
 
-interface FactoryContract extends ethers.BaseContract {
-  create(
-    name: string,
-    ticker: string,
-    metadataURI: string,
-    creator: string,
-    overrides?: any
-  ): Promise<any>;
-  fee(): Promise<bigint>;
-  getTokenSale(index: number): Promise<TokenSale>;
-  totalTokens(): Promise<number>;
-  getPriceForTokens(token: string, amount: bigint): Promise<bigint>;
-  buy(token: string, amount: bigint, overrides?: any): Promise<any>;
-}
 
 type ConfigType = {
   [key: number]: {
@@ -154,8 +140,8 @@ export const useTestTokenService = () => {
 
         return tokensWithMetadata.reverse();
       } catch (error) {
-        console.error("Error in testGetTokens:", error);
-        throw error;
+        console.warn("Error in testGetTokens:", error);
+        return { success: false, error: "Wallet client not found" };
       }
     },
     [walletClient, getContractAddress, initializeProvider]
@@ -167,7 +153,8 @@ export const useTestTokenService = () => {
       amount: bigint
     ): Promise<{ success: boolean; error?: string }> => {
       if (!walletClient) {
-        throw new Error("Wallet client not found");
+        console.warn("Wallet client not found");
+        return { success: false, error: "Wallet client not found" };
       }
 
       try {
@@ -272,12 +259,12 @@ export const useTestTokenService = () => {
   const testGetPriceForTokens = useCallback(
     async (tokenSale: TokenSale, amount: bigint): Promise<bigint> => {
       if (!walletClient) {
-        throw new Error("Wallet client not found");
+        return BigInt(0);
       }
 
       try {
         if (!tokenSale.isOpen) {
-          throw new Error("Token sale is not open");
+          return BigInt(0);
         }
 
         const provider = new ethers.BrowserProvider(walletClient);
