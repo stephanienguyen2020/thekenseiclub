@@ -1,10 +1,29 @@
 import { ethers } from "ethers";
 import { useWalletClient } from "wagmi";
 import BettingABI from "@/abi/Betting.json";
-const contractAddress = "0xe1C31E56De989192946f096eBA8Ed709C2Ec9003";
+let contractAddress = "0xd1b6BEa5A3b3dd4836100f5C55877c59d4666569";
 
 export const useBettingService = () => {
   const { data: walletClient } = useWalletClient();
+
+  // Helper function to set contract address based on chain ID
+  const setContractAddressByChainId = async () => {
+    if (!walletClient) {
+      throw new Error("Wallet client not found");
+    }
+
+    const chainId = await walletClient.getChainId();
+    console.log("Chain ID:", chainId);
+
+    if (chainId === 57054) {
+      contractAddress = "0xd1b6BEa5A3b3dd4836100f5C55877c59d4666569";
+    } else if (chainId === 146) {
+      contractAddress = "0x6E0CC7eAb0672dEbFe84f49401325B3ad16125A0";
+    }
+
+    console.log("Using contract address:", contractAddress);
+    return contractAddress;
+  };
 
   const createBet = async (
     title: string,
@@ -19,6 +38,10 @@ export const useBettingService = () => {
     if (!walletClient) {
       throw new Error("Wallet client not found");
     }
+
+    // Set the contract address based on chain ID
+    await setContractAddressByChainId();
+
     console.log("Creating bet with parameters:", {
       title,
       description,
@@ -64,6 +87,10 @@ export const useBettingService = () => {
     if (!walletClient) {
       throw new Error("Wallet client not found");
     }
+
+    // Set the contract address based on chain ID
+    await setContractAddressByChainId();
+
     console.log("Joining bet with parameters:", {
       betId,
       support,
@@ -89,6 +116,10 @@ export const useBettingService = () => {
     if (!walletClient) {
       throw new Error("Wallet client not found");
     }
+
+    // Set the contract address based on chain ID
+    await setContractAddressByChainId();
+
     const provider = new ethers.BrowserProvider(walletClient);
     const signer = await provider.getSigner();
     const bettingContract = new ethers.Contract(
@@ -105,6 +136,10 @@ export const useBettingService = () => {
     if (!walletClient) {
       throw new Error("Wallet client not found");
     }
+
+    // Set the contract address based on chain ID
+    await setContractAddressByChainId();
+
     const provider = new ethers.BrowserProvider(walletClient);
     const signer = await provider.getSigner();
     const bettingContract = new ethers.Contract(
@@ -124,6 +159,9 @@ export const useBettingService = () => {
     }
 
     try {
+      // Set the contract address based on chain ID
+      await setContractAddressByChainId();
+
       const provider = new ethers.BrowserProvider(walletClient);
       const bettingContract = new ethers.Contract(
         contractAddress,
@@ -164,6 +202,10 @@ export const useBettingService = () => {
     if (!walletClient) {
       throw new Error("Wallet client not found");
     }
+
+    // Set the contract address based on chain ID
+    await setContractAddressByChainId();
+
     console.log("Registering Twitter handle:", twitterHandle);
     const provider = new ethers.BrowserProvider(walletClient);
     const signer = await provider.getSigner();
@@ -181,6 +223,10 @@ export const useBettingService = () => {
     if (!walletClient) {
       throw new Error("Wallet client not found");
     }
+
+    // Set the contract address based on chain ID
+    await setContractAddressByChainId();
+
     if (parseFloat(amount) <= 0) {
       throw new Error("Must send some ether");
     }
@@ -205,6 +251,9 @@ export const useBettingService = () => {
       return BigInt(0); // Return 0 credits if wallet is not connected
     }
 
+    // Set the contract address based on chain ID
+    await setContractAddressByChainId();
+
     console.log("Getting bet credits for user:", user);
     const provider = new ethers.BrowserProvider(walletClient);
     const bettingContract = new ethers.Contract(
@@ -221,6 +270,10 @@ export const useBettingService = () => {
     if (!walletClient) {
       throw new Error("Wallet client not found");
     }
+
+    // Set the contract address based on chain ID
+    await setContractAddressByChainId();
+
     console.log("Getting address for Twitter handle:", twitterHandle);
     const provider = new ethers.BrowserProvider(walletClient);
     const bettingContract = new ethers.Contract(
@@ -238,6 +291,10 @@ export const useBettingService = () => {
     if (!walletClient) {
       throw new Error("Wallet client not found");
     }
+
+    // Set the contract address based on chain ID
+    await setContractAddressByChainId();
+
     const userBetCredits = await getUserBetCredits(
       walletClient.account.address
     );
