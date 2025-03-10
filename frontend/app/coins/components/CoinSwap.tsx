@@ -15,6 +15,8 @@ import {
   ExternalLink,
   Copy,
   ArrowDown,
+  Clock,
+  Globe,
 } from "lucide-react";
 import {
   Popover,
@@ -105,6 +107,101 @@ const defaultTokens: UIToken[] = [
   // ... other default tokens
 ];
 
+// DeBridgeWidget component for cross-chain swaps
+const DeBridgeWidget = () => {
+  const widgetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Safety check if the component is unmounted before the script loads
+    let isMounted = true;
+
+    const loadScript = () => {
+      // Remove any existing scripts to avoid conflicts
+      const existingScripts = document.querySelectorAll(
+        'script[src="https://app.debridge.finance/assets/scripts/widget.js"]'
+      );
+      existingScripts.forEach((script) => script.remove());
+
+      // Create and load the script
+      const script = document.createElement("script");
+      script.src = "https://app.debridge.finance/assets/scripts/widget.js";
+      script.async = true;
+      script.onload = () => {
+        if (isMounted && widgetRef.current && window.deBridge) {
+          // Clear any existing content
+          widgetRef.current.innerHTML = "";
+
+          // Initialize widget
+          window.deBridge.widget({
+            v: "1",
+            element: "debridgeWidget",
+            title: "HyperSonic",
+            description: "",
+            width: "100%",
+            height: "650px",
+            r: null,
+            supportedChains:
+              '{"inputChains":{"1":"all","10":"all","56":"all","100":"all","137":"all","146":"all","250":"all","388":"all","998":"all","1088":"all","1514":"all","2741":"all","4158":"all","7171":"all","8453":"all","42161":"all","43114":"all","48900":"all","59144":"all","80094":"all","7565164":"all","245022934":"all"},"outputChains":{"1":"all","10":"all","56":"all","100":"all","137":"all","146":"all","250":"all","388":"all","998":"all","999":"all","1088":"all","1514":"all","2741":"all","4158":"all","7171":"all","8453":"all","42161":"all","43114":"all","48900":"all","59144":"all","80094":"all","7565164":"all","245022934":"all"}}',
+            inputChain: 56,
+            outputChain: 1,
+            inputCurrency: "",
+            outputCurrency: "",
+            address: "",
+            showSwapTransfer: true,
+            amount: "",
+            outputAmount: "",
+            isAmountFromNotModifiable: false,
+            isAmountToNotModifiable: false,
+            lang: "en",
+            mode: "deswap",
+            isEnableCalldata: false,
+            styles:
+              "eyJhcHBCYWNrZ3JvdW5kIjoiIzAwMDEwMSIsImJvcmRlckNvbG9yIjoiIzM4YmRmOCIsInRvb2x0aXBCZyI6IiMwMzA2MGQiLCJwcmltYXJ5IjoiIzQ5NDk0ZCIsInByaW1hcnlCdG5CZyI6IiMzMTY3ZDkifQ==",
+            theme: "dark",
+            isHideLogo: false,
+            logo: "",
+            disabledWallets: [],
+            disabledElements: [],
+          });
+        }
+      };
+
+      document.body.appendChild(script);
+    };
+
+    loadScript();
+
+    // Cleanup function to run when component unmounts
+    return () => {
+      isMounted = false;
+      const scripts = document.querySelectorAll(
+        'script[src="https://app.debridge.finance/assets/scripts/widget.js"]'
+      );
+      scripts.forEach((script) => script.remove());
+
+      if (widgetRef.current) {
+        widgetRef.current.innerHTML = "";
+      }
+    };
+  }, []);
+
+  return (
+    <div className="w-full overflow-hidden mt-4">
+      <div
+        id="debridgeWidget"
+        ref={widgetRef}
+        style={{
+          width: "100%",
+          height: "650px",
+          border: "none",
+          overflow: "hidden",
+          background: "#000101",
+        }}
+      ></div>
+    </div>
+  );
+};
+
 const CoinSwap = ({
   symbol,
   isAuthenticated,
@@ -125,6 +222,11 @@ const CoinSwap = ({
 
   // Track if data has been fetched to prevent refetching
   const dataFetched = useRef(false);
+
+  // Add state for the order type to manage when to show the deBridge widget
+  const [orderType, setOrderType] = useState<
+    "instant" | "limit" | "cross-chain"
+  >("instant");
 
   // Convert marketplace tokens to the format needed for the UI
   const marketplaceTokensFormatted: UIToken[] = marketplaceTokens.map(
@@ -165,7 +267,6 @@ const CoinSwap = ({
   const [isToOpen, setIsToOpen] = useState(false);
   const [slippage, setSlippage] = useState("0.5");
   const [showSettings, setShowSettings] = useState(false);
-  const [orderType, setOrderType] = useState("instant");
   const [showSuccess, setShowSuccess] = useState(false);
   const [transactionHash, setTransactionHash] = useState("");
   const [estimatedPrice, setEstimatedPrice] = useState<string>("0");
@@ -768,544 +869,587 @@ const CoinSwap = ({
                   <button
                     className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium ${
                       orderType === "instant"
-                        ? "bg-[#353538] text-white"
-                        : "text-gray-400 hover:text-gray-300"
+                        ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                        : "text-gray-400 hover:text-white"
                     }`}
                     onClick={() => setOrderType("instant")}
                   >
                     <Zap className="h-4 w-4" />
                     Instant
                   </button>
+                  <button
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium ${
+                      orderType === "limit"
+                        ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                        : "text-gray-400 hover:text-white"
+                    }`}
+                    onClick={() => setOrderType("limit")}
+                  >
+                    <Clock className="h-4 w-4" />
+                    Limit
+                  </button>
+                  <button
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium ${
+                      orderType === "cross-chain"
+                        ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                        : "text-gray-400 hover:text-white"
+                    }`}
+                    onClick={() => setOrderType("cross-chain")}
+                  >
+                    <Globe className="h-4 w-4" />
+                    Cross-Chain
+                  </button>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                {/* From Token */}
-                <div className="bg-[#2A2B2E] rounded-2xl p-4">
-                  <div className="flex justify-between mb-2">
-                    <div className="text-sm text-gray-400">You pay</div>
-                    <div className="text-sm text-gray-400">
-                      Available:{" "}
-                      <span className="text-gray-300">
-                        {isLoadingBalances ? (
-                          <span className="animate-pulse">Loading...</span>
-                        ) : (
-                          <span>
-                            {parseFloat(
-                              getSelectedTokenBalance(fromToken)
-                            ).toFixed(4)}{" "}
-                            {fromToken.symbol}
-                          </span>
-                        )}
-                      </span>
+              {/* Show appropriate swap interface based on order type */}
+              {orderType === "instant" && (
+                <div className="space-y-4">
+                  {/* From Token */}
+                  <div className="bg-[#2A2B2E] rounded-2xl p-4">
+                    <div className="flex justify-between mb-2">
+                      <div className="text-sm text-gray-400">You pay</div>
+                      <div className="text-sm text-gray-400">
+                        Available:{" "}
+                        <span className="text-gray-300">
+                          {isLoadingBalances ? (
+                            <span className="animate-pulse">Loading...</span>
+                          ) : (
+                            <span>
+                              {parseFloat(
+                                getSelectedTokenBalance(fromToken)
+                              ).toFixed(4)}{" "}
+                              {fromToken.symbol}
+                            </span>
+                          )}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Popover open={isFromOpen} onOpenChange={setIsFromOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-12 px-3 bg-[#353538] hover:bg-[#404043] rounded-xl flex items-center gap-2"
-                        >
-                          <span className="text-xl">
-                            {renderTokenIcon(fromToken)}
-                          </span>
-                          <span className="text-white font-medium">
-                            {fromToken.symbol}
-                          </span>
-                          <ChevronDown className="h-4 w-4 text-gray-400" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-64 p-0 bg-[#1A1B1E] border-[#353538]">
-                        <div className="p-2">
-                          <div className="flex items-center border border-[#353538] rounded-md bg-[#2A2B2E]">
-                            <Search className="h-4 w-4 ml-2 text-gray-400" />
-                            <Input
-                              placeholder="Search tokens..."
-                              value={fromSearchQuery}
-                              onChange={(e) =>
-                                setFromSearchQuery(e.target.value)
-                              }
-                              className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                            />
-                            {fromSearchQuery && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 p-0 mr-1"
-                                onClick={() => setFromSearchQuery("")}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            )}
+                    <div className="flex items-center gap-3">
+                      <Popover open={isFromOpen} onOpenChange={setIsFromOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-12 px-3 bg-[#353538] hover:bg-[#404043] rounded-xl flex items-center gap-2"
+                          >
+                            <span className="text-xl">
+                              {renderTokenIcon(fromToken)}
+                            </span>
+                            <span className="text-white font-medium">
+                              {fromToken.symbol}
+                            </span>
+                            <ChevronDown className="h-4 w-4 text-gray-400" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64 p-0 bg-[#1A1B1E] border-[#353538]">
+                          <div className="p-2">
+                            <div className="flex items-center border border-[#353538] rounded-md bg-[#2A2B2E]">
+                              <Search className="h-4 w-4 ml-2 text-gray-400" />
+                              <Input
+                                placeholder="Search tokens..."
+                                value={fromSearchQuery}
+                                onChange={(e) =>
+                                  setFromSearchQuery(e.target.value)
+                                }
+                                className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                              />
+                              {fromSearchQuery && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 p-0 mr-1"
+                                  onClick={() => setFromSearchQuery("")}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <div className="max-h-[300px] overflow-y-auto py-1">
-                          {filteredFromTokens.map((token) => (
-                            <div
-                              key={token.symbol}
-                              className={`flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[#2A2B2E] ${
-                                fromToken.symbol === token.symbol
-                                  ? "bg-[#2A2B2E]"
-                                  : ""
-                              } ${
-                                !isTokenSwappable(token) ? "opacity-50" : ""
-                              }`}
-                              onClick={() => {
-                                if (!isTokenSwappable(token)) {
-                                  alert(
-                                    "Only graduated tokens can be swapped."
-                                  );
-                                  return;
-                                }
-                                setFromToken(token);
-                                setIsFromOpen(false);
-                                if (fromAmount) {
-                                  handleFromAmountChange(fromAmount);
-                                }
-                              }}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="text-xl">
-                                  {renderTokenIcon(token)}
-                                </span>
-                                <div className="flex flex-col">
-                                  <span className="font-medium text-white">
-                                    {token.symbol}
-                                    {token.tokenData && (
-                                      <span
-                                        className={`ml-2 text-xs px-1 py-0.5 rounded ${
-                                          isTokenSwappable(token)
-                                            ? "bg-green-500/20 text-green-400"
-                                            : "bg-yellow-500/20 text-yellow-400"
-                                        }`}
-                                      >
-                                        {isTokenSwappable(token)
-                                          ? "Graduated"
-                                          : "Not Graduated"}
+                          <div className="max-h-[300px] overflow-y-auto py-1">
+                            {filteredFromTokens.map((token) => (
+                              <div
+                                key={token.symbol}
+                                className={`flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[#2A2B2E] ${
+                                  fromToken.symbol === token.symbol
+                                    ? "bg-[#2A2B2E]"
+                                    : ""
+                                } ${
+                                  !isTokenSwappable(token) ? "opacity-50" : ""
+                                }`}
+                                onClick={() => {
+                                  if (!isTokenSwappable(token)) {
+                                    alert(
+                                      "Only graduated tokens can be swapped."
+                                    );
+                                    return;
+                                  }
+                                  setFromToken(token);
+                                  setIsFromOpen(false);
+                                  if (fromAmount) {
+                                    handleFromAmountChange(fromAmount);
+                                  }
+                                }}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xl">
+                                    {renderTokenIcon(token)}
+                                  </span>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium text-white">
+                                      {token.symbol}
+                                      {token.tokenData && (
+                                        <span
+                                          className={`ml-2 text-xs px-1 py-0.5 rounded ${
+                                            isTokenSwappable(token)
+                                              ? "bg-green-500/20 text-green-400"
+                                              : "bg-yellow-500/20 text-yellow-400"
+                                          }`}
+                                        >
+                                          {isTokenSwappable(token)
+                                            ? "Graduated"
+                                            : "Not Graduated"}
+                                        </span>
+                                      )}
+                                    </span>
+                                    <span className="text-xs text-gray-400">
+                                      {token.name}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                  <span className="text-sm text-gray-300">
+                                    {isLoadingBalances ? (
+                                      <span className="animate-pulse">
+                                        Loading...
                                       </span>
+                                    ) : token.symbol === "S" ? (
+                                      parseFloat(ethBalance).toFixed(4)
+                                    ) : token.tokenData ? (
+                                      parseFloat(
+                                        tokenBalances[token.tokenData.token] ||
+                                          "0"
+                                      ).toFixed(4)
+                                    ) : (
+                                      "0.0000"
                                     )}
                                   </span>
-                                  <span className="text-xs text-gray-400">
-                                    {token.name}
+                                  <span
+                                    className={`text-xs ${
+                                      token.change24h.startsWith("+")
+                                        ? "text-green-400"
+                                        : "text-red-400"
+                                    }`}
+                                  >
+                                    {token.change24h}
                                   </span>
                                 </div>
                               </div>
-                              <div className="flex flex-col items-end">
-                                <span className="text-sm text-gray-300">
-                                  {isLoadingBalances ? (
-                                    <span className="animate-pulse">
-                                      Loading...
-                                    </span>
-                                  ) : token.symbol === "S" ? (
-                                    parseFloat(ethBalance).toFixed(4)
-                                  ) : token.tokenData ? (
-                                    parseFloat(
-                                      tokenBalances[token.tokenData.token] ||
-                                        "0"
-                                    ).toFixed(4)
-                                  ) : (
-                                    "0.0000"
-                                  )}
-                                </span>
-                                <span
-                                  className={`text-xs ${
-                                    token.change24h.startsWith("+")
-                                      ? "text-green-400"
-                                      : "text-red-400"
-                                  }`}
-                                >
-                                  {token.change24h}
-                                </span>
+                            ))}
+                            {filteredFromTokens.length === 0 && (
+                              <div className="px-3 py-4 text-center text-gray-400">
+                                No tokens found
                               </div>
-                            </div>
-                          ))}
-                          {filteredFromTokens.length === 0 && (
-                            <div className="px-3 py-4 text-center text-gray-400">
-                              No tokens found
-                            </div>
-                          )}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                            )}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
 
-                    <div className="flex-1 relative">
+                      <div className="flex-1 relative">
+                        <Input
+                          type="text"
+                          placeholder="0.0"
+                          value={fromAmount}
+                          onChange={(e) =>
+                            handleFromAmountChange(e.target.value)
+                          }
+                          className="bg-transparent border-none text-right text-xl text-white focus-visible:ring-0 p-0 pr-16"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleMaxClick}
+                          className="absolute right-0 top-1/2 transform -translate-y-1/2 text-xs px-2 py-1 h-6 bg-[#353538] border-[#454548] text-green-400 hover:bg-[#404043]"
+                        >
+                          Max
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="text-right text-sm text-gray-400 mt-1">
+                      ≈ ${fromUsdValue.toFixed(2)}
+                    </div>
+                  </div>
+
+                  {/* Swap Button */}
+                  <div className="relative flex justify-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute -top-2 z-10 rounded-xl bg-[#2A2B2E] border border-[#353538] hover:bg-[#353538]"
+                      onClick={handleSwapTokens}
+                    >
+                      <ArrowUpDown className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* To Token */}
+                  <div className="bg-[#2A2B2E] rounded-2xl p-4 mt-4">
+                    <div className="flex justify-between mb-2">
+                      <div className="text-sm text-gray-400">You receive</div>
+                      <div className="text-sm text-gray-400">
+                        Balance:{" "}
+                        <span className="text-gray-300">
+                          {isLoadingBalances ? (
+                            <span className="animate-pulse">Loading...</span>
+                          ) : (
+                            <span>
+                              {parseFloat(
+                                getSelectedTokenBalance(toToken)
+                              ).toFixed(4)}{" "}
+                              {toToken.symbol}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Popover open={isToOpen} onOpenChange={setIsToOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-12 px-3 bg-[#353538] hover:bg-[#404043] rounded-xl flex items-center gap-2"
+                          >
+                            <span className="text-xl">
+                              {renderTokenIcon(toToken)}
+                            </span>
+                            <span className="text-white font-medium">
+                              {toToken.symbol}
+                            </span>
+                            <ChevronDown className="h-4 w-4 text-gray-400" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64 p-0 bg-[#1A1B1E] border-[#353538]">
+                          <div className="p-2">
+                            <div className="flex items-center border border-[#353538] rounded-md bg-[#2A2B2E]">
+                              <Search className="h-4 w-4 ml-2 text-gray-400" />
+                              <Input
+                                placeholder="Search tokens..."
+                                value={toSearchQuery}
+                                onChange={(e) =>
+                                  setToSearchQuery(e.target.value)
+                                }
+                                className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                              />
+                              {toSearchQuery && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 p-0 mr-1"
+                                  onClick={() => setToSearchQuery("")}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="max-h-[300px] overflow-y-auto py-1">
+                            {filteredToTokens.map((token) => (
+                              <div
+                                key={token.symbol}
+                                className={`flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[#2A2B2E] ${
+                                  toToken.symbol === token.symbol
+                                    ? "bg-[#2A2B2E]"
+                                    : ""
+                                } ${
+                                  !isTokenSwappable(token) ? "opacity-50" : ""
+                                }`}
+                                onClick={() => {
+                                  if (!isTokenSwappable(token)) {
+                                    alert(
+                                      "Only graduated tokens can be swapped."
+                                    );
+                                    return;
+                                  }
+                                  setToToken(token);
+                                  setIsToOpen(false);
+                                  if (fromAmount) {
+                                    handleFromAmountChange(fromAmount);
+                                  }
+                                }}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xl">
+                                    {renderTokenIcon(token)}
+                                  </span>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium text-white">
+                                      {token.symbol}
+                                      {token.tokenData && (
+                                        <span
+                                          className={`ml-2 text-xs px-1 py-0.5 rounded ${
+                                            isTokenSwappable(token)
+                                              ? "bg-green-500/20 text-green-400"
+                                              : "bg-yellow-500/20 text-yellow-400"
+                                          }`}
+                                        >
+                                          {isTokenSwappable(token)
+                                            ? "Graduated"
+                                            : "Not Graduated"}
+                                        </span>
+                                      )}
+                                    </span>
+                                    <span className="text-xs text-gray-400">
+                                      {token.name}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                  <span className="text-sm text-gray-300">
+                                    {isLoadingBalances ? (
+                                      <span className="animate-pulse">
+                                        Loading...
+                                      </span>
+                                    ) : token.symbol === "S" ? (
+                                      parseFloat(ethBalance).toFixed(4)
+                                    ) : token.tokenData ? (
+                                      parseFloat(
+                                        tokenBalances[token.tokenData.token] ||
+                                          "0"
+                                      ).toFixed(4)
+                                    ) : (
+                                      "0.0000"
+                                    )}
+                                  </span>
+                                  <span
+                                    className={`text-xs ${
+                                      token.change24h.startsWith("+")
+                                        ? "text-green-400"
+                                        : "text-red-400"
+                                    }`}
+                                  >
+                                    {token.change24h}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                            {filteredToTokens.length === 0 && (
+                              <div className="px-3 py-4 text-center text-gray-400">
+                                No tokens found
+                              </div>
+                            )}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+
                       <Input
                         type="text"
                         placeholder="0.0"
-                        value={fromAmount}
-                        onChange={(e) => handleFromAmountChange(e.target.value)}
-                        className="bg-transparent border-none text-right text-xl text-white focus-visible:ring-0 p-0 pr-16"
+                        value={toAmount}
+                        onChange={(e) => handleToAmountChange(e.target.value)}
+                        className="bg-transparent border-none text-right text-xl text-white focus-visible:ring-0 p-0 flex-1"
                       />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleMaxClick}
-                        className="absolute right-0 top-1/2 transform -translate-y-1/2 text-xs px-2 py-1 h-6 bg-[#353538] border-[#454548] text-green-400 hover:bg-[#404043]"
-                      >
-                        Max
-                      </Button>
                     </div>
-                  </div>
-                  <div className="text-right text-sm text-gray-400 mt-1">
-                    ≈ ${fromUsdValue.toFixed(2)}
-                  </div>
-                </div>
-
-                {/* Swap Button */}
-                <div className="relative flex justify-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute -top-2 z-10 rounded-xl bg-[#2A2B2E] border border-[#353538] hover:bg-[#353538]"
-                    onClick={handleSwapTokens}
-                  >
-                    <ArrowUpDown className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {/* To Token */}
-                <div className="bg-[#2A2B2E] rounded-2xl p-4 mt-4">
-                  <div className="flex justify-between mb-2">
-                    <div className="text-sm text-gray-400">You receive</div>
-                    <div className="text-sm text-gray-400">
-                      Balance:{" "}
-                      <span className="text-gray-300">
-                        {isLoadingBalances ? (
-                          <span className="animate-pulse">Loading...</span>
-                        ) : (
-                          <span>
-                            {parseFloat(
-                              getSelectedTokenBalance(toToken)
-                            ).toFixed(4)}{" "}
-                            {toToken.symbol}
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Popover open={isToOpen} onOpenChange={setIsToOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-12 px-3 bg-[#353538] hover:bg-[#404043] rounded-xl flex items-center gap-2"
-                        >
-                          <span className="text-xl">
-                            {renderTokenIcon(toToken)}
-                          </span>
-                          <span className="text-white font-medium">
-                            {toToken.symbol}
-                          </span>
-                          <ChevronDown className="h-4 w-4 text-gray-400" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-64 p-0 bg-[#1A1B1E] border-[#353538]">
-                        <div className="p-2">
-                          <div className="flex items-center border border-[#353538] rounded-md bg-[#2A2B2E]">
-                            <Search className="h-4 w-4 ml-2 text-gray-400" />
-                            <Input
-                              placeholder="Search tokens..."
-                              value={toSearchQuery}
-                              onChange={(e) => setToSearchQuery(e.target.value)}
-                              className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                            />
-                            {toSearchQuery && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 p-0 mr-1"
-                                onClick={() => setToSearchQuery("")}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                        <div className="max-h-[300px] overflow-y-auto py-1">
-                          {filteredToTokens.map((token) => (
-                            <div
-                              key={token.symbol}
-                              className={`flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[#2A2B2E] ${
-                                toToken.symbol === token.symbol
-                                  ? "bg-[#2A2B2E]"
-                                  : ""
-                              } ${
-                                !isTokenSwappable(token) ? "opacity-50" : ""
-                              }`}
-                              onClick={() => {
-                                if (!isTokenSwappable(token)) {
-                                  alert(
-                                    "Only graduated tokens can be swapped."
-                                  );
-                                  return;
-                                }
-                                setToToken(token);
-                                setIsToOpen(false);
-                                if (fromAmount) {
-                                  handleFromAmountChange(fromAmount);
-                                }
-                              }}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="text-xl">
-                                  {renderTokenIcon(token)}
-                                </span>
-                                <div className="flex flex-col">
-                                  <span className="font-medium text-white">
-                                    {token.symbol}
-                                    {token.tokenData && (
-                                      <span
-                                        className={`ml-2 text-xs px-1 py-0.5 rounded ${
-                                          isTokenSwappable(token)
-                                            ? "bg-green-500/20 text-green-400"
-                                            : "bg-yellow-500/20 text-yellow-400"
-                                        }`}
-                                      >
-                                        {isTokenSwappable(token)
-                                          ? "Graduated"
-                                          : "Not Graduated"}
-                                      </span>
-                                    )}
-                                  </span>
-                                  <span className="text-xs text-gray-400">
-                                    {token.name}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex flex-col items-end">
-                                <span className="text-sm text-gray-300">
-                                  {isLoadingBalances ? (
-                                    <span className="animate-pulse">
-                                      Loading...
-                                    </span>
-                                  ) : token.symbol === "S" ? (
-                                    parseFloat(ethBalance).toFixed(4)
-                                  ) : token.tokenData ? (
-                                    parseFloat(
-                                      tokenBalances[token.tokenData.token] ||
-                                        "0"
-                                    ).toFixed(4)
-                                  ) : (
-                                    "0.0000"
-                                  )}
-                                </span>
-                                <span
-                                  className={`text-xs ${
-                                    token.change24h.startsWith("+")
-                                      ? "text-green-400"
-                                      : "text-red-400"
-                                  }`}
-                                >
-                                  {token.change24h}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                          {filteredToTokens.length === 0 && (
-                            <div className="px-3 py-4 text-center text-gray-400">
-                              No tokens found
-                            </div>
-                          )}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-
-                    <Input
-                      type="text"
-                      placeholder="0.0"
-                      value={toAmount}
-                      onChange={(e) => handleToAmountChange(e.target.value)}
-                      className="bg-transparent border-none text-right text-xl text-white focus-visible:ring-0 p-0 flex-1"
-                    />
-                  </div>
-                  <div className="text-right text-sm text-gray-400 mt-1">
-                    ≈ ${toUsdValue.toFixed(2)}
-                  </div>
-                </div>
-
-                {/* Transaction Details */}
-                <div className="bg-[#2A2B2E] rounded-xl p-4 space-y-3">
-                  {/* Price Info */}
-                  <div className="flex justify-between items-center text-sm">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="text-gray-400 flex items-center gap-1 cursor-help">
-                            Price <Info className="h-4 w-4" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-[#1A1B1E] border-[#353538]">
-                          <p>Current exchange rate</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <div className="text-gray-300 flex items-center gap-1">
-                      <span className="flex items-center gap-1">
-                        1 {renderTokenIcon(fromToken)} {fromToken.symbol}
-                      </span>
-                      <span>=</span>
-                      <span className="flex items-center gap-1">
-                        {estimatedPrice} {renderTokenIcon(toToken)}{" "}
-                        {toToken.symbol}
-                      </span>
+                    <div className="text-right text-sm text-gray-400 mt-1">
+                      ≈ ${toUsdValue.toFixed(2)}
                     </div>
                   </div>
 
-                  {/* Recipient Address */}
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="text-gray-400">Recipient Address</div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-300 text-sm truncate max-w-[180px]">
-                        {recipientAddress.substring(0, 12)}...
-                        {recipientAddress.substring(
-                          recipientAddress.length - 6
-                        )}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Transaction Cost */}
-                  <div className="flex justify-between items-center text-sm">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="text-gray-400 flex items-center gap-1 cursor-help">
-                            Transaction cost <Info className="h-4 w-4" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-[#1A1B1E] border-[#353538]">
-                          <p>Estimated gas fee for this transaction</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-300">
-                        ≈ ${estimatedGasFee.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Slippage Settings */}
-                  <div className="flex justify-between items-center text-sm">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="text-gray-400 flex items-center gap-1 cursor-help">
-                            Slippage Tolerance <Info className="h-4 w-4" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-[#1A1B1E] border-[#353538]">
-                          <p>Maximum price change you're willing to accept</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1">
-                        {["0.1", "0.5", "1.0"].map((value) => (
-                          <Button
-                            key={value}
-                            variant={slippage === value ? "default" : "outline"}
-                            size="sm"
-                            className={`h-6 px-2 text-xs ${
-                              slippage === value
-                                ? "bg-green-500 hover:bg-green-600"
-                                : "bg-[#353538] border-[#454548] text-gray-300"
-                            }`}
-                            onClick={() => setSlippage(value)}
-                          >
-                            {value}%
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Gas on destination */}
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="text-gray-400">Gas on destination</div>
-                    <div className="text-gray-300">{gasOnDestination}</div>
-                  </div>
-
-                  {/* Fee */}
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="text-gray-400">Fee</div>
-                    <div className="text-gray-300">{fee}</div>
-                  </div>
-
-                  {/* Gas cost */}
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="text-gray-400">Gas cost</div>
-                    <div className="text-gray-300">{gasCost}</div>
-                  </div>
-
-                  {/* Estimated time for transfer */}
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="text-gray-400">
-                      Estimated time for transfer
-                    </div>
-                    <div className="text-gray-300">{estimatedTime}</div>
-                  </div>
-
-                  {fromAmount && parseFloat(fromAmount) > 0 && (
+                  {/* Transaction Details */}
+                  <div className="bg-[#2A2B2E] rounded-xl p-4 space-y-3">
+                    {/* Price Info */}
                     <div className="flex justify-between items-center text-sm">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="text-gray-400 flex items-center gap-1 cursor-help">
-                              Minimum Received <Info className="h-4 w-4" />
+                              Price <Info className="h-4 w-4" />
                             </div>
                           </TooltipTrigger>
                           <TooltipContent className="bg-[#1A1B1E] border-[#353538]">
-                            <p>
-                              Minimum amount you'll receive after slippage (
-                              {slippage}%)
-                            </p>
+                            <p>Current exchange rate</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      <div className="text-gray-300">
-                        {minimumReceived} {toToken.symbol}
+                      <div className="text-gray-300 flex items-center gap-1">
+                        <span className="flex items-center gap-1">
+                          1 {renderTokenIcon(fromToken)} {fromToken.symbol}
+                        </span>
+                        <span>=</span>
+                        <span className="flex items-center gap-1">
+                          {estimatedPrice} {renderTokenIcon(toToken)}{" "}
+                          {toToken.symbol}
+                        </span>
                       </div>
                     </div>
-                  )}
-                </div>
 
-                {/* Swap Button */}
-                <Button
-                  className="w-full h-14 text-lg font-medium mt-4 bg-blue-400 hover:bg-blue-500 text-white rounded-xl"
-                  onClick={!isConnected ? () => {} : handleSwap}
-                  disabled={
-                    isConnected &&
-                    (isLoadingBalances ||
-                      !fromAmount ||
-                      parseFloat(fromAmount) <= 0 ||
-                      parseFloat(fromAmount) >
-                        parseFloat(getSelectedTokenBalance(fromToken)))
-                  }
-                >
-                  {!isConnected ? (
-                    <ConnectButton.Custom>
-                      {({ openConnectModal }) => (
-                        <div onClick={openConnectModal} className="w-full">
-                          Connect Wallet
+                    {/* Recipient Address */}
+                    <div className="flex justify-between items-center text-sm">
+                      <div className="text-gray-400">Recipient Address</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-300 text-sm truncate max-w-[180px]">
+                          {recipientAddress.substring(0, 12)}...
+                          {recipientAddress.substring(
+                            recipientAddress.length - 6
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Transaction Cost */}
+                    <div className="flex justify-between items-center text-sm">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-gray-400 flex items-center gap-1 cursor-help">
+                              Transaction cost <Info className="h-4 w-4" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-[#1A1B1E] border-[#353538]">
+                            <p>Estimated gas fee for this transaction</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-300">
+                          ≈ ${estimatedGasFee.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Slippage Settings */}
+                    <div className="flex justify-between items-center text-sm">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-gray-400 flex items-center gap-1 cursor-help">
+                              Slippage Tolerance <Info className="h-4 w-4" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-[#1A1B1E] border-[#353538]">
+                            <p>Maximum price change you're willing to accept</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1">
+                          {["0.1", "0.5", "1.0"].map((value) => (
+                            <Button
+                              key={value}
+                              variant={
+                                slippage === value ? "default" : "outline"
+                              }
+                              size="sm"
+                              className={`h-6 px-2 text-xs ${
+                                slippage === value
+                                  ? "bg-green-500 hover:bg-green-600"
+                                  : "bg-[#353538] border-[#454548] text-gray-300"
+                              }`}
+                              onClick={() => setSlippage(value)}
+                            >
+                              {value}%
+                            </Button>
+                          ))}
                         </div>
-                      )}
-                    </ConnectButton.Custom>
-                  ) : isLoadingBalances ? (
-                    "Loading Balances..."
-                  ) : !fromAmount || parseFloat(fromAmount) <= 0 ? (
-                    "Enter Amount"
-                  ) : parseFloat(fromAmount) >
-                    parseFloat(getSelectedTokenBalance(fromToken)) ? (
-                    "Insufficient Balance"
-                  ) : swapDirection === "ethToToken" ? (
-                    `Swap ${fromToken.symbol} for ${toToken.symbol}`
-                  ) : (
-                    `Swap ${fromToken.symbol} for ${toToken.symbol}`
-                  )}
-                </Button>
-              </div>
+                      </div>
+                    </div>
+
+                    {/* Gas on destination */}
+                    <div className="flex justify-between items-center text-sm">
+                      <div className="text-gray-400">Gas on destination</div>
+                      <div className="text-gray-300">{gasOnDestination}</div>
+                    </div>
+
+                    {/* Fee */}
+                    <div className="flex justify-between items-center text-sm">
+                      <div className="text-gray-400">Fee</div>
+                      <div className="text-gray-300">{fee}</div>
+                    </div>
+
+                    {/* Gas cost */}
+                    <div className="flex justify-between items-center text-sm">
+                      <div className="text-gray-400">Gas cost</div>
+                      <div className="text-gray-300">{gasCost}</div>
+                    </div>
+
+                    {/* Estimated time for transfer */}
+                    <div className="flex justify-between items-center text-sm">
+                      <div className="text-gray-400">
+                        Estimated time for transfer
+                      </div>
+                      <div className="text-gray-300">{estimatedTime}</div>
+                    </div>
+
+                    {fromAmount && parseFloat(fromAmount) > 0 && (
+                      <div className="flex justify-between items-center text-sm">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="text-gray-400 flex items-center gap-1 cursor-help">
+                                Minimum Received <Info className="h-4 w-4" />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-[#1A1B1E] border-[#353538]">
+                              <p>
+                                Minimum amount you'll receive after slippage (
+                                {slippage}%)
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <div className="text-gray-300">
+                          {minimumReceived} {toToken.symbol}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Swap Button */}
+                  <Button
+                    className="w-full h-14 text-lg font-medium mt-4 bg-blue-400 hover:bg-blue-500 text-white rounded-xl"
+                    onClick={!isConnected ? () => {} : handleSwap}
+                    disabled={
+                      isConnected &&
+                      (isLoadingBalances ||
+                        !fromAmount ||
+                        parseFloat(fromAmount) <= 0 ||
+                        parseFloat(fromAmount) >
+                          parseFloat(getSelectedTokenBalance(fromToken)))
+                    }
+                  >
+                    {!isConnected ? (
+                      <ConnectButton.Custom>
+                        {({ openConnectModal }) => (
+                          <div onClick={openConnectModal} className="w-full">
+                            Connect Wallet
+                          </div>
+                        )}
+                      </ConnectButton.Custom>
+                    ) : isLoadingBalances ? (
+                      "Loading Balances..."
+                    ) : !fromAmount || parseFloat(fromAmount) <= 0 ? (
+                      "Enter Amount"
+                    ) : parseFloat(fromAmount) >
+                      parseFloat(getSelectedTokenBalance(fromToken)) ? (
+                      "Insufficient Balance"
+                    ) : swapDirection === "ethToToken" ? (
+                      `Swap ${fromToken.symbol} for ${toToken.symbol}`
+                    ) : (
+                      `Swap ${fromToken.symbol} for ${toToken.symbol}`
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {orderType === "limit" && (
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-md p-3 mb-4 text-sm text-blue-400 flex items-start">
+                  <Info className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <strong>Limit orders coming soon!</strong> This feature is
+                    currently under development.
+                  </div>
+                </div>
+              )}
+
+              {orderType === "cross-chain" && <DeBridgeWidget />}
             </>
           ) : (
             // Success View (in-component instead of modal)
@@ -1429,5 +1573,14 @@ const CoinSwap = ({
     </Card>
   );
 };
+
+// Add TypeScript declaration for the global deBridge object
+declare global {
+  interface Window {
+    deBridge?: {
+      widget: (config: any) => void;
+    };
+  }
+}
 
 export default CoinSwap;
