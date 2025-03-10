@@ -287,27 +287,16 @@ export function TokenFormSection({
       )
     ) {
       try {
-        // Prepare metadata
-        const metaData = {
+        // Prepare form data for submission
+        const formData = {
           name: nameInput.value,
-          ticker: symbolInput.value,
+          symbol: symbolInput.value,
           description: descriptionInput?.value || "",
         };
 
-        const result = await testTokenService.testCreateToken(
-          metaData,
-          imageFile
-        );
-
-        if (result.success) {
-          alert("Token created successfully!");
-        } else {
-          onSubmit({
-            error: result.error?.message || "Failed to create token",
-          });
-        }
-
-        return result.success;
+        // Call the onSubmit function with the form data
+        onSubmit(formData);
+        return true;
       } catch (error) {
         console.error("Error creating token:", error);
         onSubmit({ error: "An unexpected error occurred" });
@@ -401,8 +390,7 @@ export function TokenFormSection({
       <div className="flex justify-center mb-8 mt-8">
         <Button
           onClick={() => {
-            const form = document.querySelector("form") as HTMLFormElement;
-            if (form) form.requestSubmit();
+            validateAndSubmitForm();
           }}
           disabled={isLoading}
           size="lg"
