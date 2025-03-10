@@ -6,6 +6,28 @@ Your all-in-one decentralized hub for meme coin innovation—factory, marketplac
 
 HyperSonic transforms market predictions, token launches, research, trading, and marketing into seamless, automated processes using cutting-edge agentic AI and multi-agent systems. Whether you're a trader, creator, or investor, our AI-powered strategies put you ahead of the curve.
 
+## 🚀 Contract Address
+
+Sonic Mainnet
+
+- **Block Explorer:**
+- **RPC URL**:
+- **CHAINID**:
+
+Contracts on mainnet:
+
+- **Factory**:
+- **Launchpad Agent**:
+- **Native Liquidity Pool**:
+- **Bookie Bet**:
+
+Contracts on testnet:
+
+- **Factory**:
+- **Launchpad Agent**:
+- **Native Liquidity Pool**:
+- **Bookie Bet**:
+
 ## 🎯 Key Features
 
 ### 1. 🎲 Betting Marketplace
