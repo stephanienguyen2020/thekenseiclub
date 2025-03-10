@@ -63,9 +63,13 @@ Contracts on testnet:
 
 ### 4. 📢 AutoShill (Powered by Zerepy)
 
-- Automated viral tweet generation
-- Trending discussion engagement
-- Dynamic social media presence management
+- Automated viral tweet generation – Crafts engaging and high-impact tweets to maximize visibility.
+- Trending discussion engagement – Identifies and participates in relevant trending topics to boost reach.
+- Dynamic social media presence management – Maintains a consistent and interactive brand presence.
+- Smart reply system – Responds intelligently to discussions, ensuring organic engagement.
+- Anti-bot detection compliance – Ensures tweets are structured to avoid detection and flagging by X.
+- Customizable shill strategies – Allows users to define parameters for targeted audience engagement.
+- Seamless API integration – Easily connects with existing platforms for automated execution.
 
 ## 💻 Technology Stack
 
@@ -121,9 +125,11 @@ cd hypersonic
 
 ```bash
 # Copy sample environment files
-cp frontend/.env.sample frontend/.env
-cp backend/.env.sample backend/.env
-cp eliza/.env.sample eliza/.env
+cp frontend/.env.example frontend/.env
+cp backend/.env.example backend/.env
+cp eliza/.env.example eliza/.env
+cp ZerePy/.env.example ZerePy/.env
+
 # Configure your environment variables
 ```
 
@@ -177,7 +183,6 @@ In a new terminal window:
 
 ```bash
 cd eliza
-cp .env.example .env
 pnpm install
 pnpm build
 pnpm start --character="characters/crypto-sage.json"
@@ -197,8 +202,6 @@ In a new terminal window:
 
 ```bash
 cd ZerePy
-cp .env.example .env
-
 poetry install --no-root
 poetry shell
 poetry run python main.py --server
