@@ -20,5 +20,16 @@ export const config = {
     LaunchpadAgent: {
       address: "0xf4B146FbA71F41E0592668ffbF264F1D186b2Ca8",
     },
+  },
+  146: {
+    factory: {
+      address: "0xF52593b79C6a6c48DE918C1a3469959029DC3a8e",
+    },
+    nativeLiquidityPool: {
+      address: "0xaC348bAB58b649a41DC23D108e90d949A8852fa0",
+    },
+    LaunchpadAgent: {
+      address: "0xC699def0dB413Bff70192Fd986a20d4bFFa02641",
+    },
   }
-};
+}

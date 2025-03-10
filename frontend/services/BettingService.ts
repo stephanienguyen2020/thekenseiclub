@@ -316,7 +316,8 @@ export const useBettingService = () => {
 
   const getTwitterHandleByAddress = async (userAddress: string) => {
     if (!walletClient) {
-      throw new Error("Wallet client not found");
+      console.warn("Wallet client not found, waiting for connection...");
+      return null;
     }
     const provider = new ethers.BrowserProvider(walletClient);
     const bettingContract = new ethers.Contract(

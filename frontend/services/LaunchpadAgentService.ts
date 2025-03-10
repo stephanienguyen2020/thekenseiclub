@@ -57,7 +57,8 @@ export const useLaunchpadAgentService = () => {
     return receipt;
   };
 
-  const getUserTokenCredits = async (user: string) => {
+  const getUserTokenCredits = async (userAddress: string) => {
+    console.log("Getting token credits for user:", userAddress);
     if (!walletClient) {
       console.warn("Wallet client not found, using read-only provider...");
       try {
@@ -70,7 +71,7 @@ export const useLaunchpadAgentService = () => {
           LaunchpadAgentABI,
           provider
         );
-        const credits = await launchpadAgent.getUserTokenCredits(user);
+        const credits = await launchpadAgent.getUserTokenCredits(userAddress);
         return credits;
       } catch (error) {
         console.error("Failed to use read-only provider:", error);
@@ -78,7 +79,7 @@ export const useLaunchpadAgentService = () => {
       }
     }
 
-    console.log("Getting token credits for user:", user);
+    console.log("Getting token credits for user:", userAddress);
     const provider = new ethers.BrowserProvider(walletClient);
     const contractAddress = getContractAddress();
     const launchpadAgent = new ethers.Contract(
@@ -86,11 +87,11 @@ export const useLaunchpadAgentService = () => {
       LaunchpadAgentABI,
       provider
     );
-    const userTokenCredits = await launchpadAgent.getUserTokenCredits(user);
+    const userTokenCredits = await launchpadAgent.getUserTokenCredits(userAddress);
     return userTokenCredits;
   };
 
-  const getTwitterHandleAddress = async (twitterHandle: string) => {
+  const getUserAddressTwitterHandle = async (twitterHandle: string) => {
     if (!walletClient) {
         throw new Error("Wallet client not found");
       }
@@ -203,7 +204,7 @@ export const useLaunchpadAgentService = () => {
     registerTwitterHandle,
     buyTokenCredits,
     getUserTokenCredits,
-    getTwitterHandleAddress,
+    getUserAddressTwitterHandle,
     withdrawCredits,
     getTwitterHandleByAddress,
   };

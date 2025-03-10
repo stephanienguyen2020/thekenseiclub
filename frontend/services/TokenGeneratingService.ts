@@ -44,7 +44,7 @@ export const useTokenGeneratingService = () => {
       }
 
       const { data } = await response.json();
-      console.log("data", data);
+      //console.log("data", data);
       const imageBase64 = data.image_file;
 
       // For browser context, also create a blob URL
