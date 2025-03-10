@@ -48,7 +48,11 @@ export const getInferenceAction: Action = {
         }
 
         // Get Allora topics information from the provider
-        currentState.alloraTopics = await topicsProvider.get(runtime, message, currentState);
+        currentState.alloraTopics = await topicsProvider.get(
+            runtime,
+            message,
+            currentState
+        );
 
         // Compose context for extracting the inference fields
         const inferenceTopicContext = composeContext({
@@ -95,8 +99,8 @@ export const getInferenceAction: Action = {
                 inferenceRes.inference_data.network_inference_normalized;
 
             callback({
-                text: `Inference provided by Allora Network on topic ${inferenceFields.topicName} (Topic ID: ${inferenceFields.topicId}): ${inferenceValue}`,
-                user: "Sage"
+                text: `It will be ${inferenceValue}. (Prediction provided by Allora Network)`,
+                user: "Sage",
             });
             return true;
         } catch (error) {
@@ -107,7 +111,7 @@ export const getInferenceAction: Action = {
             elizaLogger.error(displayMessage);
             callback({
                 text: displayMessage,
-                user: "Sage"
+                user: "Sage",
             });
             return false;
         }

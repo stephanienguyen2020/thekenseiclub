@@ -62,8 +62,6 @@ export default function LaunchPage() {
   const [generatedDetails, setGeneratedDetails] = useState<TokenDetails | null>(
     null
   );
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [createdToken, setCreatedToken] = useState<Token | null>(null);
   const addToken = useTokenStore((state) => state.addToken);
   const testTokenService = useTestTokenService();
 
@@ -220,13 +218,23 @@ export default function LaunchPage() {
         return;
       }
 
+      // If we have generated details, use those instead of form data
+      const tokenName = generatedDetails?.name || data?.name;
+      const tokenSymbol = generatedDetails?.symbol || data?.symbol;
+      const tokenDescription =
+        generatedDetails?.description || data?.description;
+
+      if (!tokenName || !tokenSymbol) {
+        setError("Name and symbol are required");
+        return;
+      }
+
       setIsLoading(true);
-      let imageUrl = "";
 
       const metaData = {
-        name: data.name.trim(),
-        ticker: data.symbol.trim(),
-        description: data.description || "",
+        name: tokenName.trim(),
+        ticker: tokenSymbol.trim(),
+        description: tokenDescription || "",
       };
 
       // Use testCreateToken instead of createToken
@@ -243,10 +251,10 @@ export default function LaunchPage() {
       // Create a new token object
       const newToken: Token = {
         id: result.imageURL?.split("ipfs/")[1] || Date.now().toString(),
-        name: data.name,
-        symbol: data.symbol,
-        imageUrl: result.imageURL || "", // Use the returned IPFS URL
-        description: data.description || "",
+        name: tokenName,
+        symbol: tokenSymbol,
+        imageUrl: result.imageURL || "",
+        description: tokenDescription || "",
         price: "$0.00",
         priceChange: 0,
         marketCap: "0",
@@ -258,12 +266,9 @@ export default function LaunchPage() {
         fundingRaised: "0",
       };
 
-      console.log("New token created:", newToken);
-
       // Add token to store
       addToken(newToken);
-      setCreatedToken(newToken);
-      setShowSuccessDialog(true);
+      router.push("/dashboard/my-tokens");
       return true;
     } catch (error) {
       console.error("Error creating token:", error);
@@ -276,14 +281,16 @@ export default function LaunchPage() {
 
   const handleGenerate = async (input: string) => {
     try {
+      setAiInput(input);
+      setIsGenerating(true);
       const response = await generateTokenConcept(input);
-      (response.imageUrl = ""), setPrompt(response.image_description);
+      response.imageUrl = "";
+      setPrompt(response.image_description);
       console.log("response", response);
-      console.log("prompt", prompt, response.image_description);
-      console.log("force update");
       setGeneratedDetails(response);
       await generateImageWithPromptInput(response.image_description);
-      // setPreviewUrl(data.imageUrl);
+      // After successful generation, switch to manual mode
+      setInputMethod("manual");
     } catch (error) {
       console.error("Error generating token:", error);
       setError("Failed to generate token details");
@@ -391,60 +398,6 @@ export default function LaunchPage() {
           </div>
         </div>
       </div>
-
-      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogTitle className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20">
-              <Check className="w-4 h-4 text-blue-500" />
-            </div>
-            Token Created Successfully
-          </DialogTitle>
-          <div className="space-y-4">
-            {createdToken && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  {createdToken && (
-                    <img
-                      src={createdToken.imageUrl || "/placeholder.svg"}
-                      alt={createdToken.name || "Token"}
-                      className="w-12 h-12 rounded-full"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/placeholder.svg";
-                      }}
-                    />
-                  )}
-                  <div>
-                    <h3 className="font-medium">{createdToken?.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {createdToken?.symbol}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowSuccessDialog(false);
-                  router.push("/dashboard/my-tokens");
-                }}
-              >
-                View My Tokens
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowSuccessDialog(false);
-                  router.push("/marketplace");
-                }}
-              >
-                Go to Marketplace
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   );
 }
