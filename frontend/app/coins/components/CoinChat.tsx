@@ -131,7 +131,7 @@ function CoinChatContent({ symbol }: { symbol: string }) {
     );
 
     sendMessageMutation.mutate({
-      message: input,
+      message: input + " about " + symbol + " token",
       selectedFile: selectedFile ? selectedFile : null,
     });
 

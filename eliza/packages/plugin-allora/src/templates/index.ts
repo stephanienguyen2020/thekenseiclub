@@ -49,11 +49,29 @@ Available Topics:
 - Topic ID: 40, Topic Name: SOL/USD - 8h Volatility Prediction
 - Topic ID: 48, Topic Name: SUI/USDT - 30min Price Prediction
 
-Given the recent messages and the Allora Network Topics above, extract the following information about the requested:
-- Topic ID of the topic that best matches the user's request. The topic should be active, otherwise return null.
-- Topic Name of the topic that best matches the user's request. The topic should be active, otherwise return null.
+Given the recent messages and the Allora Network Topics above, analyze the user's request and find the most relevant topic by considering:
 
-If the topic is not active or the inference timeframe is not matching the user's request, return null for both topicId and topicName.
+1. Asset/Token mentioned (e.g., ETH, BTC, SOL, etc.)
+2. Time frame requested (e.g., 5min, 8h, 24h)
+3. Type of prediction (price, volatility, volume)
+4. Common variations and abbreviations:
+   - "Ethereum" or "ETH"
+   - "Bitcoin" or "BTC"
+   - "Solana" or "SOL"
+   - "5 minutes" = "5min"
+   - "8 hours" = "8h"
+   - "one day" or "24 hours" = "24h"
+
+For example:
+- "What will Ethereum do in the next 5 minutes?" should match "ETH/USD - 5min Price Prediction"
+- "What will BTC do in the next 24h?" should match "BTC 24h Prediction"
+- "How volatile will SOL be in 8 hours?" should match "SOL/USD - 8h Volatility Prediction"
+
+Extract:
+- Topic ID of the best matching topic (must be active, otherwise null)
+- Topic Name of the best matching topic (must be active, otherwise null)
+
+If no suitable match is found or the topic is not active, return null for both topicId and topicName.
 
 Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined. The result should be a valid JSON object with the following schema:
 \`\`\`json

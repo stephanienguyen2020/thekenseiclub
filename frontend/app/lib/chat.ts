@@ -168,18 +168,32 @@ interface Asset {
 }
 
 export const autoShill = async (asset: Asset, agentId: UUID) => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_AGENT_SERVER}/post-tweet/${agentId}/`,
-    {
+  const ZerePyUrl = "http://localhost:8000";
+  const res = await fetch(`${ZerePyUrl}`);
+  const data = await res.json();
+  console.log("Data:", data);
+  if (data.agent === null) {
+    await fetch(`${ZerePyUrl}/agents/meme-coin-influencer-agent/load`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        coinSymbol: asset.symbol,
-        coinName: asset.name,
-      }),
-    }
-  );
-  return await res.json();
+    });
+  }
+
+  // shill
+  const shill = await fetch(`${ZerePyUrl}/agent/action`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      connection: "twitter",
+      action: "shill-coin",
+      params: [asset.name],
+    }),
+  });
+  const shillData = await shill.json();
+  console.log("Shill data:", shillData);
+  return shillData;
 };

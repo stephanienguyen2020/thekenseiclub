@@ -96,6 +96,7 @@ export const getInferenceAction: Action = {
 
             callback({
                 text: `Inference provided by Allora Network on topic ${inferenceFields.topicName} (Topic ID: ${inferenceFields.topicId}): ${inferenceValue}`,
+                user: "Sage"
             });
             return true;
         } catch (error) {
@@ -106,6 +107,7 @@ export const getInferenceAction: Action = {
             elizaLogger.error(displayMessage);
             callback({
                 text: displayMessage,
+                user: "Sage"
             });
             return false;
         }
