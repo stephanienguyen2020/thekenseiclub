@@ -19,17 +19,17 @@ Sonic Mainnet
 
 Contracts on mainnet:
 
-- **Factory**:
-- **Launchpad Agent**:
-- **Native Liquidity Pool**:
-- **Bookie Bet**:
+- **Factory**: 0xF52593b79C6a6c48DE918C1a3469959029DC3a8e
+- **Launchpad Agent**: 0xC699def0dB413Bff70192Fd986a20d4bFFa02641
+- **Native Liquidity Pool**: 0xaC348bAB58b649a41DC23D108e90d949A8852fa0
+- **Bookie Bet**: 0x7cebb1bae1e148c1f1a0f30b306e898da05f12dc
 
 Contracts on testnet:
 
-- **Factory**:
-- **Launchpad Agent**:
-- **Native Liquidity Pool**:
-- **Bookie Bet**:
+- **Factory**: 0x202CCe504e04bEd6fC0521238dDf04Bc9E8E15aB
+- **Launchpad Agent**: 0xf4B146FbA71F41E0592668ffbF264F1D186b2Ca8
+- **Native Liquidity Pool**: 0x172076E0166D1F9Cc711C77Adf8488051744980C
+- **Bookie Bet**: 0xd1b6BEa5A3b3dd4836100f5C55877c59d4666569
 
 ## 🎯 Key Features
 
