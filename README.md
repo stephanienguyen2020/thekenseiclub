@@ -1,4 +1,4 @@
-# 🚀 HyperSonic
+# 🚀 HyperSonic - BEST MEME COIN PLAYGOUND ON SONIC 
 
 Your all-in-one decentralized hub for meme coin innovation—factory, marketplace, and prediction market—exclusively on Sonic Labs.
 
@@ -10,9 +10,12 @@ HyperSonic transforms market predictions, token launches, research, trading, and
 
 Sonic Mainnet
 
-- **Block Explorer:**
-- **RPC URL**:
-- **CHAINID**:
+
+- **Network name**: Sonic
+- **RPC URL**: https://rpc.soniclabs.com
+- **Explorer URL**: https://sonicscan.org
+- **Chain ID**: 146
+- **Currency symbol**: S
 
 Contracts on mainnet:
 
@@ -38,14 +41,14 @@ Contracts on testnet:
 - Smart contract-secured fund management
 - Category-based filtering and easy stake positioning
 
-### 2. 🚀 Memecoin Launchpad
+### 2. 🚀 Interactive Memecoin Launchpad with Anti-Rug Mechanism
 
 - AI-powered token generation and deployment
 - Fair launch mechanics with anti-rug pull protection
 - 10-day linear vesting schedule
 - Custom bonding curve for sustainable fundraising
-- Automated liquidity management
-- Launch via web interface, chatbot, or Twitter
+- Automated liquidity management, enforcing liquidity locks to prevent token creators from exiting early.
+- Launch via web interface, chatbot, or Twitter by only providing an interesting joke or meme ideas.
 
 ### 3. 🤖 Multi-Agent AI Framework
 
