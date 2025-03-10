@@ -110,14 +110,14 @@ Contracts on testnet:
 
 ### Installation
 
-1. **Clone the Repository**
+## **1. Clone the Repository**
 
 ```bash
 git clone https://github.com/stephanienguyen2020/hypersonic
 cd hypersonic
 ```
 
-2. **Set Up Environment Variables**
+## **2. Set Up Environment Variables**
 
 ```bash
 # Copy sample environment files
@@ -127,7 +127,7 @@ cp eliza/.env.sample eliza/.env
 # Configure your environment variables
 ```
 
-3. **Frontend Setup**
+## **3. Frontend Setup**
 
 ```bash
 # Navigate to frontend directory
@@ -176,11 +176,32 @@ This will start the backend on [http://localhost:8000](http://localhost:8000).
 In a new terminal window:
 
 ```bash
-git checkout eliza
-cp .env.sample .env
+cd eliza
+cp .env.example .env
 pnpm install
 pnpm build
 pnpm start --character="characters/crypto-sage.json"
+```
+
+## **6. Running the ZerePy Agent**
+
+Follow the steps here to use the official installation: https://python-poetry.org/docs/#installing-with-the-official-installer
+
+Extra installation after installing poetry
+```bash
+poetry self add poetry-plugin-shell
+poetry install --extras server
+```
+
+In a new terminal window:
+
+```bash
+cd ZerePy
+cp .env.example .env
+
+poetry install --no-root
+poetry shell
+poetry run python main.py --server
 ```
 
 ## 🌐 Access Points
