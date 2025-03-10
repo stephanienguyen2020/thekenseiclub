@@ -1,58 +1,100 @@
-HyperSonic is an **AI-driven platform** for meme coin trading, research, and creation. Whether you're betting on trends, launching tokens, or analyzing market data, HyperSonic provides the tools to stay ahead.
+# 🚀 HyperSonic
 
-## 🚀 Features
+Your all-in-one decentralized hub for meme coin innovation—factory, marketplace, and prediction market—exclusively on Sonic Labs.
 
-### **Seamless Wallet Integration**
+## 🌟 Overview
 
-Connect wallets easily with secure authentication—no private key management required.
+HyperSonic transforms market predictions, token launches, research, trading, and marketing into seamless, automated processes using cutting-edge agentic AI and multi-agent systems. Whether you're a trader, creator, or investor, our AI-powered strategies put you ahead of the curve.
 
-### **Dashboard & Portfolio Tracking**
+## 🎯 Key Features
 
-Monitor holdings in real-time, track profits/losses, and get AI-driven price predictions.
+### 1. 🎲 Betting Marketplace
 
-### **🛠 Betting Marketplace**
+- Place bets on meme coin trends, price movements, and crypto events
+- Web interface and Twitter integration (@HyperSonic46406)
+- Transparent on-chain execution
+- Smart contract-secured fund management
+- Category-based filtering and easy stake positioning
 
-Bet on meme coin trends directly via Twitter by tagging **@HyperSonic**. Smart contracts ensure secure escrow and instant payouts.
+### 2. 🚀 Memecoin Launchpad
 
-### **🚀 Meme Coin Launch Pad**
+- AI-powered token generation and deployment
+- Fair launch mechanics with anti-rug pull protection
+- 10-day linear vesting schedule
+- Custom bonding curve for sustainable fundraising
+- Automated liquidity management
+- Launch via web interface, chatbot, or Twitter
 
-Launch your own token with an AI-powered branding assistant, instant deployment, and on-chain security.
+### 3. 🤖 Multi-Agent AI Framework
 
-- Utilizes a custom bonding curve that dynamically adjusts token prices based on market supply and demand.
-- Once a meme token reaches its funding goal, liquidity creation is triggered through the Native Liquidity Pool. Early contributors receive rewards, allowing them to mint additional tokens on Electroneum.
-- A Marketplace where users can create, buy, and trade all launched meme tokens.
+- News Agent: Real-time crypto news monitoring
+- Token Analysis Agent: Market trend analysis
+- Price Prediction Agent: Allora-powered forecasting
+- Social Sentiment Agent: Cross-platform sentiment analysis
+- Search Agent: New token discovery
+- Swap Agent: Optimal liquidity pool routing
+- Whale Watch Agent: Large-scale transaction monitoring
+- Twitter Agent: Social media integration
 
-### **📊 AI Research & Trading Tools**
+### 4. 📢 AutoShill (Powered by Zerepy)
 
-- **Market Insights:** Track trends, social engagement, and whale movements.
-- **Swap Agent:** Find the best liquidity pools and trade efficiently.
-- **News Agent:** Get real-time alerts on market-moving events.
-- **Sentiment Analysis & Predictions:** AI forecasts price trends based on historical data.
+- Automated viral tweet generation
+- Trending discussion engagement
+- Dynamic social media presence management
 
----
+## 💻 Technology Stack
 
-# **How to Run HyperSonic**
+### Frontend & UI
 
-## **1. Clone the Repository**
+- Next.js 14
+- TypeScript
+- Tailwind CSS
+- RainbowKit for wallet connection
+
+### Backend & API
+
+- Python FastAPI
+- Multi-agent AI system
+- Blockchain integration
+- Zerepy AI Framework
+
+### Smart Contracts & Blockchain
+
+- Sonic Labs infrastructure
+- Solidity smart contracts
+- Custom bonding curves
+- Automated liquidity management
+- Allora Network integration
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- Python 3.8+
+- Crypto wallet (compatible with RainbowKit)
+- pnpm package manager
+
+### Installation
+
+1. **Clone the Repository**
 
 ```bash
-git clone https://github.com/stephanienguyen2020/memetron
-cd memetron
+git clone https://github.com/stephanienguyen2020/hypersonic
+cd hypersonic
 ```
 
-## **2. Set Up Environment Variables**
-
-Create a `.env` file inside both the `frontend/` and `backend/` directories.
+2. **Set Up Environment Variables**
 
 ```bash
-# Copy the sample environment files
+# Copy sample environment files
 cp frontend/.env.sample frontend/.env
 cp backend/.env.sample backend/.env
-
-# Edit the .env files and fill in your credentials
+cp eliza/.env.sample eliza/.env
+# Configure your environment variables
 ```
 
-## **3. Running the Frontend**
+3. **Frontend Setup**
 
 ```bash
 # Navigate to frontend directory
@@ -101,42 +143,25 @@ This will start the backend on [http://localhost:8000](http://localhost:8000).
 In a new terminal window:
 
 ```bash
-# Clone the repository (if not already done)
-git clone https://github.com/stephanienguyen2020/memetron
-cd memetron
-
-# Switch to the Eliza branch
 git checkout eliza
-
-# Create and configure environment
 cp .env.sample .env
-# Edit .env file with your credentials
-
-# Install dependencies and build
 pnpm install
 pnpm build
-
-# Start the Eliza agent
 pnpm start --character="characters/crypto-sage.json"
 ```
 
-## Troubleshooting
+## 🌐 Access Points
 
-If you encounter any issues:
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Backend API: [http://localhost:8000](http://localhost:8000)
 
-1. Make sure all environment variables are properly set
-2. Check that all required ports (3000, 8000) are available
-3. Ensure you have the correct versions of Node.js and Python installed
-4. Clear your browser cache if you experience UI issues
+## 👥 Built By
 
-## Development Notes
+HyperSonic is developed by a team of top university researchers and blockchain developers, passionate about crypto, AI, and market analytics.
 
-- The frontend runs on Next.js 14 with App Router
-- Backend uses FastAPI with Python 3.8+
-- Eliza agent requires Node.js 18+ and pnpm
-- Make sure to run all three components (frontend, backend, and Eliza agent) for full functionality
+## 🤝 Support
 
-## 💻 Technology Stack
+For support, please reach out to our team or join our community channels.
 
 ### 🎨 Frontend & UI
 
@@ -149,12 +174,15 @@ If you encounter any issues:
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![ElizaOS](https://img.shields.io/badge/ElizaOS-FF6B6B?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+&logoColor=white)
+![Zerepy](https://img.shields.io/badge/Zerepy-4B0082?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+&logoColor=white)
 
 ### ⛓️ Blockchain & Smart Contracts
 
 ![Solidity](https://img.shields.io/badge/Solidity-363636?style=for-the-badge&logo=solidity&logoColor=white)
 ![Hardhat](https://img.shields.io/badge/Hardhat-FFD700?style=for-the-badge&logo=hardhat&logoColor=black)
 ![NebulaBlock](https://img.shields.io/badge/NebulaBlock-6F4BB2?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+&logoColor=white)
+![Sonic Labs](https://img.shields.io/badge/Sonic%20Labs-00BFFF?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+&logoColor=white)
+![Allora Network](https://img.shields.io/badge/Allora%20Network-32CD32?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+&logoColor=white)
 
 ### 📦 Storage & IPFS
 
@@ -166,3 +194,5 @@ If you encounter any issues:
 ![Twitter API](https://img.shields.io/badge/Twitter%20API-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
+
+_Powered by Sonic Labs, Allora, and Zerepy - Revolutionizing the meme economy, one token at a time._
