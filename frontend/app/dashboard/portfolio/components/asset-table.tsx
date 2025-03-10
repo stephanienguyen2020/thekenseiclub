@@ -53,7 +53,7 @@ const mockAssets: Asset[] = [
     value: 7000,
   },
   {
-    id: "sonic",
+    id: "0x79bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c",
     symbol: "S",
     name: "Sonic",
     address: "0x8C96Dd1A8B1952Ce6F3a582170bb173eD591D40b",
