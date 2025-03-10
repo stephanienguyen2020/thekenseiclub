@@ -18,7 +18,7 @@ export const useBettingService = () => {
     if (chainId === 57054) {
       contractAddress = "0xd1b6BEa5A3b3dd4836100f5C55877c59d4666569";
     } else if (chainId === 146) {
-      contractAddress = "0x6E0CC7eAb0672dEbFe84f49401325B3ad16125A0";
+      contractAddress = "0x7cebb1bae1e148c1f1a0f30b306e898da05f12dc";
     }
 
     console.log("Using contract address:", contractAddress);
