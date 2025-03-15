@@ -127,6 +127,9 @@ export const swapAction: Action = {
                         fromToken: swapDetail.source_token,
                         toToken: swapDetail.destination_token,
                     }),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
                 }
             );
 

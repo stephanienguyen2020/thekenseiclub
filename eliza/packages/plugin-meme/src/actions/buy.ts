@@ -117,6 +117,9 @@ export const buyAction: Action = {
                 "http://localhost:3000/api/memecoin/buy-for-user",
                 {
                     method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
                     body: JSON.stringify({
                         amount: buyDetail.amount,
                         tokenAddress: buyDetail.tokenAddress,
