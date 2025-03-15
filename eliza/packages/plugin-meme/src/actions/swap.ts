@@ -8,6 +8,7 @@ import {
     composeContext,
     generateObject,
     ModelClass,
+    Content,
 } from "@elizaos/core";
 import { z } from "zod";
 
@@ -139,14 +140,21 @@ export const swapAction: Action = {
             transactionData.transactionType = "swap";
 
             if (transactionData.success) {
-                _callback({
-                    text: `Swapping ${swapDetail.source_amount} ${swapDetail.source_token} for ${swapDetail.destination_token}`,
+                const newMemory: Memory = {
+                    userId: _message.agentId,
+                    agentId: _message.agentId,
+                    roomId: _message.roomId,
                     content: {
                         text: `Swapping ${swapDetail.source_amount} ${swapDetail.source_token} for ${swapDetail.destination_token}`,
-                        transaction: transactionData.transaction,
-                        user: "Sage",
-                    },
-                });
+                        action: "SWAP_TOKENS_RESPONSE",
+                        source: _message.content?.source,
+                        transaction: transactionData.transaction, // Attach JSON data
+                    } as Content,
+                };
+
+                await _runtime.messageManager.createMemory(newMemory);
+
+                _callback(newMemory.content);
                 return true;
             } else {
                 _callback({
@@ -156,7 +164,7 @@ export const swapAction: Action = {
                         user: "Sage",
                     },
                 });
-                return false;
+                return true;
             }
         } else {
             _callback({

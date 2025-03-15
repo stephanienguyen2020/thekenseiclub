@@ -8,6 +8,7 @@ import {
     composeContext,
     generateObject,
     ModelClass,
+    Content,
 } from "@elizaos/core";
 import { z } from "zod";
 
@@ -133,24 +134,31 @@ export const buyAction: Action = {
             transactionData.transactionType = "buy";
 
             if (transactionData.success) {
-                _callback({
-                    text: `Buying ${buyDetail.amount} ${buyDetail.tokenAddress}`,
+                const newMemory: Memory = {
+                    userId: _message.agentId,
+                    agentId: _message.agentId,
+                    roomId: _message.roomId,
                     content: {
                         text: `Buying ${buyDetail.amount} ${buyDetail.tokenAddress}`,
-                        transaction: transactionData.transaction,
-                        user: "Sage",
-                    },
-                });
+                        action: "BUY_TOKENS_RESPONSE",
+                        source: _message.content?.source,
+                        transaction: transactionData.transaction, // Attach JSON data
+                    } as Content,
+                };
+
+                await _runtime.messageManager.createMemory(newMemory);
+
+                _callback(newMemory.content);
                 return true;
             } else {
                 _callback({
                     text: transactionData.error,
                     content: {
                         text: transactionData.error,
-                        user: "Sage",
                     },
+                    user: "Sage",
                 });
-                return false;
+                return true;
             }
         } else {
             _callback({
