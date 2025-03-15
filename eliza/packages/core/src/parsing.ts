@@ -6,7 +6,7 @@ export const messageCompletionFooter = `\nResponse format should be formatted in
 { "user": "{{agentName}}", "text": "<string>", "action": "<string>" }
 \`\`\`
 
-The “action” field should be one of the options in [Available Actions] and the "text" field should be the response you want to send.
+The 'action' field should be one of the options in [Available Actions] and the "text" field should be the response you want to send.
 `;
 
 export const shouldRespondFooter = `The available options are [RESPOND], [IGNORE], or [STOP]. Choose the most appropriate option.
@@ -236,18 +236,18 @@ export function extractAttributes(
 
 export const normalizeJsonString = (str: string) => {
     // Remove extra spaces after '{' and before '}'
-    str = str.replace(/\{\s+/, '{').replace(/\s+\}/, '}').trim();
+    str = str.replace(/\{\s+/, "{").replace(/\s+\}/, "}").trim();
 
     // "key": unquotedValue → "key": "unquotedValue"
     str = str.replace(
-      /("[\w\d_-]+")\s*: \s*(?!"|\[)([\s\S]+?)(?=(,\s*"|\}$))/g,
-      '$1: "$2"',
+        /("[\w\d_-]+")\s*: \s*(?!"|\[)([\s\S]+?)(?=(,\s*"|\}$))/g,
+        '$1: "$2"'
     );
 
     // "key": 'value' → "key": "value"
     str = str.replace(
-      /"([^"]+)"\s*:\s*'([^']*)'/g,
-      (_, key, value) => `"${key}": "${value}"`,
+        /"([^"]+)"\s*:\s*'([^']*)'/g,
+        (_, key, value) => `"${key}": "${value}"`
     );
 
     // "key": someWord → "key": "someWord"

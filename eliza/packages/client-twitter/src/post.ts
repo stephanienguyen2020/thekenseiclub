@@ -52,7 +52,8 @@ const twitterPostTemplate = `
 # Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
 Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
 Your response should be 1, 2, or 3 sentences (choose the length at random).
-Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.`;
+Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.
+Always end the tweet with "#Sonic #SonicLabs" (this counts toward character limit).`;
 
 export const twitterActionTemplate =
     `
@@ -461,7 +462,7 @@ export class TwitterPostClient {
     ) {
         try {
             elizaLogger.log(`Posting new tweet:\n`);
-
+            elizaLogger.log(tweetTextForPosting);
             let result;
 
             if (tweetTextForPosting.length > DEFAULT_MAX_TWEET_LENGTH) {
@@ -737,7 +738,6 @@ export class TwitterPostClient {
             });
 
             const rawTweetContent = cleanJsonResponse(response);
-
             // First attempt to clean content
             let tweetTextForPosting = null;
             let mediaData = null;
@@ -750,6 +750,8 @@ export class TwitterPostClient {
                 // If not JSON, use the raw text directly
                 tweetTextForPosting = rawTweetContent.trim();
             }
+
+            elizaLogger.log("tweetTextForPosting: " + tweetTextForPosting);
 
             if (
                 parsedResponse?.attachments &&

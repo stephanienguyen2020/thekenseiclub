@@ -84,13 +84,13 @@ export const currentNewsAction: Action = {
         }
 
         const context = `Extract ONLY the main topic or subject the user wants news about from this message: "${_message.content.text}". 
-For example:
-- "what's the latest news about artificial intelligence?" -> "artificial intelligence"
-- "can you show me the latest news about climate change?" -> "climate change"
-- "what's in the cryptocurrency news today?" -> "cryptocurrency"
-- "tell me everything about cybersecurity in the news" -> "cybersecurity"
+        For example:
+        - "what's the latest news about artificial intelligence?" -> "artificial intelligence"
+        - "can you show me the latest news about climate change?" -> "climate change"
+        - "what's in the cryptocurrency news today?" -> "cryptocurrency"
+        - "tell me everything about cybersecurity in the news" -> "cybersecurity"
 
-Return just the topic with no additional text, punctuation, or explanation.`;
+        Return just the topic with no additional text, punctuation, or explanation.`;
 
         const searchTerm = await generateText({
             runtime: _runtime,

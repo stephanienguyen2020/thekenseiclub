@@ -21,7 +21,6 @@ import {
 import { defaultCharacter } from "./defaultCharacter.ts";
 
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
-import { newsPlugin } from "@elizaos/plugin-news";
 
 import fs from "fs";
 import net from "net";
