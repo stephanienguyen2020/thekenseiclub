@@ -26,7 +26,7 @@ export class RagService {
         });
 
         // Initialize MongoDB
-        this.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://admin:password123@localhost:27017/ragDatabase?authSource=admin';
+        this.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ragDatabase';
         this.mongoClient = new MongoClient(this.MONGODB_URI);
         this.documentsCollection = this.mongoClient.db(this.MONGODB_DB_NAME).collection(this.COLLECTION_NAME);
     }
@@ -85,23 +85,23 @@ export class RagService {
 
             const queryEmbedding = response.data[0].embedding;
 
-            // Perform vector similarity search
+            // Perform vector similarity search using Atlas
             const similarDocuments = await this.documentsCollection
                 .aggregate([
                     {
-                        $search: {
-                            knnBeta: {
-                                vector: queryEmbedding,
-                                path: "embedding",
-                                k: limit,
-                            }
+                        "$vectorSearch": {
+                            "index": "vector_index", 
+                            "path": "embedding",
+                            "queryVector": queryEmbedding,
+                            "numCandidates": limit * 10,
+                            "limit": limit
                         }
                     },
                     {
                         $project: {
                             text: 1,
                             metadata: 1,
-                            similarity: { $meta: "searchScore" },
+                            similarity: { $meta: "vectorSearchScore" },
                             _id: 0
                         }
                     }
