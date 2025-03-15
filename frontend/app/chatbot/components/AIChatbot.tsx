@@ -31,6 +31,7 @@ import ThinkingMessage from "./ThinkingMessage";
 import { sendChatMessage } from "../service";
 import { ChatSwapInterface } from "./ChatSwapInterface/index";
 import type { Message, SwapMessageContent } from "@/types/chat";
+import { TransactionCard } from "./TransactionCard";
 
 // Define local types to avoid dependency on @elizaos/core
 type UUID = string;
@@ -54,6 +55,8 @@ import {
 import { toast, useToast } from "@/hooks/use-toast";
 import { NewsTickerWidget } from "./NewsTickerWidget";
 import { ThinkingDots } from "@/components/ui/thinking-dots";
+import { useWalletClient, usePublicClient } from 'wagmi';
+import { parseEther } from 'viem';
 
 // Map of icon components
 const icons = {
@@ -118,11 +121,32 @@ type ExtraContentFields = {
     articles: News[];
   };
   walletId?: string;
+  transaction?: Transaction;
+};
+
+// Export the Transaction type
+export type Transaction = {
+  to: string;
+  data: string;
+  value: string;
+  estimatedOutput?: string;
+  tokenDetails?: TokenDetails;
+  transactionType: "swap" | "buy" | "create";
+  gas?: string;
+  nonce?: string;
+  chainId?: string;
+};
+
+type TokenDetails = {
+  name: string;
+  symbol: string;
+  description: string;
+  imageURI: string;
+  metadataURI: string;
 };
 
 type ContentWithUser = Content & ExtraContentFields;
 
-// Wrap the content component that uses useSearchParams
 function AIChatbotContent() {
   const agentId: UUID = "c3bd776c-4465-037f-9c7a-bf94dfba78d9";
   const { toast } = useToast();
@@ -459,8 +483,131 @@ function AIChatbotContent() {
     });
   };
 
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
+
+  const handleTransactionSubmit = async (transaction: Transaction) => {
+    if (!walletClient) {
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      throw new Error("Wallet not connected");
+    }
+
+    if (!publicClient) {
+      toast({
+        title: "Error",
+        description: "Network client not available",
+        variant: "destructive",
+      });
+      throw new Error("Network client not available");
+    }
+
+    // Format the transaction data
+    const formattedTx = {
+      to: transaction.to as `0x${string}`,
+      data: transaction.data as `0x${string}`,
+      value: BigInt(transaction.value || '0'),
+      ...(transaction.gas ? { gas: BigInt(transaction.gas) } : {}),
+      ...(transaction.nonce ? { nonce: Number(transaction.nonce) } : {}),
+      ...(transaction.chainId ? { chainId: Number(transaction.chainId) } : {})
+    };
+
+    try {
+      // Send the transaction
+      const hash = await walletClient.sendTransaction(formattedTx);
+
+      // Wait for transaction confirmation with timeout
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Transaction confirmation timeout'));
+        }, 30000); // 30 second timeout
+
+        const checkReceipt = async () => {
+          try {
+            const receipt = await publicClient.getTransactionReceipt({ hash });
+            if (receipt) {
+              if (receipt.status === 'success') {
+                clearTimeout(timeout);
+                resolve(receipt);
+              } else {
+                clearTimeout(timeout);
+                reject(new Error('Transaction failed'));
+              }
+            } else {
+              setTimeout(checkReceipt, 2000);
+            }
+          } catch (error) {
+            setTimeout(checkReceipt, 2000);
+          }
+        };
+        checkReceipt();
+      });
+
+      // Update UI based on transaction type
+      if (transaction.transactionType === 'swap') {
+        queryClient.setQueryData(
+          ["messages", agentId],
+          (old: ContentWithUser[] = []) => [
+            ...old,
+            {
+              text: `Swap completed successfully! View on [SonicScan](https://testnet.sonicscan.org/tx/${hash})`,
+              user: "Sage",
+              createdAt: Date.now()
+            }
+          ]
+        );
+      } else if (transaction.transactionType === 'buy') {
+        queryClient.setQueryData(
+          ["messages", agentId],
+          (old: ContentWithUser[] = []) => [
+            ...old,
+            {
+              text: `Purchase completed successfully! View on [SonicScan](https://testnet.sonicscan.org/tx/${hash})`,
+              user: "Sage",
+              createdAt: Date.now()
+            }
+          ]
+        );
+      } else if (transaction.transactionType === 'create') {
+        queryClient.setQueryData(
+          ["messages", agentId],
+          (old: ContentWithUser[] = []) => [
+            ...old,
+            {
+              text: `Token created successfully! View on [SonicScan](https://testnet.sonicscan.org/tx/${hash})`,
+              user: "Sage",
+              createdAt: Date.now()
+            }
+          ]
+        );
+      }
+
+      return hash;
+    } catch (error: any) {
+      console.error('Transaction error:', error);
+      
+      // Add error message to chat
+      queryClient.setQueryData(
+        ["messages", agentId],
+        (old: ContentWithUser[] = []) => [
+          ...old,
+          {
+            text: `Transaction failed: ${error.message || 'Unknown error'}`,
+            user: "Sage",
+            createdAt: Date.now()
+          }
+        ]
+      );
+      
+      throw error;
+    }
+  };
+
   const renderMessageContent = (message: ContentWithUser) => {
-    console.log("Rendering message:", message);
+    console.log("Rendering message", message);
     if (message.data) {
       return (
         <div className="w-full">
@@ -468,12 +615,25 @@ function AIChatbotContent() {
         </div>
       );
     }
-    console.log("IM here?", message);
+
+    if (message.transaction) {
+      console.log("Rendering transaction card", message.transaction);
+      return (
+        <TransactionCard 
+          key={message.createdAt}
+          transaction={message.transaction} 
+          onSubmit={() => handleTransactionSubmit(message.transaction!)}
+        />
+      );
+    }
+
+    // Default text rendering
     return (
-      <p className="whitespace-pre-wrap font-clean">
-        {message.text}
-        {message.isLoading && <ThinkingDots />}
-      </p>
+      <div className="prose prose-invert">
+        <ReactMarkdown>
+          {message.text}
+        </ReactMarkdown>
+      </div>
     );
   };
 
