@@ -46,13 +46,18 @@ export const pinJSONToIPFS = async (json: Record<string, any>) => {
     }
 };
 
-export const unPinFromIPFS = async (hash: string) => {
+export const unPinFromIPFS = async (fileUrl: string, jsonUrl: string) => {
     if (!process.env.NEXT_PUBLIC_PINATA_JWT) {
         throw new Error("Pinata JWT not configured. Please check your environment variables.");
     }
 
     try {
-        await pinata.unpin([hash]);
+        const hash = fileUrl.split("/").pop();
+        const jsonHash = jsonUrl.split("/").pop();
+        if (!hash || !jsonHash) {
+            throw new Error("Failed to get IPFS hash from URL");
+        }
+        await pinata.unpin([hash, jsonHash]);
         return true;
     } catch (error) {
         console.error("Error unpinning file:", error);

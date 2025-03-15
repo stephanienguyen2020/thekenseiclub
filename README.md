@@ -79,12 +79,10 @@ Contracts on testnet:
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
-### 🔧 Backend & AI Framework
+### 🔧 AI Framework
 
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![ElizaOS](https://img.shields.io/badge/ElizaOS-FF6B6B?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+&logoColor=white)
 ![Zerepy](https://img.shields.io/badge/Zerepy-4B0082?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+&logoColor=white)
+![ElizaOS](https://img.shields.io/badge/ElizaOS-FF6B6B?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+&logoColor=white)
 
 ### ⛓️ Blockchain & Smart Contracts
 
@@ -108,7 +106,6 @@ Contracts on testnet:
 ### Prerequisites
 
 - Node.js 18+
-- Python 3.8+
 - Crypto wallet (compatible with RainbowKit)
 - pnpm package manager
 
@@ -126,7 +123,6 @@ cd hypersonic
 ```bash
 # Copy sample environment files
 cp frontend/.env.example frontend/.env
-cp backend/.env.example backend/.env
 cp eliza/.env.example eliza/.env
 cp ZerePy/.env.example ZerePy/.env
 
@@ -160,24 +156,7 @@ bun dev
 
 This will start the frontend on [http://localhost:3000](http://localhost:3000).
 
-## **4. Running the Backend**
-
-In a separate terminal:
-
-```bash
-# Navigate to backend directory
-cd backend
-
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Start the backend server
-uvicorn main:app --reload
-```
-
-This will start the backend on [http://localhost:8000](http://localhost:8000).
-
-## **5. Running the Eliza Agent**
+## **4. Running the Eliza Agent**
 
 In a new terminal window:
 
@@ -188,7 +167,7 @@ pnpm build
 pnpm start --character="characters/crypto-sage.json"
 ```
 
-## **6. Running the ZerePy Agent**
+## **5. Running the ZerePy Agent**
 
 Follow the steps here to use the official installation: https://python-poetry.org/docs/#installing-with-the-official-installer
 
@@ -210,7 +189,6 @@ poetry run python main.py --server
 ## 🌐 Access Points
 
 - Frontend: [http://localhost:3000](http://localhost:3000)
-- Backend API: [http://localhost:8000](http://localhost:3000/api)
 - ZerePy Agent: [http://localhost:8000](http://localhost:8000)
 - Eliza Agent: [http://localhost:8000](http://localhost:3001)
 

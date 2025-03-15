@@ -29,7 +29,7 @@ export const useTokenGeneratingService = () => {
         },
 
         body: JSON.stringify({
-          model_name: "black-forest-labs/FLUX.1-schnell",
+          model: "black-forest-labs/FLUX.1-schnell",
           prompt: prompt,
           num_steps: 4,
           guidance_scale: 3.5,
@@ -39,14 +39,14 @@ export const useTokenGeneratingService = () => {
         }),
       });
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         throw new Error("Failed to generate image");
       }
-
+    
       const { data } = await response.json();
-      //console.log("data", data);
-      const imageBase64 = data.image_file;
-
+      // console.log("data", data);
+      const imageBase64 = data[0].b64_json;
+      // console.log("imageBase64", imageBase64);
       // For browser context, also create a blob URL
       if (typeof window !== "undefined") {
         // Convert base64 to binary
