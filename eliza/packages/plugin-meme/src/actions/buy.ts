@@ -113,16 +113,50 @@ export const buyAction: Action = {
         elizaLogger.debug("Buy detail:", buyDetail);
 
         if (buyDetail.amount && buyDetail.tokenAddress) {
-            _callback({
-                text: `Buying ${buyDetail.amount} ${buyDetail.tokenAddress}`,
-                content: {
+            const response = await fetch(
+                "http://localhost:3000/api/memecoin/buy-for-user",
+                {
+                    method: "POST",
+                    body: JSON.stringify({
+                        amount: buyDetail.amount,
+                        tokenAddress: buyDetail.tokenAddress,
+                    }),
+                }
+            );
+
+            const transactionData = await response.json();
+            elizaLogger.debug("Transaction data:", transactionData);
+
+            if (transactionData.success) {
+                _callback({
                     text: `Buying ${buyDetail.amount} ${buyDetail.tokenAddress}`,
+                    content: {
+                        text: `Buying ${buyDetail.amount} ${buyDetail.tokenAddress}`,
+                        transaction: transactionData.transaction,
+                        user: "Sage",
+                    },
+                });
+                return true;
+            } else {
+                _callback({
+                    text: transactionData.error,
+                    content: {
+                        text: transactionData.error,
+                        user: "Sage",
+                    },
+                });
+                return false;
+            }
+        } else {
+            _callback({
+                text: `I'm sorry, I couldn't find the amount or token address in the message. Please try again.`,
+                content: {
+                    text: `I'm sorry, I couldn't find the amount or token address in the message. Please try again.`,
+                    user: "Sage",
                 },
             });
-            return true;
+            return false;
         }
-
-        return false;
     },
 
     examples: [
