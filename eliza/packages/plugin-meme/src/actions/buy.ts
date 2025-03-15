@@ -127,6 +127,8 @@ export const buyAction: Action = {
             const transactionData = await response.json();
             elizaLogger.debug("Transaction data:", transactionData);
 
+            transactionData.transactionType = "buy";
+
             if (transactionData.success) {
                 _callback({
                     text: `Buying ${buyDetail.amount} ${buyDetail.tokenAddress}`,

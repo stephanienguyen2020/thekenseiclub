@@ -133,6 +133,8 @@ export const swapAction: Action = {
             const transactionData = await response.json();
             elizaLogger.debug("Transaction data:", transactionData);
 
+            transactionData.transactionType = "swap";
+
             if (transactionData.success) {
                 _callback({
                     text: `Swapping ${swapDetail.source_amount} ${swapDetail.source_token} for ${swapDetail.destination_token}`,
