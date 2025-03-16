@@ -33,10 +33,10 @@ Contracts on testnet:
 ## 🎯 Key Features
 ### 1. Sonic Tailored Chatbot
 - An AI chatbot specialized in Sonic Labs queries, leveraging Retrieval-Augmented Generation (RAG) for real-time, accurate responses.
-- Ask anything about Sonic, including "What Makes Sonic Unique," "Fee Monetization (FeeM) Mechanism on Sonic: Incentive Innovation in the Blockchain Ecosystem," etc.
+- Ask anything about Sonic, including "What Makes Sonic Unique?," "Fee Monetization (FeeM) Mechanism on Sonic: Incentive Innovation in the Blockchain Ecosystem," etc.
 - Ask questions like:
   - "What is Sonic Gateway?"
-  - "How does Sonic boost transaction throughput from 2,000 TPS to 10,000 TPS"
+  - "How does Sonic boost transaction throughput from 2,000 TPS to 10,000 TPS?"
   - "How does Sonic’s consensus mechanism integrate Asynchronous Byzantine Fault Tolerance?"
 
 ### 2. 🚀 Interactive Memecoin Launchpad with Anti-Rug Mechanism
