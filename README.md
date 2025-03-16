@@ -1,4 +1,4 @@
-# 🚀 HyperSonic - BEST MEME COIN PLAYGOUND ON SONIC 
+# 🚀 HyperSonic – The Ultimate AI-Powered Meme Coin Hub on Sonic Labs!**
 
 Your all-in-one decentralized hub for meme coin innovation—factory, marketplace, and prediction market—exclusively on Sonic Labs.
 
@@ -9,7 +9,6 @@ HyperSonic transforms market predictions, token launches, research, trading, and
 ## 🚀 Contract Address
 
 Sonic Mainnet
-
 
 - **Network name**: Sonic
 - **RPC URL**: https://rpc.soniclabs.com
@@ -32,42 +31,50 @@ Contracts on testnet:
 - **Bookie Bet**: 0xd1b6BEa5A3b3dd4836100f5C55877c59d4666569
 
 ## 🎯 Key Features
-
-### 1. 🎲 Betting Marketplace
-
-- Place bets on meme coin trends, price movements, and crypto events
-- Web interface and Twitter integration (@HyperSonic46406)
-- Transparent on-chain execution
-- Smart contract-secured fund management
-- Category-based filtering and easy stake positioning
+### 1. Sonic Tailored Chatbot
+- An AI chatbot specialized in Sonic Labs queries, leveraging Retrieval-Augmented Generation (RAG) for real-time, accurate responses.
+- Ask anything about Sonic, including "What Makes Sonic Unique," "Fee Monetization (FeeM) Mechanism on Sonic: Incentive Innovation in the Blockchain Ecosystem," etc.
+- Ask questions like:
+  - "What is Sonic Gateway?"
+  - "How does Sonic boost transaction throughput from 2,000 TPS to 10,000 TPS"
+  - "How does Sonic’s consensus mechanism integrate Asynchronous Byzantine Fault Tolerance?"
 
 ### 2. 🚀 Interactive Memecoin Launchpad with Anti-Rug Mechanism
 
 - AI-powered token generation and deployment
 - Fair launch mechanics with anti-rug pull protection
-- 10-day linear vesting schedule
+- 10-day linear vesting schedule and 1 month of liquidity locking to prevent rug
 - Custom bonding curve for sustainable fundraising
 - Automated liquidity management, enforcing liquidity locks to prevent token creators from exiting early.
-- Launch via web interface, chatbot, or Twitter by only providing an interesting joke or meme ideas.
+- Easily launch tokens via web, chatbot, or Twitter—just submit a joke or meme idea!
+- Buy and swap tokens effortlessly through chat—just a few clicks to confirm transactions
 
-### 3. 🤖 Multi-Agent AI Framework
+### 3. 🎲 Betting Marketplace
+
+- Place bets on meme coin trends, price movements, and crypto events
+- Web interface and Twitter integration (@HyperSonic46406)
+- Fully transparent, on-chain execution for trustless betting
+- Smart contract-secured fund management
+- Category-based filtering and easy stake positioning
+  
+### 4. 🤖 Multi-Agent AI Framework
 
 - News Agent: Real-time crypto news monitoring
 - Token Analysis Agent: Market trend analysis
-- Price Prediction Agent: Allora-powered forecasting. Refined template to detect topic id based on response from fetchAllTopics() in allora sdk
+- Price Prediction Agent: Allora-powered AI forecasts. Optimized to detect topic IDs from fetchAllTopics() in the Allora SDK
 - Social Sentiment Agent: Cross-platform sentiment analysis
 - Search Agent: New token discovery
 - Swap Agent: Optimal liquidity pool routing
 - Whale Watch Agent: Large-scale transaction monitoring
-- Twitter Agent: Social media integration
+- Twitter Agent: AI-driven social engagement on X, posting and interacting on meme coin trends in real time
 
-### 4. 📢 AutoShill (Powered by Zerepy)
+### 5. 📢 AutoShill (Powered by Zerepy)
 
 - Automated viral tweet generation – Crafts engaging and high-impact tweets to maximize visibility.
 - Trending discussion engagement – Identifies and participates in relevant trending topics to boost reach.
 - Dynamic social media presence management – Maintains a consistent and interactive brand presence.
 - Smart reply system – Responds intelligently to discussions, ensuring organic engagement.
-- Anti-bot detection compliance – Ensures tweets are structured to avoid detection and flagging by X.
+- Anti-bot detection compliance – Ensures tweets comply with X’s detection systems to prevent flagging
 - Customizable shill strategies – Allows users to define parameters for targeted audience engagement.
 - Seamless API integration – Easily connects with existing platforms for automated execution.
 
