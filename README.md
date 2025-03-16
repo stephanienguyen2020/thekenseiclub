@@ -1,4 +1,4 @@
-# 🚀 HyperSonic – The Ultimate AI-Powered Meme Coin Hub on Sonic Labs!**
+# 🚀 **HyperSonic – The Ultimate AI-Powered Meme Coin Hub on Sonic Labs!**
 
 Your all-in-one decentralized hub for meme coin innovation—factory, marketplace, and prediction market—exclusively on Sonic Labs.
 
