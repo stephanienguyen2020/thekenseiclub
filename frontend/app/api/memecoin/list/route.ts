@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTokens, getTokensByCreator } from "@/services/memecoin-launchpad";
+import { getTokensByCreator } from "@/services/memecoin-launchpad";
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const createdBy = searchParams.get('created_by');
 
-    if (!createdBy) {
-      return NextResponse.json(
-        { error: "Missing required 'created_by' parameter" },
-        { status: 400 }
-      );
-    }
-
-    const tokens = await getTokensByCreator(createdBy);
+    // Get all tokens if createdBy is not provided, otherwise get tokens by creator
+    const tokens = await getTokensByCreator(createdBy || undefined);
 
     return NextResponse.json({
       success: true,

@@ -4,7 +4,7 @@ import { RagService } from '@/services/RagService';
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { query, limit } = body;
+        const { query, limit, collection } = body;
 
         if (!query) {
             return NextResponse.json(
@@ -16,12 +16,17 @@ export async function POST(req: NextRequest) {
         const ragService = new RagService();
         await ragService.connect();
 
-        const results = await ragService.searchSimilarDocuments(query, limit);
+        const results = await ragService.searchSimilarDocuments(
+            query, 
+            limit,
+            collection || undefined
+        );
         await ragService.disconnect();
 
         return NextResponse.json({
             success: true,
-            results
+            results,
+            collection: collection || 'documents'
         });
 
     } catch (error) {

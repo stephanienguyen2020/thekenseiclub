@@ -163,8 +163,7 @@ export async function createToken(
     if (receipt.status === 1) {
       return { success: true, imageURL: imageIpfsHash };
     } else {
-      if (imageIpfsHash) await unPinFromIPFS(imageIpfsHash);
-      if (metadataURI) await unPinFromIPFS(metadataURI);
+      if (imageIpfsHash && metadataURI) await unPinFromIPFS(imageIpfsHash, metadataURI);
       return { success: false, error: "Transaction failed" };
     }
   } catch (error) {
@@ -473,11 +472,11 @@ export async function getPurchasedTokens(): Promise<Token[]> {
 }
 
 /**
- * Get tokens created by a specific address
- * @param creatorAddress The address of the token creator
- * @returns Array of tokens created by the specified address
+ * Get all tokens or tokens created by a specific address
+ * @param creatorAddress Optional address of the token creator
+ * @returns Array of tokens, either all tokens or those created by the specified address
  */
-export async function getTokensByCreator(creatorAddress: string): Promise<Token[]> {
+export async function getTokensByCreator(creatorAddress?: string): Promise<Token[]> {
   try {
     // Connect to the provider
     const provider = new ethers.JsonRpcProvider(
@@ -505,8 +504,8 @@ export async function getTokensByCreator(creatorAddress: string): Promise<Token[
     for (let i = 0; i < totalTokens; i++) {
       const tokenSale: TokenSale = await factoryContract.getTokenSale(i);
 
-      // Check if the token was created by the specified address
-      if (tokenSale.creator.toLowerCase() === creatorAddress.toLowerCase()) {
+      // If creatorAddress is provided, filter by creator, otherwise include all tokens
+      if (!creatorAddress || tokenSale.creator.toLowerCase() === creatorAddress.toLowerCase()) {
         const metadata = await fetchMetadata(tokenSale.metadataURI);
         tokens.push({
           token: tokenSale.token,
@@ -524,7 +523,7 @@ export async function getTokensByCreator(creatorAddress: string): Promise<Token[
 
     return tokens.reverse();
   } catch (error) {
-    console.error("Error getting tokens by creator:", error);
+    console.error("Error getting tokens:", error);
     return [];
   }
 }

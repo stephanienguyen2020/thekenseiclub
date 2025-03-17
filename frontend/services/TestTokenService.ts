@@ -244,8 +244,7 @@ export const useTestTokenService = () => {
         if (receipt.status === 1) {
           return { success: true, imageURL: imageIpfsHash };
         } else {
-          if (imageIpfsHash) await unPinFromIPFS(imageIpfsHash);
-          if (metadataURI) await unPinFromIPFS(metadataURI);
+          if (imageIpfsHash && metadataURI) await unPinFromIPFS(imageIpfsHash, metadataURI);
           return { success: false, error: "Transaction failed" };
         }
       } catch (error) {
