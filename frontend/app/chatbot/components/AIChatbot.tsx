@@ -55,8 +55,8 @@ import {
 import { toast, useToast } from "@/hooks/use-toast";
 import { NewsTickerWidget } from "./NewsTickerWidget";
 import { ThinkingDots } from "@/components/ui/thinking-dots";
-import { useWalletClient, usePublicClient } from 'wagmi';
-import { parseEther } from 'viem';
+import { useWalletClient, usePublicClient } from "wagmi";
+import { parseEther } from "viem";
 
 // Map of icon components
 const icons = {
@@ -493,7 +493,7 @@ function AIChatbotContent() {
         description: "Please connect your wallet first",
         variant: "destructive",
       });
-      throw new Error("Wallet not connected");
+      return { error: new Error("Wallet not connected") };
     }
 
     if (!publicClient) {
@@ -502,17 +502,17 @@ function AIChatbotContent() {
         description: "Network client not available",
         variant: "destructive",
       });
-      throw new Error("Network client not available");
+      return { error: new Error("Network client not available") };
     }
 
     // Format the transaction data
     const formattedTx = {
       to: transaction.to as `0x${string}`,
       data: transaction.data as `0x${string}`,
-      value: BigInt(transaction.value || '0'),
+      value: BigInt(transaction.value || "0"),
       ...(transaction.gas ? { gas: BigInt(transaction.gas) } : {}),
       ...(transaction.nonce ? { nonce: Number(transaction.nonce) } : {}),
-      ...(transaction.chainId ? { chainId: Number(transaction.chainId) } : {})
+      ...(transaction.chainId ? { chainId: Number(transaction.chainId) } : {}),
     };
 
     try {
@@ -522,19 +522,19 @@ function AIChatbotContent() {
       // Wait for transaction confirmation with timeout
       await new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
-          reject(new Error('Transaction confirmation timeout'));
-        }, 30000); // 30 second timeout
+          reject(new Error("Transaction confirmation timeout"));
+        }, 30000);
 
         const checkReceipt = async () => {
           try {
             const receipt = await publicClient.getTransactionReceipt({ hash });
             if (receipt) {
-              if (receipt.status === 'success') {
+              if (receipt.status === "success") {
                 clearTimeout(timeout);
                 resolve(receipt);
               } else {
                 clearTimeout(timeout);
-                reject(new Error('Transaction failed'));
+                reject(new Error("Transaction failed"));
               }
             } else {
               setTimeout(checkReceipt, 2000);
@@ -546,63 +546,31 @@ function AIChatbotContent() {
         checkReceipt();
       });
 
-      // Update UI based on transaction type
-      if (transaction.transactionType === 'swap') {
-        queryClient.setQueryData(
-          ["messages", agentId],
-          (old: ContentWithUser[] = []) => [
-            ...old,
-            {
-              text: `Swap completed successfully! View on [SonicScan](https://testnet.sonicscan.org/tx/${hash})`,
-              user: "Sage",
-              createdAt: Date.now()
-            }
-          ]
-        );
-      } else if (transaction.transactionType === 'buy') {
-        queryClient.setQueryData(
-          ["messages", agentId],
-          (old: ContentWithUser[] = []) => [
-            ...old,
-            {
-              text: `Purchase completed successfully! View on [SonicScan](https://testnet.sonicscan.org/tx/${hash})`,
-              user: "Sage",
-              createdAt: Date.now()
-            }
-          ]
-        );
-      } else if (transaction.transactionType === 'create') {
-        queryClient.setQueryData(
-          ["messages", agentId],
-          (old: ContentWithUser[] = []) => [
-            ...old,
-            {
-              text: `Token created successfully! View on [SonicScan](https://testnet.sonicscan.org/tx/${hash})`,
-              user: "Sage",
-              createdAt: Date.now()
-            }
-          ]
-        );
+      return { hash };
+    } catch (error: any) {
+      console.error("Transaction error:", error);
+
+      // Handle user rejection specifically
+      if (
+        error.message.includes("rejected") ||
+        error.message.includes("denied") ||
+        error.code === 4001 // MetaMask rejection code
+      ) {
+        toast({
+          title: "Transaction Cancelled",
+          description: "You cancelled the transaction",
+          variant: "destructive",
+        });
+        return { error: new Error("Transaction cancelled by user") };
       }
 
-      return hash;
-    } catch (error: any) {
-      console.error('Transaction error:', error);
-      
-      // Add error message to chat
-      queryClient.setQueryData(
-        ["messages", agentId],
-        (old: ContentWithUser[] = []) => [
-          ...old,
-          {
-            text: `Transaction failed: ${error.message || 'Unknown error'}`,
-            user: "Sage",
-            createdAt: Date.now()
-          }
-        ]
-      );
-      
-      throw error;
+      // Handle other errors
+      toast({
+        title: "Transaction Failed",
+        description: error.message || "Transaction failed",
+        variant: "destructive",
+      });
+      return { error };
     }
   };
 
@@ -619,9 +587,9 @@ function AIChatbotContent() {
     if (message.transaction) {
       console.log("Rendering transaction card", message.transaction);
       return (
-        <TransactionCard 
+        <TransactionCard
           key={message.createdAt}
-          transaction={message.transaction} 
+          transaction={message.transaction}
           onSubmit={() => handleTransactionSubmit(message.transaction!)}
         />
       );
@@ -630,9 +598,7 @@ function AIChatbotContent() {
     // Default text rendering
     return (
       <div className="prose prose-invert">
-        <ReactMarkdown>
-          {message.text}
-        </ReactMarkdown>
+        <ReactMarkdown>{message.text}</ReactMarkdown>
       </div>
     );
   };

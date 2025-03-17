@@ -143,6 +143,7 @@ export const buyAction: Action = {
                         action: "BUY_TOKENS_RESPONSE",
                         source: _message.content?.source,
                         transaction: transactionData.transaction, // Attach JSON data
+                        user: "Sage"
                     } as Content,
                 };
 
@@ -153,20 +154,14 @@ export const buyAction: Action = {
             } else {
                 _callback({
                     text: transactionData.error,
-                    content: {
-                        text: transactionData.error,
-                    },
-                    user: "Sage",
+                    user: "Sage"
                 });
-                return true;
+                return false;
             }
         } else {
             _callback({
                 text: `I'm sorry, I couldn't find the amount or token address in the message. Please try again.`,
-                content: {
-                    text: `I'm sorry, I couldn't find the amount or token address in the message. Please try again.`,
-                    user: "Sage",
-                },
+                user: "Sage"
             });
             return false;
         }

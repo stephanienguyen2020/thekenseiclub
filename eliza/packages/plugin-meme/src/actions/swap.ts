@@ -149,6 +149,7 @@ export const swapAction: Action = {
                         action: "SWAP_TOKENS_RESPONSE",
                         source: _message.content?.source,
                         transaction: transactionData.transaction, // Attach JSON data
+                        user: "Sage"
                     } as Content,
                 };
 
@@ -159,10 +160,7 @@ export const swapAction: Action = {
             } else {
                 _callback({
                     text: transactionData.error,
-                    content: {
-                        text: transactionData.error,
-                        user: "Sage",
-                    },
+                    user: "Sage",
                 });
                 return true;
             }
