@@ -17,6 +17,7 @@
             "likeRate": 0.6
         },
         "secrets": {},
+        "ragKnowledge": true,
         "voice": {
             "model": "en_US-male-medium"
         }
@@ -227,5 +228,11 @@
     "allowedActions": {
         "buy": true,
         "execute_transactions": true
-    }
+    },
+    "knowledge": [
+        {
+            "directory": "rag_knowledge",
+            "shared": true
+        }
+    ]
 }
