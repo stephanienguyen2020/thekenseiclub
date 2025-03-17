@@ -62,6 +62,7 @@ Contracts on testnet:
 - News Agent: Real-time crypto news monitoring
 - Token Analysis Agent: Market trend analysis
 - Price Prediction Agent: Allora-powered AI forecasts. Optimized to detect topic IDs from fetchAllTopics() in the Allora SDK
+- Dex Flow Agent: Enables seamless token buys/swaps with Sonic, requiring only the token address
 - Social Sentiment Agent: Cross-platform sentiment analysis
 - Search Agent: New token discovery
 - Swap Agent: Optimal liquidity pool routing
