@@ -11,34 +11,29 @@ export async function POST(req: NextRequest) {
         console.log('I am here');
         const ragService = new RagService();
         await ragService.connect();
-        console.log('file', file);
-        console.log('metadata', metadata);
-        console.log('text', text);
-        console.log('collection', collection);
-        // if (file) {
-        //     console.log('file', file);
-        //     // Handle file upload
-        //     const buffer = Buffer.from(await file.arrayBuffer());
-        //     await ragService.addDocument(
-        //         buffer, 
-        //         metadata ? JSON.parse(metadata as string) : {}, 
-        //         file.name,
-        //         collection || undefined
-        //     );
-        // } else if (text) {
-        //     // Handle text input
-        //     await ragService.addDocument(
-        //         text as string,
-        //         metadata ? JSON.parse(metadata as string) : {},
-        //         undefined,
-        //         collection || undefined
-        //     );
-        // } else {
-        //     return NextResponse.json(
-        //         { error: 'Either file or text is required' },
-        //         { status: 400 }
-        //     );
-        // }
+        if (file) {
+            // Handle file upload
+            const buffer = Buffer.from(await file.arrayBuffer());
+            await ragService.addDocument(
+                buffer, 
+                metadata ? JSON.parse(metadata as string) : {}, 
+                file.name,
+                collection || undefined
+            );
+        } else if (text) {
+            // Handle text input
+            await ragService.addDocument(
+                text as string,
+                metadata ? JSON.parse(metadata as string) : {},
+                undefined,
+                collection || undefined
+            );
+        } else {
+            return NextResponse.json(
+                { error: 'Either file or text is required' },
+                { status: 400 }
+            );
+        }
 
         await ragService.disconnect();
 

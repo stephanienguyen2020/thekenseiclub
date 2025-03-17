@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { MongoClient, Collection } from 'mongodb';
 import dotenv from 'dotenv';
-import pdfParse from 'pdf-parse';
+import * as pdfParse from 'pdf-parse';
 
 dotenv.config();
 
@@ -32,7 +32,7 @@ export class RagService {
         });
 
         // Initialize MongoDB
-        this.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ragDatabase';
+        this.MONGODB_URI = process.env.NEXT_PUBLIC_MONGODB_URI || 'mongodb://localhost:27017/ragDatabase';
         this.mongoClient = new MongoClient(this.MONGODB_URI);
     }
 
@@ -71,11 +71,7 @@ export class RagService {
     private async processPDF(file: Buffer): Promise<TextChunk[]> {
         try {
             // Process PDF directly from buffer
-            const data = await pdfParse(file, {
-                pagerender: function(pageData: any) {
-                    return pageData.getTextContent();
-                }
-            });
+            const data = await pdfParse.default(file);
             
             if (!data || !data.text) {
                 throw new Error('Failed to extract text from PDF');
@@ -89,7 +85,15 @@ export class RagService {
                 // Skip empty pages
                 if (!pageContent.trim()) return;
 
-                const pageChunks = this.chunkText(pageContent.trim(), pageNumber + 1);
+                // Clean up the text content
+                const cleanContent = pageContent
+                    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+                    .replace(/\[object Object\]/g, '') // Remove any [object Object] artifacts
+                    .trim();
+
+                if (!cleanContent) return;
+
+                const pageChunks = this.chunkText(cleanContent, pageNumber + 1);
                 allChunks = allChunks.concat(pageChunks);
             });
 
@@ -190,6 +194,7 @@ export class RagService {
                 if (!fileName) {
                     throw new Error('Filename is required for file processing');
                 }
+                console.log('textOrFile', textOrFile.length);
                 // Process file content
                 chunks = await this.processFileContent(textOrFile, fileName);
             } else if (typeof textOrFile === 'string') {
@@ -205,14 +210,13 @@ export class RagService {
             if (chunks.length === 0) {
                 throw new Error('No content chunks generated');
             }
-
             // Process each chunk
             for (const chunk of chunks) {
                 if (!chunk.text.trim()) {
                     console.warn('Skipping empty chunk');
                     continue;
                 }
-
+                console.log('chunk.text', chunk.text);
                 // Generate embedding using OpenAI
                 const response = await this.openai.embeddings.create({
                     model: "text-embedding-ada-002",
