@@ -47,7 +47,7 @@ export const launchTokenAction: Action = {
 
         try {
             const res = await fetch(
-                "http://localhost:3000/api/memecoin/create-for-user",
+                "http://localhost:3000/api/memecoin/create-for-user-tag",
                 {
                     method: "POST",
                     headers: {
@@ -66,28 +66,35 @@ export const launchTokenAction: Action = {
             }
 
             const tokenResponse = await res.json();
-            elizaLogger.log("Token response:", tokenResponse);
-            description = `Successfully launched token. Please visit ${tokenResponse.redirectUrl} to view your launched token`;
+            if (tokenResponse.success) {
+                elizaLogger.log("Token response:", tokenResponse);
+                _callback({
+                    text: `Launching token with description: ${description}`,
+                    action: "LAUNCH_TOKEN_RESPONSE",
+                    source: _message.content?.source,
+                    user: "Sage",
+                    transaction: tokenResponse.transaction,
+                });
+                return true;
+            } else {
+                elizaLogger.error(
+                    "Failed to launch token:",
+                    tokenResponse.error
+                );
+                _callback({
+                    text: tokenResponse.error,
+                    user: "Sage",
+                });
+                return false;
+            }
         } catch (error) {
             elizaLogger.error("Failed to launch token:", error);
+            _callback({
+                text: "Failed to launch token. Please try again later.",
+                user: "Sage",
+            });
             return false;
         }
-        const newMemory: Memory = {
-            userId: _message.agentId,
-            agentId: _message.agentId,
-            roomId: _message.roomId,
-            content: {
-                text: description,
-                action: "LAUNCH_TOKEN_RESPONSE",
-                source: _message.content?.source,
-                user: "Sage",
-            } as Content,
-        };
-
-        await _runtime.messageManager.createMemory(newMemory);
-
-        _callback(newMemory.content);
-        return true;
     },
     examples: [
         [

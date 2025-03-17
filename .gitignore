@@ -12,7 +12,6 @@ OAI_CONFIG_LIST.json
 /bin/*
 /static/*
 *.crt.pem
-*.pdf
 /output/*
 /__pycache__/*
 */__pycache__/*

@@ -12,7 +12,7 @@ import {
 } from "@elizaos/core";
 import { z } from "zod";
 
-export const buyTemplate = `You are an AI assistant specialized in processing cryptocurrency swap requests. Your task is to extract specific information from user messages and format it into a structured JSON response.
+export const swapTemplate = `You are an AI assistant specialized in processing cryptocurrency swap requests. Your task is to extract specific information from user messages and format it into a structured JSON response.
 
 First, review the recent messages from the conversation:
 
@@ -91,7 +91,7 @@ export const swapAction: Action = {
         // get the context aka token address and amount
         const context = composeContext({
             state: updatedState,
-            template: buyTemplate,
+            template: swapTemplate,
         });
 
         const schema = z.object({
@@ -153,6 +153,18 @@ export const swapAction: Action = {
                     },
                 }
             );
+
+            if (!response.ok) {
+                elizaLogger.error(
+                    "Failed to swap tokens:",
+                    response.statusText
+                );
+                _callback({
+                    text: "Failed to swap tokens. Please try again later.",
+                    user: "Sage",
+                });
+                return false;
+            }
 
             const transactionData = await response.json();
             elizaLogger.debug("Transaction data:", transactionData);

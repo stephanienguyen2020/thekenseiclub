@@ -621,7 +621,7 @@ export class TwitterInteractionClient {
                     })
                 );
                 const res = await fetch(
-                    "http://localhost:3000/api/memecoin/create-for-user",
+                    "http://localhost:3000/api/memecoin/create-for-user-tag",
                     {
                         method: "POST",
                         headers: {
