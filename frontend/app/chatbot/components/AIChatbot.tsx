@@ -121,7 +121,7 @@ type ExtraContentFields = {
     articles: News[];
   };
   walletId?: string;
-  transaction?: Transaction;
+  transaction?: Transaction[];
 };
 
 // Export the Transaction type
@@ -131,7 +131,7 @@ export type Transaction = {
   value: string;
   estimatedOutput?: string;
   tokenDetails?: TokenDetails;
-  transactionType: "swap" | "buy" | "create";
+  transactionType: "swap" | "buy" | "create" | "approve";
   gas?: string;
   nonce?: string;
   chainId?: string;
@@ -585,14 +585,48 @@ function AIChatbotContent() {
     }
 
     if (message.transaction) {
-      console.log("Rendering transaction card", message.transaction);
-      return (
-        <TransactionCard
-          key={message.createdAt}
-          transaction={message.transaction}
-          onSubmit={() => handleTransactionSubmit(message.transaction!)}
-        />
-      );
+      console.log("message.transaction", message.transaction);
+      // Check if this is a token swap (approve + swap)
+      if (message.transaction.length === 2 &&
+          message.transaction[0].transactionType === 'approve' &&
+          message.transaction[1].transactionType === 'swap') {
+        
+        const approveTransaction = message.transaction[0];
+        const swapTransaction = message.transaction[1];
+        console.log("approveTransaction", approveTransaction);
+        console.log("swapTransaction", swapTransaction);
+        // For token swaps, show one card but handle both transactions
+        return (
+          <TransactionCard
+            key={message.createdAt}
+            transaction={message.transaction[1]} // Show the swap details
+            onSubmit={async () => {
+              // First do the approval
+              const approveResult = await handleTransactionSubmit(approveTransaction);
+              if (approveResult.error) {
+                return approveResult;
+              }
+              
+              // If approval was successful, do the swap
+              const swapResult = await handleTransactionSubmit(swapTransaction);
+              return swapResult;
+            }}
+          />
+        );
+      }
+      
+      // For other cases (single transaction)
+      if (message.transaction.length === 1) {
+        const transaction = message.transaction[0];
+        console.log("Rendering transaction card for length 1", transaction);
+        return (
+          <TransactionCard
+            key={message.createdAt}
+            transaction={transaction}
+            onSubmit={() => handleTransactionSubmit(transaction)}
+          />
+        );
+      } 
     }
 
     // Default text rendering
