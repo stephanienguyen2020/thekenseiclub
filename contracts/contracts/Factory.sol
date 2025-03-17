@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.28;
 
 import {Token} from "./Token.sol";
 import "./NativeLiquidityPool.sol";
@@ -14,6 +14,7 @@ contract Factory {
 
     uint256 public totalTokens;
     address[] public tokens;
+    //mapping(string => address) public tokenBySymbol;
     mapping(address => TokenSale) public tokenToSale;
     mapping(address => mapping(address => uint256)) public userTokenContributions;
     mapping(address => mapping(address => uint256)) public userEthContributions;

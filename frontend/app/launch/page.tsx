@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { createToken } from "@/services/memecoin-launchpad";
 import { generateTokenConcept } from "@/app/lib/nebula";
 import { useTestTokenService } from "@/services/TestTokenService";
+import { useTokenGeneratingService } from "@/services/TokenGeneratingService";
 
 interface TokenDetails {
   name: string;
@@ -64,6 +65,7 @@ export default function LaunchPage() {
   );
   const addToken = useTokenStore((state) => state.addToken);
   const testTokenService = useTestTokenService();
+  const { generateTokenWithAI } = useTokenGeneratingService();
 
   const handleImageSelect = (file: File) => {
     setError("");
@@ -86,35 +88,14 @@ export default function LaunchPage() {
       setError("");
       setLoadingAI(true);
 
-      const url = "https://api.nebulablock.com/api/v1/images/generation";
-
-      const response = await fetch(url, {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_NEBULA_API_KEY}`,
-        },
-
-        body: JSON.stringify({
-          model_name: "black-forest-labs/FLUX.1-schnell",
-          prompt: inputPrompt,
-          num_steps: 4,
-          guidance_scale: 3.5,
-          seed: -1,
-          width: 1024,
-          height: 1024,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to generate image");
-
-      const { data } = await response.json();
-      console.log("data", data);
-      const imageBase64 = data.image_file;
+      const result = await generateTokenWithAI(inputPrompt);
+      
+      if (!result.imageBase64) {
+        throw new Error("No image data received");
+      }
 
       // Convert base64 to binary
-      const byteCharacters = atob(imageBase64);
+      const byteCharacters = atob(result.imageBase64);
       const byteNumbers = new Array(byteCharacters.length);
 
       for (let i = 0; i < byteCharacters.length; i++) {
@@ -129,9 +110,6 @@ export default function LaunchPage() {
       // Create File object from blob
       const file = new File([blob], "ai-generated.png", { type: "image/png" });
 
-      // console.log("file", file);
-
-      // setAiImageUrl(data.url);
       setImageFile(file);
       setPreviewUrl(URL.createObjectURL(file));
     } catch (error) {
@@ -151,35 +129,14 @@ export default function LaunchPage() {
       setError("");
       setLoadingAI(true);
 
-      const url = "https://api.nebulablock.com/api/v1/images/generation";
-
-      const response = await fetch(url, {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_NEBULA_API_KEY}`,
-        },
-
-        body: JSON.stringify({
-          model_name: "black-forest-labs/FLUX.1-schnell",
-          prompt: prompt,
-          num_steps: 4,
-          guidance_scale: 3.5,
-          seed: -1,
-          width: 1024,
-          height: 1024,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to generate image");
-
-      const { data } = await response.json();
-      console.log("data", data);
-      const imageBase64 = data.image_file;
+      const result = await generateTokenWithAI(prompt);
+      
+      if (!result.imageBase64) {
+        throw new Error("No image data received");
+      }
 
       // Convert base64 to binary
-      const byteCharacters = atob(imageBase64);
+      const byteCharacters = atob(result.imageBase64);
       const byteNumbers = new Array(byteCharacters.length);
 
       for (let i = 0; i < byteCharacters.length; i++) {
@@ -194,9 +151,6 @@ export default function LaunchPage() {
       // Create File object from blob
       const file = new File([blob], "ai-generated.png", { type: "image/png" });
 
-      // console.log("file", file);
-
-      // setAiImageUrl(data.url);
       setImageFile(file);
       setPreviewUrl(URL.createObjectURL(file));
     } catch (error) {

@@ -57,6 +57,7 @@ import { NewsTickerWidget } from "./NewsTickerWidget";
 import { ThinkingDots } from "@/components/ui/thinking-dots";
 import { useWalletClient, usePublicClient } from "wagmi";
 import { parseEther } from "viem";
+import { unPinFromIPFS } from "@/app/lib/pinata";
 
 // Map of icon components
 const icons = {
@@ -617,15 +618,30 @@ function AIChatbotContent() {
       
       // For other cases (single transaction)
       if (message.transaction.length === 1) {
-        const transaction = message.transaction[0];
-        console.log("Rendering transaction card for length 1", transaction);
-        return (
-          <TransactionCard
-            key={message.createdAt}
-            transaction={transaction}
-            onSubmit={() => handleTransactionSubmit(transaction)}
-          />
-        );
+        const transaction = message.transaction[0]; //create
+        if (message.transaction[0].transactionType === 'create') {
+          return(
+            <TransactionCard
+              key={message.createdAt}
+              transaction={transaction}
+              onSubmit={async () => {
+                const createResult =  await handleTransactionSubmit(transaction);
+                if (createResult.error && transaction.tokenDetails) {
+                  unPinFromIPFS(transaction.tokenDetails.imageURI, transaction.tokenDetails.metadataURI);
+                }
+                return createResult;
+              }}
+            />
+          )
+        } else{ // swap or buy
+          return (
+            <TransactionCard
+              key={message.createdAt}
+              transaction={transaction}
+              onSubmit={() => handleTransactionSubmit(transaction)}
+            />
+          );
+        }
       } 
     }
 

@@ -47,15 +47,14 @@ export const launchTokenAction: Action = {
 
         try {
             const res = await fetch(
-                "http://localhost:3000/api/memecoin/create-for-user-tag",
+                "http://localhost:3000/api/memecoin/create-for-user",
                 {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        isTwitter: false,
-                        userWalletAddress: _message.content.userWalletId,
+                        creator: _message.content.userWalletId,
                         input: description,
                     }),
                 }
