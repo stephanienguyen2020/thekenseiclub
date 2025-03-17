@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
         );
 
         let txData;
-        if (swapType === 'ETH_TO_TOKEN') {
+        if (swapType === 'SONIC_TO_TOKEN') {
             // Encode the function data for swapEthForToken
             const data = liquidityPoolInterface.encodeFunctionData('swapEthForToken', [
                 tokenAddress
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
                 value: amountInWei.toString(),
                 estimatedOutput: estimatedTokens.toString()
             };
-        } else if (swapType === 'TOKEN_TO_ETH') {
+        } else if (swapType === 'TOKEN_TO_SONIC') {
             // Encode the function data for swapTokenForEth
             const data = liquidityPoolInterface.encodeFunctionData('swapTokenForEth', [
                 tokenAddress,

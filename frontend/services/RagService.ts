@@ -85,7 +85,7 @@ export class RagService {
             const pages = data.text.split(/\f/); // Form feed character as page separator
             let allChunks: TextChunk[] = [];
 
-            pages.forEach((pageContent, pageNumber) => {
+            pages.forEach((pageContent: string, pageNumber: number) => {
                 // Skip empty pages
                 if (!pageContent.trim()) return;
 

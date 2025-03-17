@@ -43,6 +43,7 @@
     "@react-spring/web": "^9.7.5",
     "@tanstack/react-query": "^5.66.11",
     "@types/js-cookie": "^3.0.6",
+    "@types/pdf-parse": "^1.1.4",
     "async": "",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
