@@ -119,15 +119,35 @@ export const swapAction: Action = {
             swapDetail.source_token &&
             swapDetail.destination_token
         ) {
+            let body = {};
+            if (swapDetail.destination_token === "sonic") {
+                body = {
+                    amount: swapDetail.source_amount,
+                    tokenAddress: swapDetail.source_token,
+                    swapType: "TOKEN_TO_SONIC",
+                };
+            }
+            if (swapDetail.source_token === "sonic") {
+                body = {
+                    amount: swapDetail.source_amount,
+                    tokenAddress: swapDetail.destination_token,
+                    swapType: "SONIC_TO_TOKEN",
+                };
+            }
+            elizaLogger.debug("Body:", body);
+            // if body is empty, return error
+            if (Object.keys(body).length === 0) {
+                _callback({
+                    text: "Invalid swap request. Please try again.",
+                    user: "Sage",
+                });
+                return false;
+            }
             const response = await fetch(
                 "http://localhost:3000/api/memecoin/swap-for-user",
                 {
                     method: "POST",
-                    body: JSON.stringify({
-                        amount: swapDetail.source_amount,
-                        fromToken: swapDetail.source_token,
-                        toToken: swapDetail.destination_token,
-                    }),
+                    body: JSON.stringify(body),
                     headers: {
                         "Content-Type": "application/json",
                     },
@@ -140,29 +160,20 @@ export const swapAction: Action = {
             transactionData.transactionType = "swap";
 
             if (transactionData.success) {
-                const newMemory: Memory = {
-                    userId: _message.agentId,
-                    agentId: _message.agentId,
-                    roomId: _message.roomId,
-                    content: {
-                        text: `Swapping ${swapDetail.source_amount} ${swapDetail.source_token} for ${swapDetail.destination_token}`,
-                        action: "SWAP_TOKENS_RESPONSE",
-                        source: _message.content?.source,
-                        transaction: transactionData.transaction, // Attach JSON data
-                        user: "Sage"
-                    } as Content,
-                };
-
-                await _runtime.messageManager.createMemory(newMemory);
-
-                _callback(newMemory.content);
+                _callback({
+                    text: `Swapping ${swapDetail.source_amount} ${swapDetail.source_token} for ${swapDetail.destination_token}`,
+                    action: "SWAP_TOKENS_RESPONSE",
+                    source: _message.content?.source,
+                    transaction: transactionData.transaction, // Attach JSON data
+                    user: "Sage",
+                });
                 return true;
             } else {
                 _callback({
                     text: transactionData.error,
                     user: "Sage",
                 });
-                return true;
+                return false;
             }
         } else {
             _callback({
