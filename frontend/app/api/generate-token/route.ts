@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import OpenAI from "openai"
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
 })
 
 export async function POST(req: Request) {
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       response_format: { type: "json_object" },
     })
 
-    const tokenDetails = JSON.parse(completion.choices[0].message.content)
+    const tokenDetails = JSON.parse(completion.choices[0].message.content || "{}")
 
     // Then, generate an image using DALL-E
     const imageResponse = await openai.images.generate({
