@@ -16,6 +16,10 @@ export const launchTokenAction: Action = {
     similes: ["MAKE_TOKENS", "CREATE_TOKEN"],
     description: "Create a token with the given details if asked by the user.",
     validate: async (_runtime: IAgentRuntime, _message: Memory) => {
+        const backendUrl = process.env.BACKEND_URL;
+        if (!backendUrl) {
+            throw new Error("BACKEND_URL environment variable is not set");
+        }
         return true;
     },
     handler: async (
@@ -47,7 +51,7 @@ export const launchTokenAction: Action = {
 
         try {
             const res = await fetch(
-                "http://localhost:3000/api/memecoin/create-for-user",
+                `${process.env.BACKEND_URL}/api/memecoin/create-for-user`,
                 {
                     method: "POST",
                     headers: {

@@ -69,6 +69,10 @@ export const buyAction: Action = {
         "GET",
     ],
     validate: async (_runtime: IAgentRuntime) => {
+        const backendUrl = process.env.BACKEND_URL;
+        if (!backendUrl) {
+            throw new Error("BACKEND_URL environment variable is not set");
+        }
         return true;
     },
     handler: async (
@@ -115,7 +119,7 @@ export const buyAction: Action = {
 
         if (buyDetail.amount && buyDetail.tokenAddress) {
             const response = await fetch(
-                "http://localhost:3000/api/memecoin/buy-for-user",
+                `${process.env.BACKEND_URL}/api/memecoin/buy-for-user`,
                 {
                     method: "POST",
                     headers: {

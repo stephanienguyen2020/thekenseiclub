@@ -621,7 +621,7 @@ export class TwitterInteractionClient {
                     })
                 );
                 const res = await fetch(
-                    "http://localhost:3000/api/memecoin/create-for-user-tag",
+                    `${process.env.BACKEND_URL}/api/memecoin/create-for-user-tag`,
                     {
                         method: "POST",
                         headers: {
@@ -688,7 +688,7 @@ export class TwitterInteractionClient {
                 );
 
                 const res = await fetch(
-                    "http://localhost:3000/api/bets/create-for-user",
+                    `${process.env.BACKEND_URL}/api/bets/create-for-user`,
                     {
                         method: "POST",
                         headers: {
