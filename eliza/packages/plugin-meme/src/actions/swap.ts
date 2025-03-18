@@ -68,6 +68,10 @@ export const swapAction: Action = {
         "Help users purchase tokens by processing their request to buy a specific amount of a given token contract address",
     similes: ["SWAP_SONIC", "SWAP", "PURCHASE_SONIC"],
     validate: async (_runtime: IAgentRuntime) => {
+        const backendUrl = process.env.BACKEND_URL;
+        if (!backendUrl) {
+            throw new Error("BACKEND_URL environment variable is not set");
+        }
         return true;
     },
     handler: async (
@@ -144,7 +148,7 @@ export const swapAction: Action = {
                 return false;
             }
             const response = await fetch(
-                "http://localhost:3000/api/memecoin/swap-for-user",
+                `${process.env.BACKEND_URL}/api/memecoin/swap-for-user`,
                 {
                     method: "POST",
                     body: JSON.stringify(body),
