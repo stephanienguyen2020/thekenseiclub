@@ -636,7 +636,8 @@ export class TwitterInteractionClient {
                 );
 
                 if (!res.ok) {
-                    tokenResponse.text = `Error creating token, please try again later`;
+                    const errorMessage = await res.json();
+                    tokenResponse.text = errorMessage.message;
                     await sendTweet(
                         this.client,
                         tokenResponse,
@@ -661,6 +662,15 @@ export class TwitterInteractionClient {
                 return { text: "Token response", action: "NONE" };
             } catch (error) {
                 elizaLogger.error("Error creating token:", error);
+                tokenResponse.text = `Error creating token, please try again later`;
+                await sendTweet(
+                    this.client,
+                    tokenResponse,
+                    message.roomId,
+                    this.client.twitterConfig.TWITTER_USERNAME,
+                    tweet.id
+                );
+                return { text: "Token response", action: "NONE" };
             }
         }
 
@@ -735,6 +745,15 @@ export class TwitterInteractionClient {
                 return { text: "Bet response", action: "NONE" };
             } catch (error) {
                 elizaLogger.error("Error creating bet:", error);
+                betResponse.text = `Error creating bet, please try again later`;
+                await sendTweet(
+                    this.client,
+                    betResponse,
+                    message.roomId,
+                    this.client.twitterConfig.TWITTER_USERNAME,
+                    tweet.id
+                );
+                return { text: "Bet response", action: "NONE" };
             }
         }
 

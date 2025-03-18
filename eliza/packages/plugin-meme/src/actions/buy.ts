@@ -132,15 +132,6 @@ export const buyAction: Action = {
                 }
             );
 
-            if (!response.ok) {
-                elizaLogger.error("Failed to buy tokens:", response.statusText);
-                _callback({
-                    text: "Failed to buy tokens. Please try again later.",
-                    user: "Sage",
-                });
-                return false;
-            }
-
             const transactionData = await response.json();
             elizaLogger.debug("Transaction data:", transactionData);
 

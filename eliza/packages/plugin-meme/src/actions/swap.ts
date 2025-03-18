@@ -158,18 +158,6 @@ export const swapAction: Action = {
                 }
             );
 
-            if (!response.ok) {
-                elizaLogger.error(
-                    "Failed to swap tokens:",
-                    response.statusText
-                );
-                _callback({
-                    text: "Failed to swap tokens. Please try again later.",
-                    user: "Sage",
-                });
-                return false;
-            }
-
             const transactionData = await response.json();
             elizaLogger.debug("Transaction data:", transactionData);
 

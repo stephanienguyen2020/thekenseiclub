@@ -63,10 +63,6 @@ export const launchTokenAction: Action = {
                     }),
                 }
             );
-            if (!res.ok) {
-                elizaLogger.error("Failed to launch token:", res.statusText);
-                return false;
-            }
 
             const tokenResponse = await res.json();
             if (tokenResponse.success) {
