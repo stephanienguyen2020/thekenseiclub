@@ -78,6 +78,30 @@ export const TransactionCard = ({
         >
           SonicScan
         </a>
+        <br />
+        {transaction.tokenDetails && (
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Token Details</h3>
+            <ul className="space-y-1">
+              <li>
+                <p className="font-bold">Name: <span className="font-normal">{transaction.tokenDetails.name}</span></p>
+              </li>
+              <li>
+                <p className="font-bold">Symbol: <span className="font-normal">{transaction.tokenDetails.symbol}</span></p>
+              </li>
+              <li>
+                <p className="font-bold">Description: <span className="font-normal">{transaction.tokenDetails.description}</span></p>
+              </li>
+            </ul>
+            {transaction.tokenDetails.imageURI && (
+              <img 
+                src={transaction.tokenDetails.imageURI} 
+                alt="Token Logo" 
+                className="mt-3 w-32 h-32 rounded-full border border-gray-600"
+              />
+            )}
+          </div>
+        )}
       </div>
     );
   }
