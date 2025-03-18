@@ -2,36 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { ethers } from "ethers";
 import BettingABI from "@/abi/Betting.json";
 import { pinFileToIPFS } from "@/app/lib/pinata"; // Import your IPFS upload function
+import { useTokenGeneratingService } from "@/services/TokenGeneratingService";
 
 // Contract address from the BettingService
 const contractAddress = "0xd1b6BEa5A3b3dd4836100f5C55877c59d4666569";
 
 async function generateImage(prompt: string): Promise<string> {
   try {
-    const url = "https://api.nebulablock.com/api/v1/images/generation";
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_NEBULA_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model_name: "black-forest-labs/FLUX.1-schnell",
-        prompt: prompt,
-        num_steps: 4,
-        guidance_scale: 3.5,
-        seed: -1,
-        width: 1024,
-        height: 1024,
-      }),
-    });
-
-    if (!response.ok) throw new Error("Failed to generate image");
-    const { data } = await response.json();
-    const imageBase64 = data.image_file;
+    const tokenService = useTokenGeneratingService();
+    const result = await tokenService.generateTokenWithAI(prompt);
+    
+    if (!result.imageBase64) {
+      throw new Error("No image data received");
+    }
 
     // Convert base64 to binary
-    const byteCharacters = atob(imageBase64);
+    const byteCharacters = atob(result.imageBase64);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
       byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -84,12 +70,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate image if no imageURL is provided
-    let finalImageURL = imageURL;
-    if (!imageURL) {
-      const prompt = `${title} - ${description}`;
-      finalImageURL = await generateImage(prompt);
-    }
+    const prompt = `${title} - ${description}`;
+    const finalImageURL = await generateImage(prompt);
     console.log("Final image URL", finalImageURL);
     // Connect to the provider - use environment variable for RPC URL
     const provider = new ethers.JsonRpcProvider(
