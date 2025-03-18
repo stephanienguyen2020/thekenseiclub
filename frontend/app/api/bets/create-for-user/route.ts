@@ -11,7 +11,7 @@ async function generateImage(prompt: string): Promise<string> {
   try {
     const tokenService = useTokenGeneratingService();
     const result = await tokenService.generateTokenWithAI(prompt);
-    
+
     if (!result.imageBase64) {
       throw new Error("No image data received");
     }
@@ -97,7 +97,8 @@ export async function POST(req: NextRequest) {
     // Check if the Twitter handle is linked to an address
     const userAddress = await bettingContract.twitterToAddress(twitterHandle);
     if (userAddress === ethers.ZeroAddress) {
-      const baseURL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+      const baseURL =
+        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
       return NextResponse.json(
         {
           error: "Twitter handle not linked",
@@ -123,7 +124,9 @@ export async function POST(req: NextRequest) {
 
     // Construct the redirect URL with the bet ID
     const baseURL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const betId = receipt.logs[0]?.topics[1]; // Assuming the first log contains the bet ID
+    let betId = await bettingContract.betCounter();
+    betId = ethers.toNumber(betId);
+    betId = betId - 1;
     const redirectUrl = `${baseURL}/bets/place-bet?id=${betId}`;
 
     // Return success response with transaction details and generated image

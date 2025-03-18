@@ -29,6 +29,9 @@ export function WalletSettings() {
   const [tokenTwitterHandle, setTokenTwitterHandle] = useState("");
   const [tokenTwitterPlaceholder, setTokenTwitterPlaceholder] =
     useState("@username");
+  const [initialTwitterHandle, setInitialTwitterHandle] = useState("");
+  const [initialTokenTwitterHandle, setInitialTokenTwitterHandle] =
+    useState("");
   const [isDepositing, setIsDepositing] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isTokenDepositing, setIsTokenDepositing] = useState(false);
@@ -96,11 +99,11 @@ export function WalletSettings() {
         if (mounted) {
           setTokenTwitterPlaceholder("@username");
           if (handle) {
-            setTokenTwitterHandle(handle);
+            setInitialTokenTwitterHandle(handle);
             setTokenTwitterPlaceholder(handle);
           }
           if (bettingHandle) {
-            setTwitterHandle(bettingHandle);
+            setInitialTwitterHandle(bettingHandle);
           }
         }
       } catch (error) {
@@ -113,7 +116,17 @@ export function WalletSettings() {
     return () => {
       mounted = false;
     };
-  }, [address, isMounted, launchpadAgentService]);
+  }, [address, isMounted, launchpadAgentService, bettingService]);
+
+  // Set initial values when they change
+  useEffect(() => {
+    if (initialTwitterHandle && !twitterHandle) {
+      setTwitterHandle(initialTwitterHandle);
+    }
+    if (initialTokenTwitterHandle && !tokenTwitterHandle) {
+      setTokenTwitterHandle(initialTokenTwitterHandle);
+    }
+  }, [initialTwitterHandle, initialTokenTwitterHandle]);
 
   // Show loading state during initial hydration or connection
   if (!isMounted || isConnecting) {
