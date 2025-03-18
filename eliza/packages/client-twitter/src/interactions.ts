@@ -257,6 +257,7 @@ export class TwitterInteractionClient {
 
     async handleTwitterInteractions() {
         elizaLogger.log("Checking Twitter interactions");
+        elizaLogger.log("Backend API URL", process.env.BACKEND_URL);
 
         const twitterUsername = this.client.profile.username;
         try {
@@ -611,6 +612,7 @@ export class TwitterInteractionClient {
             });
 
             elizaLogger.log("Token response", tokenResponse.text);
+
             try {
                 elizaLogger.log(
                     "Creating token body",
