@@ -97,11 +97,11 @@ export async function POST(req: NextRequest) {
     // Check if the Twitter handle is linked to an address
     const userAddress = await bettingContract.twitterToAddress(twitterHandle);
     if (userAddress === ethers.ZeroAddress) {
+      const baseURL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
       return NextResponse.json(
         {
           error: "Twitter handle not linked",
-          message:
-            "The Twitter handle is not linked to any wallet address. Please register the Twitter handle first.",
+          message: `The Twitter handle is not linked to any wallet address. Please register the Twitter handle first at ${baseURL}/settings`,
         },
         { status: 400 }
       );
