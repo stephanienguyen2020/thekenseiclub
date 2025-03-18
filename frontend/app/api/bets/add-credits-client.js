@@ -9,10 +9,12 @@ async function purchaseBetCredits() {
     console.log(
       `Attempting to purchase ${ethAmount} ETH worth of bet credits for ${twitterHandle}`
     );
-
-    const response = await fetch("http://localhost:3000/api/bets/add-credits", {
-      method: "POST",
-      headers: {
+    const baseURL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const response = await fetch(
+      `${baseURL}/api/bets/add-credits`,
+      {
+        method: "POST",
+        headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -51,9 +53,9 @@ async function testCreateBet(twitterHandle) {
     console.log(
       `Creating bet with joinAmount: 0.000004 ETH, initialPoolAmount: 0.000004 ETH`
     );
-
+    const baseURL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     const response = await fetch(
-      "http://localhost:3000/api/bets/create-for-user",
+      `${baseURL}/api/bets/create-for-user`,
       {
         method: "POST",
         headers: {
