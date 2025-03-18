@@ -2,6 +2,8 @@
 
 Your all-in-one decentralized hub for meme coin innovation—factory, marketplace, and prediction market—exclusively on Sonic Labs.
 
+**Try it out**: https://hypersonic.vercel.app/
+
 ## 🌟 Overview
 
 HyperSonic transforms market predictions, token launches, research, trading, and marketing into seamless, automated processes using cutting-edge agentic AI and multi-agent systems. Whether you're a trader, creator, or investor, our AI-powered strategies put you ahead of the curve.
@@ -32,6 +34,7 @@ Contracts on testnet:
 
 ## 🎯 Key Features
 ### 1. Sonic Tailored Chatbot
+![Alt text](https://drive.google.com/uc?export=view&id=1J7h1Ir6U_CemDQw7-Ad8Yf_IxEEtRUQx)
 - An AI chatbot specialized in Sonic Labs queries, leveraging Retrieval-Augmented Generation (RAG) for real-time, accurate responses.
 - Ask anything about Sonic, including "What Makes Sonic Unique?," "Fee Monetization (FeeM) Mechanism on Sonic: Incentive Innovation in the Blockchain Ecosystem," etc.
 - Ask questions like:
@@ -40,7 +43,8 @@ Contracts on testnet:
   - "How does Sonic’s consensus mechanism integrate Asynchronous Byzantine Fault Tolerance?"
 
 ### 2. 🚀 Interactive Memecoin Launchpad with Anti-Rug Mechanism
-
+![Alt text](https://drive.google.com/uc?export=view&id=1aI3Mz50pWfDOdUQbkTY8P8Na5sm9U4gB)
+![Alt text](https://drive.google.com/uc?export=view&id=1wyWrBufipK68qbei7fgeKrnqqSfE28Dy)
 - AI-powered token generation and deployment
 - Fair launch mechanics with anti-rug pull protection
 - 10-day linear vesting schedule and 1 month of liquidity locking to prevent rug
@@ -50,7 +54,7 @@ Contracts on testnet:
 - Buy and swap tokens effortlessly through chat—just a few clicks to confirm transactions
 
 ### 3. 🎲 Betting Marketplace
-
+![Alt text](https://drive.google.com/uc?export=view&id=1uZsQBsytcAxPm4r0HZLUVTqaVh5B704O)
 - Place bets on meme coin trends, price movements, and crypto events
 - Web interface and Twitter integration (@HyperSonic46406)
 - Fully transparent, on-chain execution for trustless betting
@@ -70,7 +74,7 @@ Contracts on testnet:
 - Twitter Agent: AI-driven social engagement on X, posting and interacting on meme coin trends in real time
 
 ### 5. 📢 AutoShill (Powered by Zerepy)
-
+![Alt text](https://drive.google.com/uc?export=view&id=1vHiVMTu1TQP5G13nGHB8CPA9jFis4X5I)
 - Automated viral tweet generation – Crafts engaging and high-impact tweets to maximize visibility.
 - Trending discussion engagement – Identifies and participates in relevant trending topics to boost reach.
 - Dynamic social media presence management – Maintains a consistent and interactive brand presence.

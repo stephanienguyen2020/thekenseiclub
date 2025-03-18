@@ -58,7 +58,7 @@ contract Factory {
         address _creator
     ) external payable {
         require(msg.value >= fee, "Creator fee not met");
-
+        //require(tokenBySymbol[_symbol] == address(0), "Token with this symbol already exists");
         // Default to msg.sender if _creator is zero address
         if (_creator == address(0)) {
             _creator = msg.sender;
@@ -183,4 +183,8 @@ contract Factory {
 
         return getCost(sale.sold) * (_amount / 10 ** 18);
     }
+
+    // function getTokenBySymbol(string memory _symbol) public view returns (address) {
+    //     return tokenBySymbol[_symbol];
+    // }
 } 
