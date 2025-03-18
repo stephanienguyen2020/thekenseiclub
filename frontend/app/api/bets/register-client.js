@@ -5,10 +5,10 @@ async function registerTwitterHandle() {
 
   try {
     console.log(`Attempting to register Twitter handle: ${twitterHandle}`);
-
+    const baseURL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     // Using testMode to bypass signature verification
     const response = await fetch(
-      "http://localhost:3000/api/bets/register-twitter",
+      `${baseURL}/api/bets/register-twitter`,
       {
         method: "POST",
         headers: {
@@ -42,9 +42,10 @@ async function registerTwitterHandle() {
 }
 
 async function testCreateBet(twitterHandle) {
+  const baseURL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   try {
     const response = await fetch(
-      "http://localhost:3000/api/bets/create-for-user",
+      `${baseURL}/api/bets/create-for-user`,
       {
         method: "POST",
         headers: {
