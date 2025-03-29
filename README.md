@@ -18,6 +18,43 @@ HyperSonic uses the **MetaMask SDK to** offer secure, scalable, and production-r
 
 No more dropped sessions. No janky wallet popups. Just fast, stable, and secure wallet interactions — as it should be.
 
+## 🔌 MetaMask Implementation Details
+
+Here's a summary of where and how MetaMask is used in the codebase:
+
+### MetaMask SDK Integration:
+
+- The application uses the MetaMask SDK (`@metamask/sdk` and `@metamask/sdk-react` packages) for wallet integration.
+- The SDK is set up in `frontend/app/providers/MetaMaskSDKProvider.tsx` which configures the MetaMask provider with app-specific settings.
+
+### Utility Functions (`frontend/app/utils/metamask.ts`):
+
+- `getMetaMaskProvider()`: Gets an Ethereum provider from MetaMask
+- `addChainToMetaMask()`: Adds a custom chain to MetaMask
+- `switchChainInMetaMask()`: Switches to a specific chain in MetaMask
+
+### Wallet Provider (`frontend/app/providers/WalletProvider.tsx`):
+
+- Creates a React context that manages wallet connection state
+- Uses the MetaMask SDK via `useSDK()` hook
+- Handles chain changes via MetaMask event listeners
+- Provides utility methods like `connect()`, `disconnect()`, and `getContract()`
+
+### Connect Button Component (`frontend/app/components/MetaMaskConnectButton.tsx`):
+
+- UI component for connecting to MetaMask
+- Uses wagmi hooks for wallet interaction
+- Displays wallet address, balance, and network information when connected
+- Offers disconnect functionality
+- Used in the site header and navbar components
+
+### App Provider Configuration (`frontend/app/providers.tsx`):
+
+- Sets up wagmi with the MetaMask connector
+- Wraps the application with `MetaMaskSDKProvider`
+
+The application is built with strong MetaMask integration, offering multiple connection methods (direct provider, SDK-based, and store-based fallback) for maximum compatibility across different environments. It's designed to handle both browser extension and mobile wallet scenarios.
+
 ## 🚀 Contract Address
 
 Sonic Mainnet

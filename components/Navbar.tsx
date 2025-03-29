@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { MetaMaskConnectButton } from "../frontend/app/components/MetaMaskConnectButton";
-import Image from "next/image";
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
