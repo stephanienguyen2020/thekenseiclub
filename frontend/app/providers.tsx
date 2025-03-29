@@ -1,13 +1,13 @@
 "use client";
 
 import { ThemeProvider as NextThemesProvider } from "next-themes";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WalletProvider } from "./providers/WalletProvider";
 import { AuthGuard } from "./providers/AuthGuard";
 import { WagmiProvider, createConfig, http } from "wagmi";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import "@rainbow-me/rainbowkit/styles.css";
+import { metaMask } from "wagmi/connectors";
+import { MetaMaskSDKProvider } from "./providers/MetaMaskSDKProvider";
 
 // Configure custom Sonic Blaze Testnet
 const sonicBlazeTestnet = {
@@ -77,9 +77,10 @@ const hardhatTestnet = {
   testnet: true,
 };
 
-// Create wagmi config
+// Create wagmi config with MetaMask connector
 const config = createConfig({
   chains: [sonicBlazeTestnet, sonicMainnet, hardhatTestnet],
+  connectors: [metaMask()],
   transports: {
     [sonicBlazeTestnet.id]: http(),
     [sonicMainnet.id]: http(),
@@ -91,9 +92,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
+    <MetaMaskSDKProvider>
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
           <NextThemesProvider
             attribute="class"
             defaultTheme="dark"
@@ -104,8 +105,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
               <AuthGuard>{children}</AuthGuard>
             </WalletProvider>
           </NextThemesProvider>
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </MetaMaskSDKProvider>
   );
 }

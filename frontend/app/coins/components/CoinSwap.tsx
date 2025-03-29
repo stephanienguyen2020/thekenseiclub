@@ -17,6 +17,7 @@ import {
   ArrowDown,
   Clock,
   Globe,
+  Zap,
 } from "lucide-react";
 import {
   Popover,
@@ -40,7 +41,7 @@ import {
 } from "@/services/memecoin-launchpad";
 import { ethers } from "ethers";
 import { useAccount, useWalletClient } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { MetaMaskConnectButton } from "../../components/MetaMaskConnectButton";
 import { useTestTokenService } from "@/services/TestTokenService";
 
 // Define the Token interface to match what's returned by getTokens
@@ -818,6 +819,14 @@ const CoinSwap = ({
     );
   };
 
+  // Swap button section
+  const isSwapDisabled =
+    isConnected &&
+    (isLoadingBalances ||
+      !fromAmount ||
+      parseFloat(fromAmount) <= 0 ||
+      parseFloat(fromAmount) > parseFloat(getSelectedTokenBalance(fromToken)));
+
   return (
     <Card className="bg-[#1A1B1E] border-none w-full overflow-visible shadow-xl">
       <div className="relative">
@@ -840,16 +849,7 @@ const CoinSwap = ({
                     <strong>Wallet not connected:</strong> Please connect your
                     wallet to view your balances and make trades.
                   </div>
-                  <ConnectButton.Custom>
-                    {({ openConnectModal }) => (
-                      <Button
-                        className="ml-2 bg-yellow-500 hover:bg-yellow-600 text-black"
-                        onClick={openConnectModal}
-                      >
-                        Connect
-                      </Button>
-                    )}
-                  </ConnectButton.Custom>
+                  <MetaMaskConnectButton />
                 </div>
               )}
 
@@ -1403,39 +1403,27 @@ const CoinSwap = ({
                   </div>
 
                   {/* Swap Button */}
-                  <Button
-                    className="w-full h-14 text-lg font-medium mt-4 bg-blue-400 hover:bg-blue-500 text-white rounded-xl"
-                    onClick={!isConnected ? () => {} : handleSwap}
-                    disabled={
-                      isConnected &&
-                      (isLoadingBalances ||
-                        !fromAmount ||
-                        parseFloat(fromAmount) <= 0 ||
-                        parseFloat(fromAmount) >
-                          parseFloat(getSelectedTokenBalance(fromToken)))
-                    }
-                  >
-                    {!isConnected ? (
-                      <ConnectButton.Custom>
-                        {({ openConnectModal }) => (
-                          <div onClick={openConnectModal} className="w-full">
-                            Connect Wallet
-                          </div>
-                        )}
-                      </ConnectButton.Custom>
-                    ) : isLoadingBalances ? (
-                      "Loading Balances..."
-                    ) : !fromAmount || parseFloat(fromAmount) <= 0 ? (
-                      "Enter Amount"
-                    ) : parseFloat(fromAmount) >
-                      parseFloat(getSelectedTokenBalance(fromToken)) ? (
-                      "Insufficient Balance"
-                    ) : swapDirection === "ethToToken" ? (
-                      `Swap ${fromToken.symbol} for ${toToken.symbol}`
-                    ) : (
-                      `Swap ${fromToken.symbol} for ${toToken.symbol}`
-                    )}
-                  </Button>
+                  {!isConnected ? (
+                    <div className="w-full text-center">
+                      <MetaMaskConnectButton />
+                    </div>
+                  ) : isSwapDisabled ? (
+                    <Button
+                      className="w-full h-14 text-lg font-medium mt-4 bg-blue-400 hover:bg-blue-500 text-white rounded-xl"
+                      disabled
+                    >
+                      Loading...
+                    </Button>
+                  ) : (
+                    <Button
+                      className="w-full h-14 text-lg font-medium mt-4 bg-blue-400 hover:bg-blue-500 text-white rounded-xl"
+                      onClick={handleSwap}
+                    >
+                      {swapDirection === "ethToToken"
+                        ? `Swap ${fromToken.symbol} for ${toToken.symbol}`
+                        : `Swap ${fromToken.symbol} for ${toToken.symbol}`}
+                    </Button>
+                  )}
                 </div>
               )}
 

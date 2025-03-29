@@ -18,26 +18,33 @@ export default function Home(): JSX.Element {
     const savedAuth = localStorage.getItem("isAuthenticated") === "true";
     setIsAuthenticated(isConnected || savedAuth);
 
-    // If authenticated, redirect to dashboard
+    // If authenticated, redirect to dashboard once
     if (isConnected || savedAuth) {
-      router.push("/dashboard");
+      console.log(
+        "Landing page detected authenticated user, redirecting to dashboard"
+      );
+      window.location.href = "/dashboard";
     }
-  }, [isConnected, router]);
+  }, [isConnected]);
 
   // Function to handle the "Connect Wallet" button click
   const handleConnectWallet = async () => {
     try {
       // If not connected, try to connect wallet
       if (!isConnected) {
+        console.log("Attempting to connect wallet from landing page");
         await connect();
-        // The WalletProvider will handle redirection to dashboard after successful connection
+        // Let the useEffect above handle the redirect when isConnected changes
       } else {
         // If already connected, just navigate to dashboard
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
       }
     } catch (error) {
       console.error("Failed to connect wallet:", error);
-      router.push("/dashboard");
+      // No need to redirect on error unless already authenticated
+      if (localStorage.getItem("isAuthenticated") === "true") {
+        window.location.href = "/dashboard";
+      }
     }
   };
 
@@ -76,8 +83,7 @@ export default function Home(): JSX.Element {
                   </span>
                 </h1>
                 <p className="text-lg text-gray-300 text-center max-w-2xl mx-auto">
-                  Built on Sonic - the high-performance EVM blockchain built for
-                  DeFi and Web3 innovation
+                  Powered by MetaMask SDK
                 </p>
                 <div className="flex justify-center gap-4 mt-4">
                   <Button
@@ -85,14 +91,7 @@ export default function Home(): JSX.Element {
                     className="bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600 text-white rounded-full px-8 hover:glow"
                     onClick={handleConnectWallet}
                   >
-                    Let's GOO!
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="rounded-full px-8 hover:glow text-white border-white"
-                  >
-                    View Demo
+                    Connect Wallet
                   </Button>
                 </div>
               </div>

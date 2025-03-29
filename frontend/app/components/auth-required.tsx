@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Wallet, Lock, ArrowLeft } from "lucide-react";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useRouter } from "next/navigation";
+import { MetaMaskConnectButton } from "./MetaMaskConnectButton";
 
 export function AuthRequired() {
   const router = useRouter();
@@ -40,7 +40,7 @@ export function AuthRequired() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex justify-center">
-              <ConnectButton />
+              <MetaMaskConnectButton />
             </div>
 
             <div className="text-center text-sm text-muted-foreground">

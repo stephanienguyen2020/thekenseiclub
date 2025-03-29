@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { SiteHeader } from "./site-header";
 import { SiteLeftbar } from "./site-leftbar";
 import { Footer } from "./Footer";
+import { usePathname } from "next/navigation";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -12,6 +13,10 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, showFooter = false }: AppLayoutProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const pathname = usePathname();
+
+  // Check if we're on the landing page
+  const isLandingPage = pathname === "/";
 
   // Check authentication status
   useEffect(() => {
@@ -33,15 +38,17 @@ export function AppLayout({ children, showFooter = false }: AppLayoutProps) {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Fixed header */}
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <SiteHeader />
-      </div>
+      {/* Fixed header - hidden on landing page */}
+      {!isLandingPage && (
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <SiteHeader />
+        </div>
+      )}
 
       {/* Main content area with sidebar */}
-      <div className="flex pt-16 flex-grow">
-        {/* Left Sidebar - only shown when authenticated */}
-        {isAuthenticated && (
+      <div className={`flex ${!isLandingPage ? "pt-16" : ""} flex-grow`}>
+        {/* Left Sidebar - only shown when authenticated and not on landing page */}
+        {isAuthenticated && !isLandingPage && (
           <div className="fixed top-16 left-0 bottom-0 z-40 w-[280px]">
             <SiteLeftbar />
           </div>
@@ -49,7 +56,9 @@ export function AppLayout({ children, showFooter = false }: AppLayoutProps) {
 
         {/* Main Content - adjust padding based on authentication status */}
         <main
-          className={`flex-1 ${isAuthenticated ? "ml-[280px]" : ""} w-full`}
+          className={`flex-1 ${
+            isAuthenticated && !isLandingPage ? "ml-[280px]" : ""
+          } w-full`}
         >
           {children}
 

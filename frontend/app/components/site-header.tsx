@@ -21,9 +21,9 @@ import {
   X,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 import { useWallet } from "../providers/WalletProvider";
+import { MetaMaskConnectButton } from "./MetaMaskConnectButton";
 
 // Matrix-style text scramble effect for the logo
 class TextScramble {
@@ -100,7 +100,6 @@ class TextScramble {
   }
 }
 
-// Matrix-style connect button for when not using RainbowKit
 const MatrixConnectButton = () => {
   const router = useRouter();
   const { connect, isConnected } = useWallet();
@@ -138,120 +137,9 @@ const MatrixConnectButton = () => {
   );
 };
 
-// Matrix-styled RainbowKit ConnectButton
-const MatrixRainbowButton = () => {
-  return (
-    <ConnectButton.Custom>
-      {({
-        account,
-        chain,
-        openAccountModal,
-        openChainModal,
-        openConnectModal,
-        authenticationStatus,
-        mounted,
-      }) => {
-        // Note: If your app doesn't use authentication, you
-        // can remove all 'authenticationStatus' checks
-        const ready = mounted && authenticationStatus !== "loading";
-        const connected =
-          ready &&
-          account &&
-          chain &&
-          (!authenticationStatus || authenticationStatus === "authenticated");
-
-        return (
-          <div
-            {...(!ready && {
-              "aria-hidden": true,
-              style: {
-                opacity: 0,
-                pointerEvents: "none",
-                userSelect: "none",
-              },
-            })}
-          >
-            {(() => {
-              if (!connected) {
-                return (
-                  <button
-                    onClick={openConnectModal}
-                    type="button"
-                    className="px-4 py-2 rounded-md text-sm font-bold transition-all duration-300 bg-transparent border border-sky-400 text-sky-400 hover:bg-sky-400 hover:text-black hover:shadow-[0_0_10px_rgba(56,189,248,0.7)]"
-                  >
-                    <div className="flex items-center">
-                      <Wallet className="mr-2 h-4 w-4" />
-                      <span>CONNECT</span>
-                    </div>
-                  </button>
-                );
-              }
-
-              if (chain.unsupported) {
-                return (
-                  <button
-                    onClick={openChainModal}
-                    type="button"
-                    className="px-4 py-2 rounded-md text-sm font-bold transition-all duration-300 bg-transparent border border-red-500 text-red-500 hover:bg-red-500 hover:text-black hover:shadow-[0_0_10px_rgba(255,0,0,0.7)]"
-                  >
-                    Wrong network
-                  </button>
-                );
-              }
-
-              return (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={openChainModal}
-                    type="button"
-                    className="px-4 py-2 rounded-md text-sm font-bold transition-all duration-300 bg-transparent border border-sky-400 text-sky-400 hover:bg-sky-400 hover:text-black hover:shadow-[0_0_10px_rgba(56,189,248,0.7)]"
-                  >
-                    <div className="flex items-center">
-                      {chain.hasIcon && (
-                        <div
-                          style={{
-                            background: chain.iconBackground,
-                            width: 16,
-                            height: 16,
-                            borderRadius: 999,
-                            overflow: "hidden",
-                            marginRight: 6,
-                          }}
-                        >
-                          {chain.iconUrl && (
-                            <img
-                              alt={chain.name ?? "Chain icon"}
-                              src={chain.iconUrl}
-                              style={{ width: 16, height: 16 }}
-                            />
-                          )}
-                        </div>
-                      )}
-                      {chain.name}
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={openAccountModal}
-                    type="button"
-                    className="px-4 py-2 rounded-md text-sm font-bold transition-all duration-300 bg-transparent border border-sky-400 text-sky-400 hover:bg-sky-400 hover:text-black hover:shadow-[0_0_10px_rgba(56,189,248,0.7)]"
-                  >
-                    <div className="flex items-center">
-                      <Wallet className="mr-2 h-4 w-4" />
-                      {account.displayName}
-                      {account.displayBalance
-                        ? ` (${account.displayBalance})`
-                        : ""}
-                    </div>
-                  </button>
-                </div>
-              );
-            })()}
-          </div>
-        );
-      }}
-    </ConnectButton.Custom>
-  );
+// Display wallet connect button or link to dashboard
+const WalletButton = () => {
+  return <MetaMaskConnectButton />;
 };
 
 export function SiteHeader() {
@@ -379,7 +267,7 @@ export function SiteHeader() {
 
           {/* Connect Button and Mobile Menu Toggle - aligned to the right edge of the screen */}
           <div className="flex-shrink-0 flex items-center space-x-4">
-            <MatrixRainbowButton />
+            <WalletButton />
 
             {/* Mobile Menu Toggle */}
             <button

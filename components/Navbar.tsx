@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { MetaMaskConnectButton } from "../frontend/app/components/MetaMaskConnectButton";
 import Image from "next/image";
 
 const Navbar: React.FC = () => {
@@ -46,7 +46,7 @@ const Navbar: React.FC = () => {
             <div className="text-[#00A8E8] px-3 py-1 rounded-lg border border-[#00A8E8] text-sm">
               Sonic Blaze Testnet
             </div>
-            <ConnectButton />
+            <MetaMaskConnectButton />
           </div>
 
           {/* Mobile Navigation Button */}
@@ -102,7 +102,7 @@ const Navbar: React.FC = () => {
             </div>
             <div className="pt-4 pb-3 border-t border-gray-700">
               <div className="px-3 py-3">
-                <ConnectButton />
+                <MetaMaskConnectButton />
               </div>
             </div>
           </div>
