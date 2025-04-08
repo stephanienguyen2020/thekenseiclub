@@ -147,8 +147,8 @@ fun get_token_receive(
     curr_token_a_balance: u64,
     curr_token_b_balance: u64
 ) : u64 {
-    let after_fee_sui_amount_val = after_fee_amount as u128;
-    (after_fee_sui_amount_val * (curr_token_b_balance as u128) / ((curr_token_a_balance as u128) + after_fee_sui_amount_val)) as u64
+    let after_fee_amount_val = after_fee_amount as u128;
+    (after_fee_amount_val * (curr_token_b_balance as u128) / ((curr_token_a_balance as u128) + after_fee_amount_val)) as u64
 }
 
 fun take_fee(
