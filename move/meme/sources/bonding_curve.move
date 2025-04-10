@@ -1,18 +1,13 @@
 module meme::bonding_curve;
 
 use sui::balance;
-use sui::balance::Supply;
-use sui::coin::{Self, Coin, TreasuryCap};
+use sui::coin::{Self, Coin};
 use sui::sui::SUI;
-use sui::tx_context;
 
 const ETotalSupplyNotEqualZero: u64 = 0;
 const EOutputAmountLessThanMin: u64 = 1;
 const EDecimalsNotEqualNine: u64 = 2;
-const EListingFeeNotEqual: u64 = 3;
 const ECurveNotActive: u64 = 4;
-const EReserveValuesNotGreaterThanZero: u64 = 5;
-const ECurveNotInactive: u64 = 6;
 
 public struct BONDING_CURVE has drop {}
 public struct AdminCap has key, store {
@@ -26,7 +21,7 @@ public struct BondingCurve<phantom T> has key {
     target_supply_threshold: u64,
     swap_fee: u64,
     listing_fee: u64,
-    migration_fee:u64,
+    migration_fee: u64,
     is_active: bool,
     creator: address,
     migration_target: u64,
@@ -40,13 +35,11 @@ fun init(_witness: BONDING_CURVE, ctx: &mut TxContext) {
 public fun create_bonding_curve<T>(
     treasury_cap: &mut coin::TreasuryCap<T>,
     coin_metadata: &coin::CoinMetadata<T>,
-    coin: coin::Coin<SUI>,
     migration_target: u64,
     ctx: &mut TxContext,
 ) {
     assert!(coin::total_supply<T>(treasury_cap) == 0, ETotalSupplyNotEqualZero);
     assert!(coin::get_decimals<T>(coin_metadata) == 9, EDecimalsNotEqualNine);
-    let mut sui_balance = coin::into_balance<SUI>(coin);
 
     let bonding_curve = BondingCurve<T> {
         id: object::new(ctx),
@@ -64,7 +57,7 @@ public fun create_bonding_curve<T>(
     transfer::share_object<BondingCurve<T>>(bonding_curve);
 }
 
-fun buy<T>(
+public fun buy<T>(
     bonding_curve: &mut BondingCurve<T>,
     coin: Coin<SUI>,
     amount: u64,
@@ -74,7 +67,7 @@ fun buy<T>(
     assert!(bonding_curve.is_active, ECurveNotActive);
     let sender = tx_context::sender(ctx);
 
-    amount = amount - take_fee(bonding_curve.swap_fee, amount);
+    let amount = amount - take_fee(bonding_curve.swap_fee, amount);
     let (curr_sui_balance, curr_token_balance) = get_token_in_pool(bonding_curve);
     let token_received = get_token_receive(
         amount,
@@ -82,18 +75,21 @@ fun buy<T>(
         curr_token_balance,
     );
     assert!(token_received >= min_token_required, EOutputAmountLessThanMin);
-    bonding_curve.sui_balance.join(balance::Balance {value: amount});
-    (curr_sui_balance, curr_token_balance) = get_token_in_pool(bonding_curve);
+    let mut balance = coin::into_balance<SUI>(coin);
+    bonding_curve.sui_balance.join(balance.split(amount));
+    let (curr_sui_balance, curr_token_balance) = get_token_in_pool(bonding_curve);
     if (curr_token_balance + token_received >= bonding_curve.target_supply_threshold) {
         bonding_curve.is_active = false;
         //Migrate
     };
     let token = coin::take<T>(&mut bonding_curve.token_balance, token_received, ctx);
-    transfer::transfer(token, sender);
+    transfer::public_transfer(token, sender);
+    return_back_or_delete<SUI>(balance, ctx);
 }
 
-fun sell<T>(
+public fun sell<T>(
     bonding_curve: &mut BondingCurve<T>,
+    coin: Coin<T>,
     amount: u64,
     min_token_required: u64,
     ctx: &mut TxContext,
@@ -101,34 +97,46 @@ fun sell<T>(
     assert!(bonding_curve.is_active, ECurveNotActive);
     let sender = tx_context::sender(ctx);
     let (curr_sui_balance, curr_token_balance) = get_token_in_pool(bonding_curve);
-    let sui_received = get_token_receive(
-        token_amount,
+    let mut sui_received = get_token_receive(
+        amount,
         curr_token_balance,
         curr_sui_balance + bonding_curve.virtual_sui_amt,
     );
     assert!(sui_received >= min_token_required, EOutputAmountLessThanMin);
     sui_received = sui_received - take_fee(bonding_curve.swap_fee, sui_received);
-    bonding_curve.token_balance.join(balance::Balance {value: amount});
+    let mut balance = coin::into_balance<T>(coin);
+    bonding_curve.token_balance.join(balance.split(amount));
     let token = coin::take<SUI>(&mut bonding_curve.sui_balance, sui_received, ctx);
-    transfer::transfer(token, sender)
+    transfer::public_transfer(token, sender);
+    return_back_or_delete<T>(balance, ctx);
 }
 
 fun get_token_receive(
     after_fee_amount: u64,
     curr_token_a_balance: u64,
-    curr_token_b_balance: u64
-) : u64 {
+    curr_token_b_balance: u64,
+): u64 {
     let after_fee_amount_val = after_fee_amount as u128;
-    (after_fee_amount_val * (curr_token_b_balance as u128) / ((curr_token_a_balance as u128) + after_fee_amount_val)) as u64
+    (
+        after_fee_amount_val * (curr_token_b_balance as u128) / ((curr_token_a_balance as u128) + after_fee_amount_val),
+    ) as u64
 }
 
-fun take_fee(
-    swap_fee: u64,
-    buy_amount: u64,
-):u64 {
+fun take_fee(swap_fee: u64, buy_amount: u64): u64 {
     swap_fee * (buy_amount / 100_000)
 }
 
-fun get_token_in_pool<T>(bonding_curve: &BondingCurve<T>) : (u64, u64) {
-    (balance::value<SUI>(&bonding_curve.sui_balance), balance::value<T>(&bonding_curve.token_balance))
+fun get_token_in_pool<T>(bonding_curve: &BondingCurve<T>): (u64, u64) {
+    (
+        balance::value<SUI>(&bonding_curve.sui_balance),
+        balance::value<T>(&bonding_curve.token_balance),
+    )
+}
+
+fun return_back_or_delete<T>(balance: balance::Balance<T>, ctx: &mut TxContext) {
+    if (balance::value(&balance) > 0) {
+        transfer::public_transfer(coin::from_balance(balance, ctx), tx_context::sender(ctx));
+    } else {
+        balance::destroy_zero(balance);
+    }
 }
