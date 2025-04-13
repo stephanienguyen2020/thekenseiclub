@@ -5,6 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
+    "dev": "tsc && node src/index.js",
     "test": "jest"
   },
   "keywords": [

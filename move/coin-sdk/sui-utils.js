@@ -77,6 +77,36 @@ const publishPackage = async ({ packagePath, network, exportFileName = "contract
     (0, fs_1.writeFileSync)(`${exportFileName}.json`, JSON.stringify({
         packageId,
     }), { encoding: "utf8", flag: "w" });
+    const upgradeCap = results.objectChanges?.find((change) => change.type === "created" &&
+        change.objectType.includes("::package::UpgradeCap"))?.objectId;
+    const client = await (0, exports.getClient)(network);
+    const upgradeCapObject = await waitForObject(client, upgradeCap, 5, 500);
+    const publishedPackageId = (upgradeCapObject.data?.content).fields.package;
     return results;
 };
 exports.publishPackage = publishPackage;
+async function waitForObject(client, objectId, maxRetries = 10, delayMs = 500) {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const obj = await client.getObject({
+                id: objectId,
+                options: { showContent: true, showOwner: true },
+            });
+            if (obj?.error?.code === "notExists") {
+                await new Promise((r) => setTimeout(r, delayMs));
+                continue;
+            }
+            return obj;
+        }
+        catch (err) {
+            if (err?.error?.code === "notExists") {
+                await new Promise((r) => setTimeout(r, delayMs));
+                continue;
+            }
+            else {
+                throw err;
+            }
+        }
+    }
+    throw new Error(`Object ${objectId} did not become available in time.`);
+}

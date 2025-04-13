@@ -5,7 +5,7 @@ import { execSync } from "child_process";
 import { readFileSync, writeFileSync } from "fs";
 import { homedir } from "os";
 import path from "path";
-import {getFullnodeUrl, SuiClient, SuiTransactionBlockResponse} from "@mysten/sui/client";
+import {getFullnodeUrl, SuiClient, SuiObjectChange, SuiTransactionBlockResponse} from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { fromBase64 } from "@mysten/sui/utils";
@@ -112,5 +112,43 @@ export const publishPackage = async ({
     }),
     { encoding: "utf8", flag: "w" }
   );
+
+  const upgradeCap = results.objectChanges?.find(
+      (change): change is Extract<SuiObjectChange, { type: 'created' }> =>
+          change.type === "created" &&
+          change.objectType.includes("::package::UpgradeCap")
+  )?.objectId as string;
+  const client = await getClient(network);
+  const upgradeCapObject = await waitForObject(client, upgradeCap, 5, 500);
+  const publishedPackageId = (upgradeCapObject.data?.content as any).fields.package;
   return results;
 };
+
+async function waitForObject(
+    client: SuiClient,
+    objectId: string,
+    maxRetries = 10,
+    delayMs = 500
+): Promise<any> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const obj = await client.getObject({
+        id: objectId,
+        options: { showContent: true, showOwner: true },
+      });
+      if (obj?.error?.code === "notExists") {
+        await new Promise((r) => setTimeout(r, delayMs));
+        continue;
+      }
+      return obj;
+    } catch (err: any) {
+      if (err?.error?.code === "notExists") {
+        await new Promise((r) => setTimeout(r, delayMs));
+        continue;
+      } else {
+        throw err;
+      }
+    }
+  }
+  throw new Error(`Object ${objectId} did not become available in time.`);
+}
