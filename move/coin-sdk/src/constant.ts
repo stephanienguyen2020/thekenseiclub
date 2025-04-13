@@ -1,0 +1,1 @@
+export const COIN_MODULE_PACKAGE_ID = '0x2';

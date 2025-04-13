@@ -1,0 +1,27 @@
+{
+  "name": "coin-sdk",
+  "version": "1.0.0",
+  "description": "A TypeScript SDK for interacting with the coin contract.",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "keywords": [
+    "blockchain",
+    "sdk",
+    "coin",
+    "typescript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@mysten/sui": "^1.27.0",
+    "axios": "^1.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "typescript": "^5.8.3",
+    "ts-node": "^10.9.2"
+  }
+}

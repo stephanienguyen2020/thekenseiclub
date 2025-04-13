@@ -13,7 +13,7 @@ public struct BONDING_CURVE has drop {}
 public struct AdminCap has key, store {
     id: UID,
 }
-public struct BondingCurve<phantom T> has key {
+public struct BondingCurve<phantom T> has key, store {
     id: UID,
     sui_balance: balance::Balance<SUI>,
     token_balance: balance::Balance<T>,
@@ -54,7 +54,7 @@ public fun create_bonding_curve<T>(
         creator: tx_context::sender(ctx),
         migration_target,
     };
-    transfer::share_object<BondingCurve<T>>(bonding_curve);
+    transfer::public_share_object<BondingCurve<T>>(bonding_curve);
 }
 
 public fun buy<T>(
