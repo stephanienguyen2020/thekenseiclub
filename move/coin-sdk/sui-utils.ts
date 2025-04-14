@@ -12,6 +12,7 @@ import { fromBase64 } from "@mysten/sui/utils";
 export type Network = "mainnet" | "testnet" | "devnet" | "localnet";
 
 export const SUI_BIN = `sui`;
+export const ACTIVE_NETWORK = (process.env.NETWORK as Network) || "testnet";
 
 export const getActiveAddress = () => {
   return execSync(`${SUI_BIN} client active-address`, {
@@ -19,8 +20,8 @@ export const getActiveAddress = () => {
   }).trim();
 };
 
-export const getSigner = () => {
-  const sender = getActiveAddress();
+export const getSigner = (address: string) => {
+  const sender = address;
 
   const keystore = JSON.parse(
     readFileSync(
@@ -48,9 +49,10 @@ export const getClient = (network: Network) => {
   return new SuiClient({ url: getFullnodeUrl(network) });
 };
 
-export const signAndExecute = async (txb: Transaction, network: Network) => {
+export const signAndExecute = async (txb: Transaction, network: Network, address: string) => {
+  const signer = getSigner(address);
+
   const client = getClient(network);
-  const signer = getSigner();
 
   return client.signAndExecuteTransaction({
     transaction: txb,
@@ -66,10 +68,12 @@ export const publishPackage = async ({
   packagePath,
   network,
   exportFileName = "contract",
+    address
 }: {
   packagePath: string;
   network: Network;
   exportFileName: string;
+  address: string
 }): Promise<SuiTransactionBlockResponse> => {
   const txb = new Transaction();
 
@@ -89,13 +93,12 @@ export const publishPackage = async ({
 
   txb.transferObjects([cap], getActiveAddress());
 
-  const results = await signAndExecute(txb, network);
+  const results = await signAndExecute(txb, network, address);
 
   const packageId = results.objectChanges?.find(
     (x) => x.type === "published"
   )?.packageId;
 
-  // save to an env file
   writeFileSync(
     `${exportFileName}.json`,
     JSON.stringify({
@@ -146,7 +149,7 @@ async function waitForObject(
 
 function generateCoinModule(template: string, replacements: { [key: string]: string }): string {
   return template.replace(/\{(\w+)\}/g, (_, key) => {
-    return replacements[key] || `{${key}}`; // giữ nguyên nếu không có key tương ứng
+    return replacements[key] || `{${key}}`;
   });
 }
 
@@ -177,11 +180,21 @@ export async function getModuleName(objectId: string, network: Network) {
   const objectType = obj.data?.type;
   if (!objectType) throw new Error("Object type not found");
 
-  // objectType format: 0x...::module::TreasuryCap<0x...::YourModule::YourCoin>
   const match = objectType.match(/<([^>]+)>/);
   const innerType = match?.[1];
   if (!innerType) throw new Error("Inner coin type not found");
 
   const [, moduleName, structName] = innerType.split("::");
   return { moduleName, structName, fullType: innerType };
+}
+
+export async function getCoinsByType(address: string, type: string) {
+  const client = new SuiClient({ url: getFullnodeUrl(ACTIVE_NETWORK) });
+
+  const response = await client.getCoins({
+    owner: address,
+    coinType: type,
+  });
+
+  return response.data;
 }

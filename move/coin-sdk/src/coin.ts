@@ -1,7 +1,14 @@
 import {SuiClient, SuiObjectChange, SuiTransactionBlockResponse} from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import {generateToMoveFile, getClient, getModuleName, Network, publishPackage, signAndExecute} from "../sui-utils";
-export const ACTIVE_NETWORK = (process.env.NETWORK as Network) || "testnet";
+import {
+    ACTIVE_NETWORK,
+    generateToMoveFile,
+    getClient,
+    getModuleName,
+    Network,
+    publishPackage,
+    signAndExecute
+} from "../sui-utils";
 
 class CoinSDK {
   private treasuryCap: string;
@@ -28,14 +35,14 @@ class CoinSDK {
         description,
         iconUrl,
         client,
-        signer
+        address
       } : {
         name: string;
         symbol: string;
         description?: string;
         iconUrl?: string;
         client: SuiClient;
-        signer: any;
+        address: any;
       }
   ): Promise<CoinSDK> {
     name = name.toLowerCase();
@@ -44,6 +51,7 @@ class CoinSDK {
       packagePath: "coin-create",
       network: ACTIVE_NETWORK,
       exportFileName: "coin",
+        address
     });
     const treasuryCap = publishResult.objectChanges?.find(
         (change): change is Extract<SuiObjectChange, { type: 'created' }> =>
@@ -68,7 +76,7 @@ class CoinSDK {
         symbol,
         description: description || "",
         iconUrl: iconUrl || "",
-        signer,
+        address,
     });
 
     return sdk;
@@ -80,13 +88,13 @@ class CoinSDK {
         symbol,
         description,
         iconUrl,
-        signer
+          address
       }: {
         name: string;
         symbol: string;
         description: string;
         iconUrl: string;
-        signer: any;
+          address: any;
       }
   ): Promise<SuiTransactionBlockResponse> {
     if (!this.coinMetadata) {
@@ -108,16 +116,18 @@ class CoinSDK {
         tx.object(this.coinMetadata),
       ],
     });
-    return await signAndExecute(tx, ACTIVE_NETWORK);
+    return await signAndExecute(tx, ACTIVE_NETWORK, address);
   }
 
   async createCoinAndTransfer(
       {
         amount,
-        recipient
+        recipient,
+          address
       }: {
         amount: number;
         recipient: string;
+        address: string;
       },
   ): Promise<SuiTransactionBlockResponse> {
     const tx = new Transaction();
@@ -131,7 +141,7 @@ class CoinSDK {
       ],
     });
 
-    return await signAndExecute(tx, ACTIVE_NETWORK);
+    return await signAndExecute(tx, ACTIVE_NETWORK,address);
   }
 }
 

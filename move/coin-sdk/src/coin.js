@@ -1,9 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ACTIVE_NETWORK = void 0;
 const transactions_1 = require("@mysten/sui/transactions");
 const sui_utils_1 = require("../sui-utils");
-exports.ACTIVE_NETWORK = process.env.NETWORK || "testnet";
 class CoinSDK {
     treasuryCap;
     client;
@@ -15,13 +13,14 @@ class CoinSDK {
         this.packageId = packageId;
         this.coinMetadata = coinMetadata;
     }
-    static async deployNewCoin({ name, symbol, description, iconUrl, client, signer }) {
+    static async deployNewCoin({ name, symbol, description, iconUrl, client, address }) {
         name = name.toLowerCase();
         (0, sui_utils_1.generateToMoveFile)('src/template.txt', 'coin-create/sources/coin.move', { coin_module: name, coin_name: name.toUpperCase() });
         const publishResult = await (0, sui_utils_1.publishPackage)({
             packagePath: "coin-create",
-            network: exports.ACTIVE_NETWORK,
+            network: sui_utils_1.ACTIVE_NETWORK,
             exportFileName: "coin",
+            address
         });
         const treasuryCap = publishResult.objectChanges?.find((change) => change.type === 'created' &&
             change.objectType.includes(`::coin::TreasuryCap`))?.objectId;
@@ -34,11 +33,11 @@ class CoinSDK {
             symbol,
             description: description || "",
             iconUrl: iconUrl || "",
-            signer,
+            address,
         });
         return sdk;
     }
-    async updateCoinInfo({ name, symbol, description, iconUrl, signer }) {
+    async updateCoinInfo({ name, symbol, description, iconUrl, address }) {
         if (!this.coinMetadata) {
             throw new Error("Coin metadata object ID is required to update coin info");
         }
@@ -54,11 +53,11 @@ class CoinSDK {
                 tx.object(this.coinMetadata),
             ],
         });
-        return await (0, sui_utils_1.signAndExecute)(tx, exports.ACTIVE_NETWORK);
+        return await (0, sui_utils_1.signAndExecute)(tx, sui_utils_1.ACTIVE_NETWORK, address);
     }
-    async createCoinAndTransfer({ amount, recipient }) {
+    async createCoinAndTransfer({ amount, recipient, address }) {
         const tx = new transactions_1.Transaction();
-        const { moduleName } = await (0, sui_utils_1.getModuleName)(this.treasuryCap, exports.ACTIVE_NETWORK);
+        const { moduleName } = await (0, sui_utils_1.getModuleName)(this.treasuryCap, sui_utils_1.ACTIVE_NETWORK);
         tx.moveCall({
             target: `${this.packageId}::${moduleName}::create_and_transfer`,
             arguments: [
@@ -67,7 +66,7 @@ class CoinSDK {
                 tx.pure.u64(amount),
             ],
         });
-        return await (0, sui_utils_1.signAndExecute)(tx, exports.ACTIVE_NETWORK);
+        return await (0, sui_utils_1.signAndExecute)(tx, sui_utils_1.ACTIVE_NETWORK, address);
     }
 }
 exports.default = CoinSDK;

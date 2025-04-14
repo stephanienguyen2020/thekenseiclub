@@ -1,6 +1,7 @@
 import {SuiClient, SuiObjectChange, SuiTransactionBlockResponse} from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import { signAndExecute } from "../sui-utils";
+import {getCoinsByType, Network, signAndExecute} from "../sui-utils";
+import {ACTIVE_NETWORK} from "../sui-utils";
 
 class BondingCurveSDK {
     private bondingCurveId: string;
@@ -20,7 +21,7 @@ class BondingCurveSDK {
         client: SuiClient,
         packageId: string,
         type: string,
-        signer: any
+        address: string
     ): Promise<BondingCurveSDK> {
         const tx = new Transaction();
 
@@ -34,7 +35,7 @@ class BondingCurveSDK {
             ],
         });
 
-        const response: SuiTransactionBlockResponse = await signAndExecute(tx, "localnet");
+        const response: SuiTransactionBlockResponse = await signAndExecute(tx, ACTIVE_NETWORK, address);
 
         const bondingCurveId = response.objectChanges?.find(
             (change): change is Extract<SuiObjectChange, {type : "created"}> =>
@@ -53,29 +54,31 @@ class BondingCurveSDK {
             minTokenRequired,
             coinId,
             type,
-            signer
+            address
         } : {
             amount: number;
             minTokenRequired: number;
             coinId: string;
             type: string;
-            signer: any;
+            address: string;
         }
     ): Promise<SuiTransactionBlockResponse> {
         const tx = new Transaction();
+
+        const [suiCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(amount)]);
 
         tx.moveCall({
             target: `${this.packageId}::bonding_curve::buy`,
             typeArguments: [type],
             arguments: [
                 tx.object(this.bondingCurveId),
-                tx.object(coinId),
+                suiCoin,
                 tx.pure.u64(amount),
                 tx.pure.u64(minTokenRequired),
             ],
         });
 
-        return await signAndExecute(tx, "localnet");
+        return await signAndExecute(tx, ACTIVE_NETWORK, address);
     }
 
     async sell(
@@ -84,29 +87,36 @@ class BondingCurveSDK {
             minSuiRequired,
             coinId,
             type,
-            signer
+            address
         } : {
             amount: number;
             minSuiRequired: number;
             coinId: string;
             type: string;
-            signer: any;
+            address: string;
         }
     ): Promise<SuiTransactionBlockResponse> {
         const tx = new Transaction();
+
+        const coins = await getCoinsByType(address, type);
+        if (coins.length === 0) {
+            throw new Error(`No coin of type ${type} found in wallet`);
+        }
+
+        const [splitCoin] = tx.splitCoins(tx.object(coins[0].coinObjectId), [tx.pure.u64(amount)]);
 
         tx.moveCall({
             target: `${this.packageId}::bonding_curve::sell`,
             typeArguments: [type],
             arguments: [
                 tx.object(this.bondingCurveId),
-                tx.object(coinId),
+                splitCoin,
                 tx.pure.u64(amount),
                 tx.pure.u64(minSuiRequired),
             ],
         });
 
-        return await signAndExecute(tx, "localnet");
+        return await signAndExecute(tx, ACTIVE_NETWORK, address);
     }
 }
 

@@ -3,9 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.publishPackage = exports.signAndExecute = exports.getClient = exports.getSigner = exports.getActiveAddress = exports.SUI_BIN = void 0;
+exports.publishPackage = exports.signAndExecute = exports.getClient = exports.getSigner = exports.getActiveAddress = exports.ACTIVE_NETWORK = exports.SUI_BIN = void 0;
 exports.generateToMoveFile = generateToMoveFile;
 exports.getModuleName = getModuleName;
+exports.getCoinsByType = getCoinsByType;
 const fs_1 = __importDefault(require("fs"));
 const child_process_1 = require("child_process");
 const fs_2 = require("fs");
@@ -16,14 +17,15 @@ const ed25519_1 = require("@mysten/sui/keypairs/ed25519");
 const transactions_1 = require("@mysten/sui/transactions");
 const utils_1 = require("@mysten/sui/utils");
 exports.SUI_BIN = `sui`;
+exports.ACTIVE_NETWORK = process.env.NETWORK || "testnet";
 const getActiveAddress = () => {
     return (0, child_process_1.execSync)(`${exports.SUI_BIN} client active-address`, {
         encoding: "utf8",
     }).trim();
 };
 exports.getActiveAddress = getActiveAddress;
-const getSigner = () => {
-    const sender = (0, exports.getActiveAddress)();
+const getSigner = (address) => {
+    const sender = address;
     const keystore = JSON.parse((0, fs_2.readFileSync)(path_1.default.join((0, os_1.homedir)(), ".sui", "sui_config", "sui.keystore"), "utf8"));
     for (const priv of keystore) {
         const raw = (0, utils_1.fromBase64)(priv);
@@ -42,9 +44,9 @@ const getClient = (network) => {
     return new client_1.SuiClient({ url: (0, client_1.getFullnodeUrl)(network) });
 };
 exports.getClient = getClient;
-const signAndExecute = async (txb, network) => {
+const signAndExecute = async (txb, network, address) => {
+    const signer = (0, exports.getSigner)(address); // chỉ gọi khi cần
     const client = (0, exports.getClient)(network);
-    const signer = (0, exports.getSigner)();
     return client.signAndExecuteTransaction({
         transaction: txb,
         signer,
@@ -55,7 +57,7 @@ const signAndExecute = async (txb, network) => {
     });
 };
 exports.signAndExecute = signAndExecute;
-const publishPackage = async ({ packagePath, network, exportFileName = "contract", }) => {
+const publishPackage = async ({ packagePath, network, exportFileName = "contract", address }) => {
     const txb = new transactions_1.Transaction();
     const { modules, dependencies } = JSON.parse((0, child_process_1.execSync)(`${exports.SUI_BIN} move build --dump-bytecode-as-base64 --path ${packagePath}`, {
         encoding: "utf-8",
@@ -65,7 +67,7 @@ const publishPackage = async ({ packagePath, network, exportFileName = "contract
         dependencies,
     });
     txb.transferObjects([cap], (0, exports.getActiveAddress)());
-    const results = await (0, exports.signAndExecute)(txb, network);
+    const results = await (0, exports.signAndExecute)(txb, network, address);
     const packageId = results.objectChanges?.find((x) => x.type === "published")?.packageId;
     // save to an env file
     (0, fs_2.writeFileSync)(`${exportFileName}.json`, JSON.stringify({
@@ -137,3 +139,13 @@ async function getModuleName(objectId, network) {
     const [, moduleName, structName] = innerType.split("::");
     return { moduleName, structName, fullType: innerType };
 }
+async function getCoinsByType(address, type) {
+    const signer = (0, exports.getSigner)(address);
+    const client = new client_1.SuiClient({ url: (0, client_1.getFullnodeUrl)(exports.ACTIVE_NETWORK) });
+    const response = await client.getCoins({
+        owner: address,
+        coinType: type,
+    });
+    return response.data; // Mỗi item: { coinObjectId, balance, ... }
+}
+const isEmptyObject = (obj) => obj && Object.keys(obj).length === 0 && obj.constructor === Object;

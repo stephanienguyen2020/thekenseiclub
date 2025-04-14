@@ -28,28 +28,29 @@ const bondingCurveObjectId = "0x5f783bee46cbfe75655c481530e22093165b68cc9963b67b
 //     description: "mario",
 //     iconUrl: "https://example.com/icon.png",
 //     client,
-//     signer: undefined
+//     address
 // });
 //Mint and transfer coin
 // coinSdk.createCoinAndTransfer({
 //     amount: 10000000000,
 //     recipient: address,
+//     address
 // });
 //Create bonding curve
-// BondingCurveSDK.createBondingCurve(treasuryCap, coinMetadata, 10000000000000000000, client, bondingCurvePackageId, coinType, {} as any);
+// BondingCurveSDK.createBondingCurve(treasuryCap, coinMetadata, 10000000000000000000, client, bondingCurvePackageId, coinType, address);
 // Buy, sell bonding curve
 const bondingCurveSdk = new bonding_curve_1.default(bondingCurveObjectId, client, bondingCurvePackageId);
 // bondingCurveSdk.buy({
-//     amount: 1000,
+//     amount: 100000000000,
 //     minTokenRequired: 0,
 //     coinId: suiCoinId,
 //     type: coinType,
-//     signer: {} as any
+//     address: address
 // })
 bondingCurveSdk.sell({
-    amount: 1000,
+    amount: 100000000000000000,
     minSuiRequired: 0,
     coinId: tokenId,
     type: tokenType,
-    signer: {}
+    address: address
 });
