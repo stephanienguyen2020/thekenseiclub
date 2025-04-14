@@ -1,21 +1,21 @@
 /// Module: pump
-module meme::keke;
+module meme::hehehe;
 
 use std::ascii;
 use std::string::String;
 use sui::coin::{Self, TreasuryCap, Coin};
 use sui::url::{Self};
 
-public struct KEKE has drop {}
+public struct HEHEHE has drop {}
 
-fun init(witness: KEKE, ctx: &mut TxContext) {
-    let (treasury_cap, metadata) = coin::create_currency<KEKE>(
+fun init(witness: HEHEHE, ctx: &mut TxContext) {
+    let (treasury_cap, metadata) = coin::create_currency<HEHEHE>(
         witness,
         9,
-        b"keke",
-        b"KEKE",
-        b"keke",
-        option::some(url::new_unsafe_from_bytes(b"https://cdn.oneesports.vn/cdn-data/sites/4/2023/05/TuSena-ManU-1024x576.jpg")),
+        b"HEHEHE",
+        b"HEHEHE",
+        b"HEHEHE",
+        option::some(url::new_unsafe_from_bytes(b"https://ichef.bbci.co.uk/ace/standard/976/cpsprodpb/16620/production/_91408619_55df76d5-2245-41c1-8031-07a4da3f313f.jpg")),
         ctx,
     );
 
@@ -28,8 +28,8 @@ public fun update_coin_info(
     symbol: vector<u8>,
     description: String,
     icon_url: vector<u8>,
-    _treasury: &coin::TreasuryCap<KEKE>,
-    metadata: &mut coin::CoinMetadata<KEKE>,
+    _treasury: &coin::TreasuryCap<HEHEHE>,
+    metadata: &mut coin::CoinMetadata<HEHEHE>,
 ) {
     let icon_url = ascii::string(icon_url);
     let symbol = ascii::string(symbol);
@@ -40,7 +40,7 @@ public fun update_coin_info(
 }
 
 public entry fun create_and_transfer(
-    treasury_cap: &mut TreasuryCap<KEKE>,
+    treasury_cap: &mut TreasuryCap<HEHEHE>,
     recepient: address,
     amount: u64,
     ctx: &mut TxContext,
@@ -49,6 +49,6 @@ public entry fun create_and_transfer(
 }
 
 /// Manager can burn coins
-public entry fun burn(treasury_cap: &mut TreasuryCap<KEKE>, coin: Coin<KEKE>) {
+public entry fun burn(treasury_cap: &mut TreasuryCap<HEHEHE>, coin: Coin<HEHEHE>) {
     coin::burn(treasury_cap, coin);
 }

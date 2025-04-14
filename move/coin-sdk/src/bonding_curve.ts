@@ -1,5 +1,5 @@
 import {SuiClient, SuiObjectChange, SuiTransactionBlockResponse} from "@mysten/sui/client";
-import { Transaction } from "@mysten/sui/transactions";
+import {Transaction} from "@mysten/sui/transactions";
 import {getCoinsByType, Network, signAndExecute} from "../sui-utils";
 import {ACTIVE_NETWORK} from "../sui-utils";
 
@@ -38,7 +38,7 @@ class BondingCurveSDK {
         const response: SuiTransactionBlockResponse = await signAndExecute(tx, ACTIVE_NETWORK, address);
 
         const bondingCurveId = response.objectChanges?.find(
-            (change): change is Extract<SuiObjectChange, {type : "created"}> =>
+            (change): change is Extract<SuiObjectChange, { type: "created" }> =>
                 change.type === "created" &&
                 change.objectType.includes("::bonding_curve::BondingCurve")
         )?.objectId as string;
@@ -55,7 +55,7 @@ class BondingCurveSDK {
             coinId,
             type,
             address
-        } : {
+        }: {
             amount: number;
             minTokenRequired: number;
             coinId: string;
@@ -88,7 +88,7 @@ class BondingCurveSDK {
             coinId,
             type,
             address
-        } : {
+        }: {
             amount: number;
             minSuiRequired: number;
             coinId: string;

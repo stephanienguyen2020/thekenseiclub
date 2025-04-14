@@ -77,10 +77,10 @@ public fun buy<T>(
     let mut balance = coin::into_balance<SUI>(coin);
     bonding_curve.sui_balance.join(balance.split(amount));
     let (curr_sui_balance, curr_token_balance) = get_token_in_pool(bonding_curve);
-    // if (curr_token_balance + token_received >= bonding_curve.target_supply_threshold) {
-    //     bonding_curve.is_active = false;
-    //     //Migrate
-    // };
+    if (curr_token_balance + token_received <= bonding_curve.target_supply_threshold) {
+        bonding_curve.is_active = false;
+        //Migrate
+    };
     let token = coin::take<T>(&mut bonding_curve.token_balance, token_received, ctx);
     transfer::public_transfer(token, sender);
     return_back_or_delete<SUI>(balance, ctx);
