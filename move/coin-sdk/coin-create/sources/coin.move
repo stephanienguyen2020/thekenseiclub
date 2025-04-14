@@ -1,18 +1,18 @@
 /// Module: pump
-module meme::coin;
+module meme::mario;
 
 use std::ascii;
 use std::string::String;
 use sui::coin::{Self, TreasuryCap, Coin};
 
-public struct COIN has drop {}
+public struct MARIO has drop {}
 
-fun init(witness: COIN, ctx: &mut TxContext) {
-    let (treasury_cap, metadata) = coin::create_currency<COIN>(
+fun init(witness: MARIO, ctx: &mut TxContext) {
+    let (treasury_cap, metadata) = coin::create_currency<MARIO>(
         witness,
         9,
-        b"coin",
-        b"Coin",
+        b"MARIO",
+        b"MARIO",
         b"",
         option::none(),
         ctx,
@@ -27,8 +27,8 @@ public fun update_coin_info(
     symbol: vector<u8>,
     description: String,
     icon_url: vector<u8>,
-    _treasury: &coin::TreasuryCap<COIN>,
-    metadata: &mut coin::CoinMetadata<COIN>,
+    _treasury: &coin::TreasuryCap<MARIO>,
+    metadata: &mut coin::CoinMetadata<MARIO>,
 ) {
     let icon_url = ascii::string(icon_url);
     let symbol = ascii::string(symbol);
@@ -39,7 +39,7 @@ public fun update_coin_info(
 }
 
 public entry fun create_and_transfer(
-    treasury_cap: &mut TreasuryCap<COIN>,
+    treasury_cap: &mut TreasuryCap<MARIO>,
     recepient: address,
     amount: u64,
     ctx: &mut TxContext,
@@ -48,6 +48,6 @@ public entry fun create_and_transfer(
 }
 
 /// Manager can burn coins
-public entry fun burn(treasury_cap: &mut TreasuryCap<COIN>, coin: Coin<COIN>) {
+public entry fun burn(treasury_cap: &mut TreasuryCap<MARIO>, coin: Coin<MARIO>) {
     coin::burn(treasury_cap, coin);
 }

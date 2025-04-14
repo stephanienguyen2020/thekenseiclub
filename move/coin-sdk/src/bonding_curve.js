@@ -23,15 +23,16 @@ class BondingCurveSDK {
             ],
         });
         const response = await (0, sui_utils_1.signAndExecute)(tx, "localnet");
-        console.log({ response });
         const bondingCurveId = response.objectChanges?.find((change) => change.type === "created" &&
             change.objectType.includes("::bonding_curve::BondingCurve"))?.objectId;
+        console.log("Bonding Curve ID:", bondingCurveId);
         return new BondingCurveSDK(bondingCurveId, client, packageId);
     }
-    async buy(amount, minTokenRequired, coinId, signer) {
+    async buy({ amount, minTokenRequired, coinId, type, signer }) {
         const tx = new transactions_1.Transaction();
         tx.moveCall({
             target: `${this.packageId}::bonding_curve::buy`,
+            typeArguments: [type],
             arguments: [
                 tx.object(this.bondingCurveId),
                 tx.object(coinId),
@@ -41,10 +42,11 @@ class BondingCurveSDK {
         });
         return await (0, sui_utils_1.signAndExecute)(tx, "localnet");
     }
-    async sell(amount, minSuiRequired, coinId, signer) {
+    async sell({ amount, minSuiRequired, coinId, type, signer }) {
         const tx = new transactions_1.Transaction();
         tx.moveCall({
             target: `${this.packageId}::bonding_curve::sell`,
+            typeArguments: [type],
             arguments: [
                 tx.object(this.bondingCurveId),
                 tx.object(coinId),

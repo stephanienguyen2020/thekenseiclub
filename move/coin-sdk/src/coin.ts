@@ -1,13 +1,7 @@
 import {SuiClient, SuiObjectChange, SuiTransactionBlockResponse} from "@mysten/sui/client";
-import { Transaction, TransactionArgument } from "@mysten/sui/transactions";
-import {publishPackage, signAndExecute} from "../sui-utils";
-
-interface CoinMetadata {
-  name: string;
-  symbol: string;
-  description: string;
-  iconUrl: string;
-}
+import { Transaction } from "@mysten/sui/transactions";
+import {generateToMoveFile, getClient, getModuleName, Network, publishPackage, signAndExecute} from "../sui-utils";
+export const ACTIVE_NETWORK = (process.env.NETWORK as Network) || "testnet";
 
 class CoinSDK {
   private treasuryCap: string;
@@ -28,29 +22,39 @@ class CoinSDK {
   }
 
   static async deployNewCoin(
-    name: string,
-    symbol: string,
-    description: string,
-    iconUrl: string,
-    client: SuiClient,
-    signer: any
+      {
+        name,
+        symbol,
+        description,
+        iconUrl,
+        client,
+        signer
+      } : {
+        name: string;
+        symbol: string;
+        description?: string;
+        iconUrl?: string;
+        client: SuiClient;
+        signer: any;
+      }
   ): Promise<CoinSDK> {
+    name = name.toLowerCase();
+    generateToMoveFile('src/template.txt', 'coin-create/sources/coin.move', {coin_module: name, coin_name: name.toUpperCase()})
     const publishResult: SuiTransactionBlockResponse  = await publishPackage({
-      packagePath: "../../meme",
-      network: "localnet",
+      packagePath: "coin-create",
+      network: ACTIVE_NETWORK,
       exportFileName: "coin",
     });
-
     const treasuryCap = publishResult.objectChanges?.find(
         (change): change is Extract<SuiObjectChange, { type: 'created' }> =>
             change.type === 'created' &&
-            change.objectType.includes('::coin::TreasuryCap')
+            change.objectType.includes(`::coin::TreasuryCap`)
     )?.objectId as string;
 
     const coinMetadata = publishResult.objectChanges?.find(
       (change): change is Extract<SuiObjectChange, { type: 'created' }> =>
         change.type === "created" &&
-        change.objectType.includes("::coin::CoinMetadata")
+        change.objectType.includes(`::coin::CoinMetadata`)
     )?.objectId as string;
 
     const packageId = publishResult.objectChanges?.find(
@@ -59,17 +63,31 @@ class CoinSDK {
 
     const sdk = new CoinSDK(treasuryCap, client, packageId, coinMetadata);
 
-    await sdk.updateCoinInfo(name, symbol, description, iconUrl, signer);
+    await sdk.updateCoinInfo({
+        name,
+        symbol,
+        description: description || "",
+        iconUrl: iconUrl || "",
+        signer,
+    });
 
     return sdk;
   }
 
   async updateCoinInfo(
-    name: string,
-    symbol: string,
-    description: string,
-    iconUrl: string,
-    signer: any
+      {
+        name,
+        symbol,
+        description,
+        iconUrl,
+        signer
+      }: {
+        name: string;
+        symbol: string;
+        description: string;
+        iconUrl: string;
+        signer: any;
+      }
   ): Promise<SuiTransactionBlockResponse> {
     if (!this.coinMetadata) {
       throw new Error(
@@ -80,7 +98,7 @@ class CoinSDK {
     const tx = new Transaction();
 
     tx.moveCall({
-      target: `${this.packageId}::coin::update_coin_info`,
+      target: `${this.packageId}::${name}::update_coin_info`,
       arguments: [
         tx.pure.string(name),
         tx.pure.string(symbol),
@@ -90,17 +108,22 @@ class CoinSDK {
         tx.object(this.coinMetadata),
       ],
     });
-    return await signAndExecute(tx, 'localnet');
+    return await signAndExecute(tx, ACTIVE_NETWORK);
   }
 
   async createCoinAndTransfer(
-    amount: number,
-    recipient: string,
+      {
+        amount,
+        recipient
+      }: {
+        amount: number;
+        recipient: string;
+      },
   ): Promise<SuiTransactionBlockResponse> {
     const tx = new Transaction();
-
+      const {moduleName} = await getModuleName(this.treasuryCap, ACTIVE_NETWORK);
     tx.moveCall({
-      target: `${this.packageId}::coin::create_and_transfer`,
+      target: `${this.packageId}::${moduleName}::create_and_transfer`,
       arguments: [
         tx.object(this.treasuryCap),
         tx.pure.address(recipient),
@@ -108,7 +131,7 @@ class CoinSDK {
       ],
     });
 
-    return await signAndExecute(tx, 'localnet');
+    return await signAndExecute(tx, ACTIVE_NETWORK);
   }
 }
 

@@ -1,5 +1,4 @@
-// Copyright (c) Mysten Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
+import fs from 'fs';
 
 import { execSync } from "child_process";
 import { readFileSync, writeFileSync } from "fs";
@@ -12,8 +11,6 @@ import { fromBase64 } from "@mysten/sui/utils";
 
 export type Network = "mainnet" | "testnet" | "devnet" | "localnet";
 
-export const ACTIVE_NETWORK = (process.env.NETWORK as Network) || "testnet";
-
 export const SUI_BIN = `sui`;
 
 export const getActiveAddress = () => {
@@ -22,7 +19,6 @@ export const getActiveAddress = () => {
   }).trim();
 };
 
-/** Returns a signer based on the active address of system's sui. */
 export const getSigner = () => {
   const sender = getActiveAddress();
 
@@ -48,12 +44,10 @@ export const getSigner = () => {
   throw new Error(`keypair not found for sender: ${sender}`);
 };
 
-/** Get the client for the specified network. */
 export const getClient = (network: Network) => {
   return new SuiClient({ url: getFullnodeUrl(network) });
 };
 
-/** A helper to sign & execute a transaction. */
 export const signAndExecute = async (txb: Transaction, network: Network) => {
   const client = getClient(network);
   const signer = getSigner();
@@ -68,7 +62,6 @@ export const signAndExecute = async (txb: Transaction, network: Network) => {
   });
 };
 
-/** Publishes a package and saves the package id to a specified json file. */
 export const publishPackage = async ({
   packagePath,
   network,
@@ -94,12 +87,10 @@ export const publishPackage = async ({
     dependencies,
   });
 
-  // Transfer the upgrade capability to the sender so they can upgrade the package later if they want.
   txb.transferObjects([cap], getActiveAddress());
 
   const results = await signAndExecute(txb, network);
 
-  // @ts-ignore-next-line
   const packageId = results.objectChanges?.find(
     (x) => x.type === "published"
   )?.packageId;
@@ -151,4 +142,46 @@ async function waitForObject(
     }
   }
   throw new Error(`Object ${objectId} did not become available in time.`);
+}
+
+function generateCoinModule(template: string, replacements: { [key: string]: string }): string {
+  return template.replace(/\{(\w+)\}/g, (_, key) => {
+    return replacements[key] || `{${key}}`; // giữ nguyên nếu không có key tương ứng
+  });
+}
+
+export function generateToMoveFile(
+    inputPath: string,
+    outputPath: string,
+    replacements: { [key: string]: string }
+) {
+  try {
+    const template = fs.readFileSync(inputPath, 'utf-8');
+    const result = generateCoinModule(template, replacements);
+
+    fs.writeFileSync(outputPath, result, 'utf-8');
+    console.log(`✅ Module written to ${outputPath}`);
+    console.log(`✅ Module content: ${result}`);
+  } catch (error) {
+    console.error('❌ Error:', error);
+  }
+}
+
+
+export async function getModuleName(objectId: string, network: Network) {
+  const obj = await getClient(network).getObject({
+    id: objectId,
+    options: { showType: true },
+  });
+
+  const objectType = obj.data?.type;
+  if (!objectType) throw new Error("Object type not found");
+
+  // objectType format: 0x...::module::TreasuryCap<0x...::YourModule::YourCoin>
+  const match = objectType.match(/<([^>]+)>/);
+  const innerType = match?.[1];
+  if (!innerType) throw new Error("Inner coin type not found");
+
+  const [, moduleName, structName] = innerType.split("::");
+  return { moduleName, structName, fullType: innerType };
 }

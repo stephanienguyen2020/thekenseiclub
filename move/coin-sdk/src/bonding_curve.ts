@@ -35,7 +35,6 @@ class BondingCurveSDK {
         });
 
         const response: SuiTransactionBlockResponse = await signAndExecute(tx, "localnet");
-        console.log({response})
 
         const bondingCurveId = response.objectChanges?.find(
             (change): change is Extract<SuiObjectChange, {type : "created"}> =>
@@ -43,19 +42,31 @@ class BondingCurveSDK {
                 change.objectType.includes("::bonding_curve::BondingCurve")
         )?.objectId as string;
 
+        console.log("Bonding Curve ID:", bondingCurveId);
+
         return new BondingCurveSDK(bondingCurveId, client, packageId);
     }
 
     async buy(
-        amount: number,
-        minTokenRequired: number,
-        coinId: string,
-        signer: any
+        {
+            amount,
+            minTokenRequired,
+            coinId,
+            type,
+            signer
+        } : {
+            amount: number;
+            minTokenRequired: number;
+            coinId: string;
+            type: string;
+            signer: any;
+        }
     ): Promise<SuiTransactionBlockResponse> {
         const tx = new Transaction();
 
         tx.moveCall({
             target: `${this.packageId}::bonding_curve::buy`,
+            typeArguments: [type],
             arguments: [
                 tx.object(this.bondingCurveId),
                 tx.object(coinId),
@@ -68,15 +79,25 @@ class BondingCurveSDK {
     }
 
     async sell(
-        amount: number,
-        minSuiRequired: number,
-        coinId: string,
-        signer: any
+        {
+            amount,
+            minSuiRequired,
+            coinId,
+            type,
+            signer
+        } : {
+            amount: number;
+            minSuiRequired: number;
+            coinId: string;
+            type: string;
+            signer: any;
+        }
     ): Promise<SuiTransactionBlockResponse> {
         const tx = new Transaction();
 
         tx.moveCall({
             target: `${this.packageId}::bonding_curve::sell`,
+            typeArguments: [type],
             arguments: [
                 tx.object(this.bondingCurveId),
                 tx.object(coinId),

@@ -1,17 +1,60 @@
 import CoinSDK from "./coin";
-import Coin from "./coin";
 import {getClient} from "../sui-utils";
 import BondingCurveSDK from "./bonding_curve";
-import coin from "./coin";
 
-const treasuryCap = "0x50035953004f7fc2cadbed6e0eba215630ae29b6796078de913c508cf1e35029"
+const address="0x89052a175017eb52f49d24e7de1f48b0c38c6b1d67f9fc4e471420524e4dc2d4"
+const treasuryCap = "0xd5a8f35f3f4abc206e5d97a21b1bc6c5845464386f0abc4a8903173a66e2564f"
 const client = getClient("localnet");
-const packageId = "0xd082437cd54ac3be2ffee0c315e48c88975fd2d8ce3a445ee5c01cb2094faa61"
-const coinMetadata = "0x58d6fa0d893bea5af8c52be2ee83f68d075b2912ecb8036d1352b4b425296b0f"
-// const coinSdk = new CoinSDK(treasuryCap, client, packageId, coinMetadata);
-// CoinSDK.deployNewCoin("TAO", "TAO", "TAO Coin", "https://example.com/icon.png", {} as any, {} as any);
-// coinSdk.createCoinAndTransfer(10000000000000000000, "0x89052a175017eb52f49d24e7de1f48b0c38c6b1d67f9fc4e471420524e4dc2d4");
-//
-const type = "0x2::coin::Coin<0xd082437cd54ac3be2ffee0c315e48c88975fd2d8ce3a445ee5c01cb2094faa61::coin::COIN>";
-BondingCurveSDK.createBondingCurve(treasuryCap, coinMetadata, 10000000000000000000, client, packageId,type, {} as any)
+const coinCreationPackageId = "0xb99fae772e06a49ef626d4122b40c571c13a858033f1b1ade71a94149a3b9189"
+const coinMetadata = "0x336864ff9f4a86311489da15082f3092c2c1cb2c8412cd19e924ee147e63f71e"
+const coinSdk = new CoinSDK(treasuryCap, client, coinCreationPackageId, coinMetadata);
+const coinType = "0xb99fae772e06a49ef626d4122b40c571c13a858033f1b1ade71a94149a3b9189::mario::MARIO";
+
+const suiCoinId="0x99a122a72ed9c1130b5f9583ee7357f4784c898b9e732ddac96f59283cf0fae4"
+const suiCoinType = "0x2::coin::Coin<0x2::sui::SUI>";
+
+const tokenId="0x5b00143dfbfa324952f888c3285782915b5beaffab2fce515aaeb447d3750f00"
+const tokenType = "0xb99fae772e06a49ef626d4122b40c571c13a858033f1b1ade71a94149a3b9189::mario::MARIO";
+
+const bondingCurvePackageId = "0x81d7ca09e6d2cc04a27be4508355690cab345665440538fe7bac0b583cb79db0";
+const bondingCurveObjectId = "0x5f783bee46cbfe75655c481530e22093165b68cc9963b67b56b6564df82edc6c"
+
+//Publish new coin
+// CoinSDK.deployNewCoin({
+//     name: "mario",
+//     symbol: "mario",
+//     description: "mario",
+//     iconUrl: "https://example.com/icon.png",
+//     client,
+//     signer: undefined
+// });
+
+//Mint and transfer coin
+// coinSdk.createCoinAndTransfer({
+//     amount: 10000000000,
+//     recipient: address,
+// });
+
+//Create bonding curve
+// BondingCurveSDK.createBondingCurve(treasuryCap, coinMetadata, 10000000000000000000, client, bondingCurvePackageId, coinType, {} as any);
+
+// Buy, sell bonding curve
+const bondingCurveSdk = new BondingCurveSDK(bondingCurveObjectId, client, bondingCurvePackageId);
+// bondingCurveSdk.buy({
+//     amount: 1000,
+//     minTokenRequired: 0,
+//     coinId: suiCoinId,
+//     type: coinType,
+//     signer: {} as any
+// })
+
+bondingCurveSdk.sell({
+    amount: 1000,
+    minSuiRequired: 0,
+    coinId: tokenId,
+    type: tokenType,
+    signer: {} as any
+})
+
+
 export { CoinSDK };
