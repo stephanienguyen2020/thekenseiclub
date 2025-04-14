@@ -45,27 +45,11 @@ class BondingCurveSDK {
         return await (0, sui_utils_1.signAndExecute)(tx, sui_utils_2.ACTIVE_NETWORK, address);
     }
     async sell({ amount, minSuiRequired, coinId, type, address }) {
-        // const tx = new Transaction();
-        //
-        // tx.moveCall({
-        //     target: `${this.packageId}::bonding_curve::sell`,
-        //     typeArguments: [type],
-        //     arguments: [
-        //         tx.object(this.bondingCurveId),
-        //         tx.object(coinId),
-        //         tx.pure.u64(amount),
-        //         tx.pure.u64(minSuiRequired),
-        //     ],
-        // });
-        //
-        // return await signAndExecute(tx, ACTIVE_NETWORK);
         const tx = new transactions_1.Transaction();
-        // 🔍 Lấy list đồng coin phù hợp
         const coins = await (0, sui_utils_1.getCoinsByType)(address, type);
         if (coins.length === 0) {
             throw new Error(`No coin of type ${type} found in wallet`);
         }
-        // 🪙 Split amount từ đồng đầu tiên
         const [splitCoin] = tx.splitCoins(tx.object(coins[0].coinObjectId), [tx.pure.u64(amount)]);
         tx.moveCall({
             target: `${this.packageId}::bonding_curve::sell`,

@@ -48,7 +48,7 @@ public fun create_bonding_curve<T>(
         target_supply_threshold: 300_000_000_000_000_000,
         migration_fee: 3_000_000_000,
         listing_fee: 1_000_000_000,
-        swap_fee: 10_000,
+        swap_fee: 1,
         is_active: true,
         creator: tx_context::sender(ctx),
         migration_target,
@@ -122,7 +122,7 @@ fun get_token_receive(
 }
 
 fun take_fee(swap_fee: u64, buy_amount: u64): u64 {
-    swap_fee * (buy_amount / 100_000)
+    swap_fee * (buy_amount / 100)
 }
 
 fun get_token_in_pool<T>(bonding_curve: &BondingCurve<T>): (u64, u64) {

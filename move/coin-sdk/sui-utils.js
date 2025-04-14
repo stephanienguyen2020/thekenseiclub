@@ -45,7 +45,7 @@ const getClient = (network) => {
 };
 exports.getClient = getClient;
 const signAndExecute = async (txb, network, address) => {
-    const signer = (0, exports.getSigner)(address); // chỉ gọi khi cần
+    const signer = (0, exports.getSigner)(address);
     const client = (0, exports.getClient)(network);
     return client.signAndExecuteTransaction({
         transaction: txb,
@@ -69,7 +69,6 @@ const publishPackage = async ({ packagePath, network, exportFileName = "contract
     txb.transferObjects([cap], (0, exports.getActiveAddress)());
     const results = await (0, exports.signAndExecute)(txb, network, address);
     const packageId = results.objectChanges?.find((x) => x.type === "published")?.packageId;
-    // save to an env file
     (0, fs_2.writeFileSync)(`${exportFileName}.json`, JSON.stringify({
         packageId,
     }), { encoding: "utf8", flag: "w" });
@@ -108,7 +107,7 @@ async function waitForObject(client, objectId, maxRetries = 10, delayMs = 500) {
 }
 function generateCoinModule(template, replacements) {
     return template.replace(/\{(\w+)\}/g, (_, key) => {
-        return replacements[key] || `{${key}}`; // giữ nguyên nếu không có key tương ứng
+        return replacements[key] || `{${key}}`;
     });
 }
 function generateToMoveFile(inputPath, outputPath, replacements) {
@@ -131,7 +130,6 @@ async function getModuleName(objectId, network) {
     const objectType = obj.data?.type;
     if (!objectType)
         throw new Error("Object type not found");
-    // objectType format: 0x...::module::TreasuryCap<0x...::YourModule::YourCoin>
     const match = objectType.match(/<([^>]+)>/);
     const innerType = match?.[1];
     if (!innerType)
@@ -140,12 +138,10 @@ async function getModuleName(objectId, network) {
     return { moduleName, structName, fullType: innerType };
 }
 async function getCoinsByType(address, type) {
-    const signer = (0, exports.getSigner)(address);
     const client = new client_1.SuiClient({ url: (0, client_1.getFullnodeUrl)(exports.ACTIVE_NETWORK) });
     const response = await client.getCoins({
         owner: address,
         coinType: type,
     });
-    return response.data; // Mỗi item: { coinObjectId, balance, ... }
+    return response.data;
 }
-const isEmptyObject = (obj) => obj && Object.keys(obj).length === 0 && obj.constructor === Object;

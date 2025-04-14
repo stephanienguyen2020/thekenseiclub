@@ -4,6 +4,7 @@ module meme::{coin_module};
 use std::ascii;
 use std::string::String;
 use sui::coin::{Self, TreasuryCap, Coin};
+use sui::url::{Self};
 
 public struct {coin_name} has drop {}
 
@@ -11,10 +12,10 @@ fun init(witness: {coin_name}, ctx: &mut TxContext) {
     let (treasury_cap, metadata) = coin::create_currency<{coin_name}>(
         witness,
         9,
+        b"{coin_symbol}",
         b"{coin_name}",
-        b"{coin_name}",
-        b"",
-        option::none(),
+        b"{coin_description}",
+        option::some(url::new_unsafe_from_bytes(b"{coin_icon_url}")),
         ctx,
     );
 
