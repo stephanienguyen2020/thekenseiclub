@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const transactions_1 = require("@mysten/sui/transactions");
 const sui_utils_1 = require("../sui-utils");
 const sui_utils_2 = require("../sui-utils");
+const sdk_1 = require("@flowx-finance/sdk");
+const constant_1 = require("./constant");
 class BondingCurveSDK {
     bondingCurveId;
     client;
@@ -62,6 +64,54 @@ class BondingCurveSDK {
             ],
         });
         return await (0, sui_utils_1.signAndExecute)(tx, sui_utils_2.ACTIVE_NETWORK, address);
+    }
+    async migrateToFlowx(address) {
+        try {
+            const bondingCurveObj = await this.client.getObject({
+                id: this.bondingCurveId,
+                options: {
+                    showType: true,
+                    showContent: true
+                }
+            });
+            if (!bondingCurveObj.data || !bondingCurveObj.data.content) {
+                throw new Error("Failed to get bonding curve data");
+            }
+            const content = bondingCurveObj.data.content;
+            const objectType = bondingCurveObj.data.type;
+            const tokenTypeMatch = objectType.match(/<(.+)>/);
+            const tokenType = tokenTypeMatch ? tokenTypeMatch[1] : null;
+            if (!tokenType) {
+                throw new Error("Could not determine token type from bonding curve");
+            }
+            // const tx = new Transaction();
+            // tx.moveCall({
+            //     target: `${this.packageId}::bonding_curve::withdraw_for_migration`,
+            //     typeArguments: [tokenType],
+            //     arguments: [
+            //         tx.object(this.bondingCurveId),
+            //         tx.pure.address(address)
+            //     ]
+            // });
+            // await signAndExecute(tx, ACTIVE_NETWORK, address);
+            // @ts-ignore
+            const addLiquidityV2 = new sdk_1.AddLiquidityV2(sui_utils_2.ACTIVE_NETWORK, this.client);
+            const liquidityTx = await addLiquidityV2.buildTransaction({
+                x: tokenType,
+                y: constant_1.SUI_COIN_TYPE,
+            }, {
+                // x: fields.token_balance,
+                // y: fields.sui_balance,
+                x: "10000000",
+                y: "1"
+            }, address, 0.01);
+            // Execute the transaction
+            return await (0, sui_utils_1.signAndExecute)(liquidityTx, sui_utils_2.ACTIVE_NETWORK, address);
+        }
+        catch (error) {
+            console.error("Error migrating to FlowX:", error);
+            throw error;
+        }
     }
 }
 exports.default = BondingCurveSDK;

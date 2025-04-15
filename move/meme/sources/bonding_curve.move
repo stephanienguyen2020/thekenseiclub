@@ -110,6 +110,24 @@ public fun sell<T>(
     return_back_or_delete<T>(balance, ctx);
 }
 
+// Add this function to your bonding_curve.move file
+public entry fun withdraw_for_migration<T>(
+    bonding_curve: &mut BondingCurve<T>,
+    recipient: address,
+    ctx: &mut TxContext
+) {
+    assert!(tx_context::sender(ctx) == bonding_curve.creator, 0);
+
+    let sui_amount = bonding_curve.sui_balance.value();
+    let token_amount = bonding_curve.token_balance.value();
+
+    let sui_coin = coin::take(&mut bonding_curve.sui_balance, sui_amount, ctx);
+    let token_coin = coin::take(&mut bonding_curve.token_balance, token_amount, ctx);
+
+    transfer::public_transfer(sui_coin, recipient);
+    transfer::public_transfer(token_coin, recipient);
+}
+
 fun get_token_receive(
     after_fee_amount: u64,
     curr_token_a_balance: u64,
