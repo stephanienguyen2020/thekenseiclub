@@ -137,6 +137,7 @@ class BondingCurveSDK {
             }
 
             const content = bondingCurveObj.data.content as any;
+            console.log("content", content);
             const objectType = bondingCurveObj.data.type as string;
 
             const tokenTypeMatch = objectType.match(/<(.+)>/);
@@ -144,17 +145,29 @@ class BondingCurveSDK {
             if (!tokenType) {
                 throw new Error("Could not determine token type from bonding curve");
             }
-            // const tx = new Transaction();
-            // tx.moveCall({
-            //     target: `${this.packageId}::bonding_curve::withdraw_for_migration`,
-            //     typeArguments: [tokenType],
-            //     arguments: [
-            //         tx.object(this.bondingCurveId),
-            //         tx.pure.address(address)
-            //     ]
-            // });
+            const x = content.fields.token_balance;
+            const y = content.fields.sui_balance;
+            const tx = new Transaction();
+            tx.moveCall({
+                target: `${this.packageId}::bonding_curve::withdraw_for_migration`,
+                typeArguments: [tokenType],
+                arguments: [
+                    tx.object(this.bondingCurveId),
+                    tx.pure.address(address)
+                ]
+            });
 
-            // await signAndExecute(tx, ACTIVE_NETWORK, address);
+            // Execute withdraw transaction and wait for completion
+            const withdrawTxResponse = await signAndExecute(tx, ACTIVE_NETWORK, address);
+            console.log("Withdraw transaction submitted, digest:", withdrawTxResponse.digest);
+
+            // Wait for the transaction to be confirmed
+            await this.client.waitForTransaction({
+                digest: withdrawTxResponse.digest,
+                timeout: 60 * 1000, // 60 seconds timeout
+            });
+
+            console.log("Withdraw transaction confirmed, proceeding with adding liquidity");
             // @ts-ignore
             const addLiquidityV2 = new AddLiquidityV2(ACTIVE_NETWORK, this.client)
             const liquidityTx = await addLiquidityV2.buildTransaction(
@@ -163,10 +176,7 @@ class BondingCurveSDK {
                     y: SUI_COIN_TYPE,
                 },
                 {
-                    // x: fields.token_balance,
-                    // y: fields.sui_balance,
-                    x: "10000000",
-                    y: "1"
+                    x, y
                 },
                 address,
                 0.01
@@ -174,7 +184,6 @@ class BondingCurveSDK {
 
             // Execute the transaction
             return await signAndExecute(liquidityTx as any, ACTIVE_NETWORK, address);
-
         } catch (error) {
             console.error("Error migrating to FlowX:", error);
             throw error;

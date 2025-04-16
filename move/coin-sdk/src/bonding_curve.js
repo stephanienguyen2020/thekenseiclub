@@ -78,32 +78,40 @@ class BondingCurveSDK {
                 throw new Error("Failed to get bonding curve data");
             }
             const content = bondingCurveObj.data.content;
+            console.log("content", content);
             const objectType = bondingCurveObj.data.type;
             const tokenTypeMatch = objectType.match(/<(.+)>/);
             const tokenType = tokenTypeMatch ? tokenTypeMatch[1] : null;
             if (!tokenType) {
                 throw new Error("Could not determine token type from bonding curve");
             }
-            // const tx = new Transaction();
-            // tx.moveCall({
-            //     target: `${this.packageId}::bonding_curve::withdraw_for_migration`,
-            //     typeArguments: [tokenType],
-            //     arguments: [
-            //         tx.object(this.bondingCurveId),
-            //         tx.pure.address(address)
-            //     ]
-            // });
-            // await signAndExecute(tx, ACTIVE_NETWORK, address);
+            const x = content.fields.token_balance;
+            const y = content.fields.sui_balance;
+            const tx = new transactions_1.Transaction();
+            tx.moveCall({
+                target: `${this.packageId}::bonding_curve::withdraw_for_migration`,
+                typeArguments: [tokenType],
+                arguments: [
+                    tx.object(this.bondingCurveId),
+                    tx.pure.address(address)
+                ]
+            });
+            // Execute withdraw transaction and wait for completion
+            const withdrawTxResponse = await (0, sui_utils_1.signAndExecute)(tx, sui_utils_2.ACTIVE_NETWORK, address);
+            console.log("Withdraw transaction submitted, digest:", withdrawTxResponse.digest);
+            // Wait for the transaction to be confirmed
+            await this.client.waitForTransaction({
+                digest: withdrawTxResponse.digest,
+                timeout: 60 * 1000, // 60 seconds timeout
+            });
+            console.log("Withdraw transaction confirmed, proceeding with adding liquidity");
             // @ts-ignore
             const addLiquidityV2 = new sdk_1.AddLiquidityV2(sui_utils_2.ACTIVE_NETWORK, this.client);
             const liquidityTx = await addLiquidityV2.buildTransaction({
                 x: tokenType,
                 y: constant_1.SUI_COIN_TYPE,
             }, {
-                // x: fields.token_balance,
-                // y: fields.sui_balance,
-                x: "10000000",
-                y: "1"
+                x, y
             }, address, 0.01);
             // Execute the transaction
             return await (0, sui_utils_1.signAndExecute)(liquidityTx, sui_utils_2.ACTIVE_NETWORK, address);

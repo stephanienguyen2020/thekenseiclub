@@ -15,16 +15,16 @@ const client = (0, sui_utils_1.getClient)("testnet");
 const coinCreationPackageId = "0xb99fae772e06a49ef626d4122b40c571c13a858033f1b1ade71a94149a3b9189";
 const coinMetadata = "0x336864ff9f4a86311489da15082f3092c2c1cb2c8412cd19e924ee147e63f71e";
 const coinSdk = new coin_1.default(treasuryCap, client, coinCreationPackageId, coinMetadata);
-const coinType = "0x66e52759de5959b64e456ead83122737a3225b5faa82f52f172ebe622c3733f6::senachill::SENACHILL";
+const coinType = "0x9c494550d6941d8b3aeb37caa6190d9d6d74c0699026a48da578e6acac03670a::hehehe::HEHEHE";
 const suiCoinId = "0x99a122a72ed9c1130b5f9583ee7357f4784c898b9e732ddac96f59283cf0fae4";
 const suiCoinType = "0x2::coin::Coin<0x2::sui::SUI>";
 const bondingCurvePackageId = constant_1.BONDING_CURVE_MODULE_PACKAGE_ID;
-const bondingCurveObjectId = "0xd262e3a93498254d203d4ef4e2b2ea2794d95d300131da50193043fe54cb1edf";
+const bondingCurveObjectId = "0x9b98d39ca4771b39ab117225cf6ae9ff3c4b96e5ef991a6df1f54b7ec48227bc";
 //Publish new coin
 // CoinSDK.deployNewCoin({
-//     name: "SENACHILL",
-//     symbol: "SENACHILL",
-//     description: "SENACHILL",
+//     name: "HEHEHE",
+//     symbol: "HEHEHE",
+//     description: "HEHEHE",
 //     iconUrl: "https://avatars.githubusercontent.com/u/42907738?v=4",
 //     client,
 //     address
@@ -40,7 +40,7 @@ const bondingCurveObjectId = "0xd262e3a93498254d203d4ef4e2b2ea2794d95d300131da50
 // Buy, sell bonding curve
 const bondingCurveSdk = new bonding_curve_1.default(bondingCurveObjectId, client, bondingCurvePackageId);
 // bondingCurveSdk.buy({
-//     amount: 500000,
+//     amount: 10000000,
 //     minTokenRequired: 0,
 //     type: coinType,
 //     address: address
