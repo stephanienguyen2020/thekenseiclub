@@ -3,6 +3,7 @@ module meme::bonding_curve;
 use sui::balance;
 use sui::coin::{Self, Coin};
 use sui::sui::SUI;
+use sui::event;
 
 const ETotalSupplyNotEqualZero: u64 = 0;
 const EOutputAmountLessThanMin: u64 = 1;
@@ -10,9 +11,11 @@ const EDecimalsNotEqualNine: u64 = 2;
 const ECurveNotActive: u64 = 4;
 
 public struct BONDING_CURVE has drop {}
+
 public struct AdminCap has key, store {
     id: UID,
 }
+
 public struct BondingCurve<phantom T> has key, store {
     id: UID,
     sui_balance: balance::Balance<SUI>,
@@ -26,6 +29,19 @@ public struct BondingCurve<phantom T> has key, store {
     creator: address,
     migration_target: u64,
 }
+
+public struct BuyEvent has copy, drop, store {
+    buyer: address,
+    amount_in: u64,
+    token_out: u64,
+}
+
+public struct SellEvent has copy, drop, store {
+    seller: address,
+    token_in: u64,
+    amount_out: u64,
+}
+
 
 fun init(_witness: BONDING_CURVE, ctx: &mut TxContext) {
     let admin_cap = AdminCap { id: object::new(ctx) };
@@ -84,6 +100,14 @@ public fun buy<T>(
     let token = coin::take<T>(&mut bonding_curve.token_balance, token_received, ctx);
     transfer::public_transfer(token, sender);
     return_back_or_delete<SUI>(balance, ctx);
+
+    event::emit(
+        BuyEvent {
+            buyer: sender,
+            amount_in: original_amount,
+            token_out: token_received,
+        }
+    );
 }
 
 public fun sell<T>(
@@ -108,6 +132,14 @@ public fun sell<T>(
     let token = coin::take<SUI>(&mut bonding_curve.sui_balance, sui_received, ctx);
     transfer::public_transfer(token, sender);
     return_back_or_delete<T>(balance, ctx);
+
+    event::emit(
+        SellEvent {
+            seller: sender,
+            token_in: amount,
+            amount_out: sui_received,
+        }
+    );
 }
 
 // Add this function to your bonding_curve.move file
@@ -145,8 +177,8 @@ fun take_fee(swap_fee: u64, buy_amount: u64): u64 {
 
 fun get_token_in_pool<T>(bonding_curve: &BondingCurve<T>): (u64, u64) {
     (
-        bonding_curve.sui_balance.value::<SUI>(),
-        bonding_curve.token_balance.value::<T>(),
+        balance::value<SUI>(&bonding_curve.sui_balance),
+        balance::value<T>(&bonding_curve.token_balance),
     )
 }
 

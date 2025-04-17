@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc && NETWORK=testnet node src/index.js",
+    "indexer": "ts-node src/indexer.ts",
     "test": "jest"
   },
   "keywords": [
@@ -16,6 +17,7 @@
   ],
   "author": "Your Name",
   "license": "MIT",
+
   "dependencies": {
     "@flowx-finance/sdk": "1.2.2-3",
     "@mysten/sui": "^1.27.0",
