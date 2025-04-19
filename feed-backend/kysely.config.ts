@@ -4,10 +4,12 @@ import { defineConfig } from "kysely-ctl";
 
 export const dialect =  new PostgresDialect({
     pool: new Pool({
+      database: 'sui',
       host: 'localhost',
-      database: 'your_db',
-      user: 'your_user',
-      password: 'your_pass',
+      user: 'postgres',
+      password: 'password',
+      port: 5432,
+      max: 10,
     }),
   });
 
