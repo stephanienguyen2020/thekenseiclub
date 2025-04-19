@@ -8,7 +8,7 @@ import {
     getModuleName,
     publishPackage,
     signAndExecute
-} from "../sui-utils";
+} from "./utils/sui-utils";
 import BondingCurveSDK from "./bonding_curve";
 import {BONDING_CURVE_MODULE_PACKAGE_ID} from "./constant";
 
@@ -46,7 +46,7 @@ class CoinSDK {
             client: SuiClient;
             address: any;
         }
-    ) {
+    ): Promise<CoinSDK> {
         name = name.toLowerCase();
         generateToMoveFile('src/template.txt', `coin-create/sources/${name}.move`, {
             coin_module: name,
@@ -84,6 +84,7 @@ class CoinSDK {
 
         await BondingCurveSDK.createBondingCurve(treasuryCap, coinMetadata, 10000000000000000000, getClient(ACTIVE_NETWORK), BONDING_CURVE_MODULE_PACKAGE_ID, `${packageId}::${name}::${name.toUpperCase()}`, address);
         deleteFile(`coin-create/sources/${name}.move`);
+        return new CoinSDK(treasuryCap, client, packageId, coinMetadata);
     }
 
     async updateCoinInfo(
