@@ -18,7 +18,7 @@ type EventExecutionResult = {
 type EventTracker = {
     type: string;
     filter: SuiEventFilter;
-    callback: (events: SuiEvent[], type: string) => any;
+    callback: (events: SuiEvent[], type: string) => Promise<void>;
 };
 
 const EVENTS_TO_TRACK: EventTracker[] = [
@@ -58,8 +58,8 @@ const executeEventJob = async (
                 hasNextPage,
             };
         }
-    } catch (e) {
-        console.error(e);
+    } catch (error: unknown) {
+        console.error(error);
     }
     // By default, we return the same cursor as passed in.
     return {
@@ -79,13 +79,21 @@ const runEventJob = async (client: SuiClient, tracker: EventTracker, cursor: Sui
     );
 };
 
-const getLatestCursor = async (tracker: EventTracker) => {
+const getLatestCursor = async (tracker: EventTracker): Promise<SuiEventsCursor> => {
     const cursor = await db
         .selectFrom('cursors')
         .selectAll()
         .where('id', '=', tracker.type)
-        .executeTakeFirst()
-    return cursor || undefined
+        .executeTakeFirst();
+
+    if (cursor) {
+        return {
+            txDigest: cursor.txDigest,
+            eventSeq: cursor.eventSeq
+        };
+    }
+
+    return undefined;
 }
 
 const saveLatestCursor = async (tracker: EventTracker, cursor: EventId) => {
