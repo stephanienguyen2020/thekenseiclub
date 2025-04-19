@@ -32,26 +32,23 @@ export async function up(db: Kysely<any>): Promise<void> {
         .execute()
 
     await db.schema
-        .createTable('price_snapshots')
-        .addColumn('id', 'serial', col => col.primaryKey().notNull())
-        .addColumn('coinType', 'varchar', col => col.notNull())
-        .addColumn('timestamp', 'timestamp', col => col.notNull())
-        .addColumn('open', 'numeric', col => col.notNull())
-        .addColumn('high', 'numeric', col => col.notNull())
-        .addColumn('low', 'numeric', col => col.notNull())
-        .addColumn('close', 'numeric', col => col.notNull())
-        .addColumn('volume', 'numeric', col => col.notNull())
-        .execute()
-
-    await db.schema
         .createTable('raw_prices')
         .addColumn('id', 'varchar', col => col.primaryKey().notNull())
         .addColumn('bondingCurveId', 'varchar', col => col.notNull())
-        .addColumn('timestamp', 'timestamp', col => col.primaryKey().notNull())
-        .addColumn('price', 'numeric', col => col.notNull())
-        .addColumn('amountIn', 'numeric', col => col.notNull())
-        .addColumn('amountOut', 'numeric', col => col.notNull())
+        .addColumn('timestamp', 'timestamp', col => col.notNull())
+        .addColumn('price', 'varchar', col => col.notNull())
+        .addColumn('amountIn', 'varchar', col => col.notNull())
+        .addColumn('amountOut', 'varchar', col => col.notNull())
         .addColumn('direction', 'varchar', col => col.notNull())
+        .execute()
+
+    await db.schema
+        .createTable('bonding_curve')
+        .addColumn('bondingCurveId', 'varchar', col => col.primaryKey().notNull())
+        .addColumn('issuer', 'varchar', col => col.notNull())
+        .addColumn('treasuryCap', 'varchar', col => col.notNull())
+        .addColumn('coinMetadata', 'varchar', col => col.notNull())
+        .addColumn('migrationTarget', 'varchar', col => col.notNull())
         .execute()
 }
 

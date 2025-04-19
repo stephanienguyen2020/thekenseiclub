@@ -1,7 +1,7 @@
 export const CONFIG = {
     BONDING_CURVE: {
-        packageId: "0x3bca20d5c8b915bb2f3ff5fad5fa9cec22e5571a609b0758aa8afe2d079a1312",
+        packageId: "0x97f38a7a5f8f0c4a811e08ed4d3c9481ea8d4aa54efb486ae55cb92d6c4928aa",
     },
     NETWORK: "testnet",
-    POLLING_INTERVAL_MS: 5000,
+    POLLING_INTERVAL_MS: 1000,
 }

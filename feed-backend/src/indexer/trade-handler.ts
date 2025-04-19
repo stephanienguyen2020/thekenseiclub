@@ -1,16 +1,37 @@
 // File: src/indexer/trade-handler.ts
 import {db} from '../db/database'
-import {RawPrice} from '../db/types'
+import {BondingCurve, RawPrice} from '../db/types'
 import {SuiEvent} from '@mysten/sui/client'
 
-export const handleRawPriceEvent = async (events: SuiEvent[], type: string) => {
+export const handleBondingCurveEvent = async (events: SuiEvent[], type: string) => {
     for (const event of events) {
         if (!event.type.startsWith(type)) throw new Error('Invalid event module origin');
-
+        if (event.type.endsWith('::BondingCurveCreatedEvent')) {
+            const payload = event.parsedJson as {
+                bonding_curve_id: string;
+                issuer: string;
+                treasury_cap: string;
+                coin_metadata: string;
+                migration_target: string;
+            };
+            const bondingCurveData: BondingCurve = {
+                bondingCurveId: payload.bonding_curve_id,
+                issuer: payload.issuer,
+                treasuryCap: payload.treasury_cap,
+                coinMetadata: payload.coin_metadata,
+                migrationTarget: payload.migration_target,
+            }
+            console.log(bondingCurveData)
+            await db
+                .insertInto('bonding_curve')
+                .values(bondingCurveData)
+                .execute()
+            continue
+        }
         const payload = event.parsedJson as {
-            price: number;
-            amount_in: number;
-            amount_out: number;
+            price: string;
+            amount_in: string;
+            amount_out: string;
             bonding_curve_id: string;
             direction: string;
         }
@@ -23,7 +44,6 @@ export const handleRawPriceEvent = async (events: SuiEvent[], type: string) => {
             payload.direction = 'SELL';
         }
 
-
         const rawPriceData: RawPrice = {
             id: event.id.txDigest,
             bondingCurveId: payload.bonding_curve_id,
@@ -33,8 +53,6 @@ export const handleRawPriceEvent = async (events: SuiEvent[], type: string) => {
             amountOut: payload.amount_out,
             direction: payload.direction,
         }
-
-        console.log("Parsed event:", rawPriceData)
 
         console.log("[inserted] Raw Price Event:", rawPriceData)
 

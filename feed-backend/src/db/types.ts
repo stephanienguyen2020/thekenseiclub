@@ -1,16 +1,5 @@
 import {Generated} from 'kysely'
 
-export interface PriceSnapshot {
-    id: Generated<number>
-    bondingCurveId: string
-    timestamp: Date
-    open: number
-    high: number
-    low: number
-    close: number
-    volume: number
-}
-
 export interface CursorTable {
     id: string
     eventSeq: string
@@ -41,16 +30,24 @@ export interface RawPrice {
     id: string
     bondingCurveId: string
     timestamp: Date
-    price: number
-    amountIn: number
-    amountOut: number
+    price: string
+    amountIn: string
+    amountOut: string
     direction: string
+}
+
+export interface BondingCurve {
+    bondingCurveId: string,
+    issuer: string,
+    treasuryCap: string,
+    coinMetadata: string,
+    migrationTarget: string,
 }
 
 export interface Database {
     cursors: CursorTable
     buy_events: BuyEventTable
     sell_events: SellEventTable
-    price_snapshots: PriceSnapshot
     raw_prices: RawPrice
+    bonding_curve: BondingCurve
 }

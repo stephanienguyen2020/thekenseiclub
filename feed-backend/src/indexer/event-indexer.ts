@@ -4,7 +4,7 @@
 import {EventId, SuiClient, SuiEvent, SuiEventFilter} from '@mysten/sui/client';
 
 import {CONFIG} from '../config';
-import {handleRawPriceEvent} from './trade-handler';
+import {handleBondingCurveEvent} from './trade-handler';
 import {ACTIVE_NETWORK, getClient} from "../utils";
 import {db} from "../db/database";
 
@@ -30,7 +30,7 @@ const EVENTS_TO_TRACK: EventTracker[] = [
                 package: CONFIG.BONDING_CURVE.packageId,
             },
         },
-        callback: handleRawPriceEvent,
+        callback: handleBondingCurveEvent,
     },
 ];
 
