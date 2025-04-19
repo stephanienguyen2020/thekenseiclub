@@ -1,7 +1,6 @@
 import {SuiClient, SuiObjectChange, SuiTransactionBlockResponse} from "@mysten/sui/client";
 import {Transaction} from "@mysten/sui/transactions";
-import {getCoinsByType, signAndExecute} from "../sui-utils";
-import {ACTIVE_NETWORK} from "../sui-utils";
+import {ACTIVE_NETWORK, getCoinsByType, signAndExecute} from "../sui-utils";
 import {AddLiquidityV2} from "@flowx-finance/sdk"
 import {SUI_COIN_TYPE} from "./constant";
 
@@ -45,7 +44,6 @@ class BondingCurveSDK {
                 change.type === "created" &&
                 change.objectType.includes("::bonding_curve::BondingCurve")
         )?.objectId as string;
-
         console.log("Bonding Curve ID:", bondingCurveId);
 
         return new BondingCurveSDK(bondingCurveId, client, packageId);

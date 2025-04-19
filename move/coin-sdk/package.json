@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc && NETWORK=testnet node src/index.js",
+    "dev": "NETWORK=testnet ts-node src/index.ts",
     "indexer": "ts-node src/indexer.ts",
     "test": "jest"
   },
@@ -17,7 +17,6 @@
   ],
   "author": "Your Name",
   "license": "MIT",
-
   "dependencies": {
     "@flowx-finance/sdk": "1.2.2-3",
     "@mysten/sui": "^1.27.0",

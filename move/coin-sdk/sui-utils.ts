@@ -1,7 +1,6 @@
-import fs from 'fs';
+import fs, {readFileSync, writeFileSync} from 'fs';
 
 import {execSync} from "child_process";
-import {readFileSync, writeFileSync} from "fs";
 import {homedir} from "os";
 import path from "path";
 import {getFullnodeUrl, SuiClient, SuiObjectChange, SuiTransactionBlockResponse} from "@mysten/sui/client";
@@ -170,6 +169,14 @@ export function generateToMoveFile(
     }
 }
 
+export function deleteFile(moveFilePath: string) {
+    try {
+        fs.unlinkSync(moveFilePath);
+        console.log(`✅ Deleted ${moveFilePath}`);
+    } catch (error) {
+        console.error(`❌ Error deleting ${moveFilePath}:`, error);
+    }
+}
 
 export async function getModuleName(objectId: string, network: Network) {
     const obj = await getClient(network).getObject({

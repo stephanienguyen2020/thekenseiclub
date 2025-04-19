@@ -31,17 +31,28 @@ public struct BondingCurve<phantom T> has key, store {
 }
 
 public struct BuyEvent has copy, drop, store {
-    buyer: address,
+    bonding_curve_id: ID,
+    issuer: address,
     amount_in: u64,
-    token_out: u64,
+    amount_out: u64,
+    price: u64,
 }
 
 public struct SellEvent has copy, drop, store {
-    seller: address,
-    token_in: u64,
+    bonding_curve_id: ID,
+    issuer: address,
+    amount_in: u64,
     amount_out: u64,
+    price: u64,
 }
 
+public struct BondingCurveCreatedEvent has copy, drop, store {
+    bonding_curve_id: ID,
+    issuer: address,
+    treasury_cap: ID,
+    coin_metadata: ID,
+    migration_target: u64,
+}
 
 fun init(_witness: BONDING_CURVE, ctx: &mut TxContext) {
     let admin_cap = AdminCap { id: object::new(ctx) };
@@ -69,6 +80,16 @@ public fun create_bonding_curve<T>(
         creator: tx_context::sender(ctx),
         migration_target,
     };
+
+    event::emit(
+        BondingCurveCreatedEvent {
+            bonding_curve_id: object::id(&bonding_curve),
+            issuer: tx_context::sender(ctx),
+            treasury_cap: object::id(treasury_cap),
+            coin_metadata: object::id(coin_metadata),
+            migration_target,
+        }
+    );
     transfer::public_share_object<BondingCurve<T>>(bonding_curve);
 }
 
@@ -103,9 +124,11 @@ public fun buy<T>(
 
     event::emit(
         BuyEvent {
-            buyer: sender,
+            bonding_curve_id: object::id(bonding_curve),
+            issuer: sender,
             amount_in: original_amount,
-            token_out: token_received,
+            amount_out: token_received,
+            price: token_received / original_amount,
         }
     );
 }
@@ -135,9 +158,11 @@ public fun sell<T>(
 
     event::emit(
         SellEvent {
-            seller: sender,
-            token_in: amount,
+            bonding_curve_id: object::id(bonding_curve),
+            issuer: sender,
+            amount_in: amount,
             amount_out: sui_received,
+            price: sui_received / amount,
         }
     );
 }

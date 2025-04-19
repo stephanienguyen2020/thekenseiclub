@@ -2,10 +2,10 @@ import {SuiClient, SuiObjectChange, SuiTransactionBlockResponse} from "@mysten/s
 import {Transaction} from "@mysten/sui/transactions";
 import {
     ACTIVE_NETWORK,
+    deleteFile,
     generateToMoveFile,
     getClient,
     getModuleName,
-    Network,
     publishPackage,
     signAndExecute
 } from "../sui-utils";
@@ -48,7 +48,7 @@ class CoinSDK {
         }
     ) {
         name = name.toLowerCase();
-        generateToMoveFile('src/template.txt', 'coin-create/sources/coin.move', {
+        generateToMoveFile('src/template.txt', `coin-create/sources/${name}.move`, {
             coin_module: name,
             coin_name: name.toUpperCase(),
             coin_symbol: symbol,
@@ -83,6 +83,7 @@ class CoinSDK {
         console.log(`${packageId}::${name}::${name.toUpperCase()}`)
 
         await BondingCurveSDK.createBondingCurve(treasuryCap, coinMetadata, 10000000000000000000, getClient(ACTIVE_NETWORK), BONDING_CURVE_MODULE_PACKAGE_ID, `${packageId}::${name}::${name.toUpperCase()}`, address);
+        deleteFile(`coin-create/sources/${name}.move`);
     }
 
     async updateCoinInfo(
