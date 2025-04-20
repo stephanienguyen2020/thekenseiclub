@@ -6,6 +6,8 @@ import coinRouter from "./routes/coin";
 import imageRouter from "./routes/image";
 import postRouter from "./routes/posts";
 import userRouter from "./routes/user";
+import commentRouter from "./routes/comments";
+
 // import './indexer/cron';
 
 // Get port from environment variable or use default
@@ -38,6 +40,7 @@ app.use(ohlcvRouter);
 app.use(coinRouter);
 app.use(imageRouter);
 app.use(postRouter);
+app.use(commentRouter);
 app.use(userRouter);
 
 // Error handling middleware
