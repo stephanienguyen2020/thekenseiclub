@@ -5,7 +5,7 @@ import {Kysely, PostgresDialect} from 'kysely'
 // Get database configuration from environment variables with fallbacks
 const dbHost = process.env.DB_HOST || 'localhost';
 const dbPort = parseInt(process.env.DB_PORT || '5432', 10);
-const dbName = process.env.DB_NAME || 'sui';
+const dbName = process.env.DB_NAME || 'postgres';
 const dbUser = process.env.DB_USER || 'postgres';
 const dbPassword = process.env.DB_PASSWORD || 'password';
 const dbPoolMax = parseInt(process.env.DB_POOL_MAX || '10', 10);

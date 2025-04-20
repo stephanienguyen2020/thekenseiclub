@@ -1,5 +1,5 @@
 // File: src/db/migrations/1744680765801_create_tables.ts
-import type {Kysely} from 'kysely'
+import {Kysely, sql} from 'kysely'
 
 export async function up(db: Kysely<any>): Promise<void> {
     await db.schema
@@ -50,12 +50,52 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addColumn('coinMetadata', 'varchar', col => col.notNull())
         .addColumn('migrationTarget', 'varchar', col => col.notNull())
         .execute()
+
+    await db.schema
+      .createTable('users')
+      .addColumn('id', 'bigint', col => col.primaryKey().notNull())
+      .addColumn('username', 'varchar', col => col.notNull())
+      .addColumn('sui_address', 'varchar', col => col.notNull())
+      .addColumn('profile_picture_url', 'text', col => col.notNull())
+      .execute()
+
+    await db.schema
+      .createTable('posts')
+      .addColumn('id', 'bigint', col => col.primaryKey().notNull())
+      .addColumn('user_id', 'bigint', col => col.notNull())
+      .addColumn('content', 'varchar', col => col.notNull())
+      .addColumn('media_urls', sql`text[]`)
+      .addColumn('created_at', 'timestamp', col => col.notNull())
+      .execute()
+
+    await db.schema
+      .createTable('comments')
+      .addColumn('id', 'bigint', col => col.primaryKey().notNull())
+      .addColumn('user_id', 'bigint', col => col.notNull())
+      .addColumn('post_id', 'bigint', col => col.notNull())
+      .addColumn('content', 'varchar', col => col.notNull())
+      .addColumn('created_at', 'timestamp', col => col.notNull())
+      .execute()
+
+    await db.schema
+      .createTable('likes')
+      .addColumn('id', 'bigint', col => col.primaryKey().notNull())
+      .addColumn('user_id', 'bigint', col => col.notNull())
+      .addColumn('post_id', 'bigint', col => col.notNull())
+      .addColumn('created_at', 'timestamp', col => col.notNull())
+      .addUniqueConstraint('likes_unique', ['user_id', 'post_id'])
+      .execute()
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
     // Reverse the table creations if needed.
-    await db.schema.dropTable('price_snapshots').execute()
     await db.schema.dropTable('sell_events').execute()
     await db.schema.dropTable('buy_events').execute()
     await db.schema.dropTable('cursors').execute()
+    await db.schema.dropTable('raw_prices').execute()
+    await db.schema.dropTable('bonding_curve').execute()
+    await db.schema.dropTable('users').execute()
+    await db.schema.dropTable('posts').execute()
+    await db.schema.dropTable('comments').execute()
+    await db.schema.dropTable('likes').execute()
 }

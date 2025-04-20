@@ -17,13 +17,32 @@ A backend service for blockchain data feeds, providing APIs for OHLCV (Open, Hig
 
 ## Installation
 
-1. Clone the repository
-2. Install dependencies:
+- Clone the repository
+- Install dependencies:
    ```bash
    npm install
    ```
-3. Set up environment variables (see Configuration section)
-4. Start the development server:
+- Install postgres client:
+   ```bash
+   sudo apt update
+   sudo apt install postgresql postgresql-contrib
+  
+   # Check if postgres is running
+   sudo systemctl status postgresql
+   ```
+- Create a PostgreSQL account: (run simultaneously)
+   ```bash
+   sudo -i -u postgres
+   psql
+   ALTER USER postgres WITH PASSWORD 'password';
+   \q
+   exit
+   ```
+- Set up db migrations:
+   ```bash
+   npx kysely-ctl migrate up
+   ```
+- Start the development server:
    ```bash
    npm run dev
    ```
