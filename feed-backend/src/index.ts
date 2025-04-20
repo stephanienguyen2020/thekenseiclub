@@ -4,7 +4,8 @@ import {setupListeners} from "./indexer/event-indexer";
 import ohlcvRouter from "./routes/ohlcv";
 import coinRouter from "./routes/coin";
 import imageRouter from "./routes/image";
-import postRouter from "./routes/posts"
+import postRouter from "./routes/posts";
+import userRouter from "./routes/user";
 // import './indexer/cron';
 
 // Get port from environment variable or use default
@@ -37,6 +38,7 @@ app.use(ohlcvRouter);
 app.use(coinRouter);
 app.use(imageRouter);
 app.use(postRouter);
+app.use(userRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
