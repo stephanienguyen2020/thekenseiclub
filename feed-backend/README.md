@@ -30,13 +30,9 @@ A backend service for blockchain data feeds, providing APIs for OHLCV (Open, Hig
    # Check if postgres is running
    sudo systemctl status postgresql
    ```
-- Create a PostgreSQL account: (run simultaneously)
+- Create timeseries database:
    ```bash
-   sudo -i -u postgres
-   psql
-   ALTER USER postgres WITH PASSWORD 'password';
-   \q
-   exit
+   docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=password timescale/timescaledb-ha:pg17
    ```
 - Set up db migrations:
    ```bash

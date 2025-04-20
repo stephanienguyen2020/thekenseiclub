@@ -33,14 +33,16 @@ export async function up(db: Kysely<any>): Promise<void> {
 
     await db.schema
         .createTable('raw_prices')
-        .addColumn('id', 'varchar', col => col.primaryKey().notNull())
         .addColumn('bondingCurveId', 'varchar', col => col.notNull())
         .addColumn('timestamp', 'timestamp', col => col.notNull())
         .addColumn('price', 'varchar', col => col.notNull())
         .addColumn('amountIn', 'varchar', col => col.notNull())
         .addColumn('amountOut', 'varchar', col => col.notNull())
         .addColumn('direction', 'varchar', col => col.notNull())
-        .execute()
+        .execute();
+
+    await sql`SELECT create_hypertable('raw_prices', by_range('timestamp'));`
+      .execute(db);
 
     await db.schema
         .createTable('bonding_curve')
