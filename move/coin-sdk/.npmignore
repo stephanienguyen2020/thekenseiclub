@@ -6,7 +6,6 @@ tsconfig.json
 
 # Development files
 tests/
-coin-create/
 .idea/
 .DS_Store
 

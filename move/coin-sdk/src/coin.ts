@@ -1,4 +1,8 @@
-import {SuiClient, SuiObjectChange, SuiTransactionBlockResponse} from "@mysten/sui/client";
+import {
+    SuiClient,
+    SuiObjectChange,
+    SuiTransactionBlockResponse,
+} from "@mysten/sui/client";
 import {Transaction} from "@mysten/sui/transactions";
 import {
     ACTIVE_NETWORK,
@@ -7,10 +11,11 @@ import {
     getClient,
     getModuleName,
     publishPackage,
-    signAndExecute
+    signAndExecute,
 } from "./utils/sui-utils";
 import BondingCurveSDK from "./bonding_curve";
 import {BONDING_CURVE_MODULE_PACKAGE_ID} from "./constant";
+import path from "path";
 
 class CoinSDK {
     private treasuryCap: string;
@@ -48,42 +53,56 @@ class CoinSDK {
         }
     ): Promise<CoinSDK> {
         name = name.toLowerCase();
-        generateToMoveFile('src/template.txt', `coin-create/sources/${name}.move`, {
+        //log current directory
+        console.log(__dirname);
+        const templatePath = path.resolve(__dirname, 'template.txt');
+        const movePath = path.resolve(__dirname, '../coin-create/sources', `${name}.move`);
+
+        generateToMoveFile(templatePath, movePath, {
             coin_module: name,
             coin_name: name.toUpperCase(),
             coin_symbol: symbol,
             coin_description: description,
-            coin_icon_url: iconUrl
+            coin_icon_url: iconUrl,
         });
         const publishResult: SuiTransactionBlockResponse = await publishPackage({
-            packagePath: "coin-create",
+            packagePath: path.resolve(__dirname, '../coin-create'),
             network: ACTIVE_NETWORK,
             exportFileName: "coin",
-            address
+            address,
         });
         const treasuryCap = publishResult.objectChanges?.find(
-            (change): change is Extract<SuiObjectChange, { type: 'created' }> =>
-                change.type === 'created' &&
+            (change): change is Extract<SuiObjectChange, { type: "created" }> =>
+                change.type === "created" &&
                 change.objectType.includes(`::coin::TreasuryCap`)
         )?.objectId as string;
 
         const coinMetadata = publishResult.objectChanges?.find(
-            (change): change is Extract<SuiObjectChange, { type: 'created' }> =>
+            (change): change is Extract<SuiObjectChange, { type: "created" }> =>
                 change.type === "created" &&
                 change.objectType.includes(`::coin::CoinMetadata`)
         )?.objectId as string;
 
         const packageId = publishResult.objectChanges?.find(
-            (change): change is Extract<SuiObjectChange, { type: 'published' }> => change.type === "published"
+            (change): change is Extract<SuiObjectChange, { type: "published" }> =>
+                change.type === "published"
         )?.packageId as string;
 
         console.log("packageId", packageId);
         console.log("coinMetadata", coinMetadata);
         console.log("treasuryCap", treasuryCap);
-        console.log(`${packageId}::${name}::${name.toUpperCase()}`)
+        console.log(`${packageId}::${name}::${name.toUpperCase()}`);
 
-        await BondingCurveSDK.createBondingCurve(treasuryCap, coinMetadata, 10000000000000000000, getClient(ACTIVE_NETWORK), BONDING_CURVE_MODULE_PACKAGE_ID, `${packageId}::${name}::${name.toUpperCase()}`, address);
-        deleteFile(`coin-create/sources/${name}.move`);
+        await BondingCurveSDK.createBondingCurve(
+            treasuryCap,
+            coinMetadata,
+            10000000000000000000,
+            getClient(ACTIVE_NETWORK),
+            BONDING_CURVE_MODULE_PACKAGE_ID,
+            `${packageId}::${name}::${name.toUpperCase()}`,
+            address
+        );
+        deleteFile(movePath);
         return new CoinSDK(treasuryCap, client, packageId, coinMetadata);
     }
 

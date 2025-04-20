@@ -1,6 +1,6 @@
 {
   "name": "coin-sdk",
-  "version": "1.0.2",
+  "version": "1.0.7",
   "description": "A TypeScript SDK for interacting with the coin contract on Sui blockchain.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,7 +8,7 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp -r coin-create dist/ && cp -r src/template.txt dist/src/",
     "prepublishOnly": "npm run build",
     "dev": "NETWORK=testnet ts-node src/index.ts",
     "indexer": "ts-node src/indexer.ts",
