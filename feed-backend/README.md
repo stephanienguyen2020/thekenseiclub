@@ -81,6 +81,10 @@ npm run build
 
 # Start production server
 npm start
+
+# gen Kysely model
+chmod +x kysely-codegen.sh # If Permission denied
+./kysely-codegen.sh
 ```
 
 ## Project Structure
