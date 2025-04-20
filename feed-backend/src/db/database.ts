@@ -1,15 +1,23 @@
-import { Database } from './types' // this is the Database interface we defined earlier
-import { Pool } from 'pg'
-import { Kysely, PostgresDialect } from 'kysely'
+import {Database} from './types' // this is the Database interface we defined earlier
+import {Pool} from 'pg'
+import {Kysely, PostgresDialect} from 'kysely'
+
+// Get database configuration from environment variables with fallbacks
+const dbHost = process.env.DB_HOST || 'localhost';
+const dbPort = parseInt(process.env.DB_PORT || '5432', 10);
+const dbName = process.env.DB_NAME || 'sui';
+const dbUser = process.env.DB_USER || 'postgres';
+const dbPassword = process.env.DB_PASSWORD || 'password';
+const dbPoolMax = parseInt(process.env.DB_POOL_MAX || '10', 10);
 
 const dialect = new PostgresDialect({
   pool: new Pool({
-    database: 'sui',
-    host: 'localhost',
-    user: 'postgres',
-    password: 'password',
-    port: 5432,
-    max: 10,
+    database: dbName,
+    host: dbHost,
+    user: dbUser,
+    password: dbPassword,
+    port: dbPort,
+    max: dbPoolMax,
   })
 })
 
