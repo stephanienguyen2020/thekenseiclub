@@ -19,10 +19,6 @@ const storage = multer.diskStorage({
   },
   filename: function (req: any, file: any, cb: any) {
     const postId = req.body.postId;
-    // if (!postId) {
-    //   return cb(new Error("Missing postId"), "");
-    // }
-
     // Get original file extension
     const ext = path.extname(file.originalname);
     // Create filename with postId and original filename

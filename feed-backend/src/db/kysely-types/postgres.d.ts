@@ -332,6 +332,12 @@ export interface Cursors {
   txDigest: string;
 }
 
+export interface Images {
+  imageName: string;
+  imagePath: string;
+  postId: string;
+}
+
 export interface Likes {
   created_at: Timestamp;
   id: Int8;
@@ -352,6 +358,7 @@ export interface RawPrices {
   amountOut: string;
   bondingCurveId: string;
   direction: string;
+  id: string;
   price: string;
   timestamp: Timestamp;
 }
@@ -568,6 +575,7 @@ export interface DB {
   buy_events: BuyEvents;
   comments: Comments;
   cursors: Cursors;
+  images: Images;
   likes: Likes;
   posts: Posts;
   raw_prices: RawPrices;
