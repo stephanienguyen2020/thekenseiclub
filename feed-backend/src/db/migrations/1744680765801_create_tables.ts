@@ -55,7 +55,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
     await db.schema
       .createTable('users')
-      .addColumn('id', 'bigint', col => col.primaryKey().notNull())
+      .addColumn('id', 'bigserial', col => col.primaryKey().notNull())
       .addColumn('username', 'varchar', col => col.notNull())
       .addColumn('sui_address', 'varchar', col => col.notNull())
       .addColumn('profile_picture_url', 'text', col => col.notNull())
@@ -63,7 +63,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
     await db.schema
       .createTable('posts')
-      .addColumn('id', 'bigint', col => col.primaryKey().notNull())
+      .addColumn('id', 'bigserial', col => col.primaryKey().notNull())
       .addColumn('user_id', 'bigint', col => col.notNull())
       .addColumn('content', 'varchar', col => col.notNull())
       .addColumn('media_urls', sql`text[]`)
@@ -72,7 +72,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
     await db.schema
       .createTable('comments')
-      .addColumn('id', 'bigint', col => col.primaryKey().notNull())
+      .addColumn('id', 'bigserial', col => col.primaryKey().notNull())
       .addColumn('user_id', 'bigint', col => col.notNull())
       .addColumn('post_id', 'bigint', col => col.notNull())
       .addColumn('content', 'varchar', col => col.notNull())
@@ -81,7 +81,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
     await db.schema
       .createTable('likes')
-      .addColumn('id', 'bigint', col => col.primaryKey().notNull())
+      .addColumn('id', 'bigserial', col => col.primaryKey().notNull())
       .addColumn('user_id', 'bigint', col => col.notNull())
       .addColumn('post_id', 'bigint', col => col.notNull())
       .addColumn('created_at', 'timestamp', col => col.notNull())
