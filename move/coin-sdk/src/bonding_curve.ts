@@ -1,6 +1,6 @@
 import {SuiClient, SuiObjectChange, SuiTransactionBlockResponse} from "@mysten/sui/client";
 import {Transaction} from "@mysten/sui/transactions";
-import {ACTIVE_NETWORK, getCoinsByType, signAndExecute} from "../sui-utils";
+import {ACTIVE_NETWORK, getCoinsByType, signAndExecute} from "./utils/sui-utils";
 import {AddLiquidityV2} from "@flowx-finance/sdk"
 import {SUI_COIN_TYPE} from "./constant";
 
@@ -44,7 +44,6 @@ class BondingCurveSDK {
                 change.type === "created" &&
                 change.objectType.includes("::bonding_curve::BondingCurve")
         )?.objectId as string;
-        console.log("Bonding Curve ID:", bondingCurveId);
 
         return new BondingCurveSDK(bondingCurveId, client, packageId);
     }
@@ -134,8 +133,7 @@ class BondingCurveSDK {
                 throw new Error("Failed to get bonding curve data");
             }
 
-            const content = bondingCurveObj.data.content as any;
-            console.log("content", content);
+            const content = bondingCurveObj.data.content as unknown as { fields: { token_balance: string; sui_balance: string } };
             const objectType = bondingCurveObj.data.type as string;
 
             const tokenTypeMatch = objectType.match(/<(.+)>/);
@@ -157,7 +155,6 @@ class BondingCurveSDK {
 
             // Execute withdraw transaction and wait for completion
             const withdrawTxResponse = await signAndExecute(tx, ACTIVE_NETWORK, address);
-            console.log("Withdraw transaction submitted, digest:", withdrawTxResponse.digest);
 
             // Wait for the transaction to be confirmed
             await this.client.waitForTransaction({
@@ -165,7 +162,6 @@ class BondingCurveSDK {
                 timeout: 60 * 1000, // 60 seconds timeout
             });
 
-            console.log("Withdraw transaction confirmed, proceeding with adding liquidity");
             // @ts-ignore
             const addLiquidityV2 = new AddLiquidityV2(ACTIVE_NETWORK, this.client)
             const liquidityTx = await addLiquidityV2.buildTransaction(
@@ -181,7 +177,7 @@ class BondingCurveSDK {
             );
 
             // Execute the transaction
-            return await signAndExecute(liquidityTx as any, ACTIVE_NETWORK, address);
+            return await signAndExecute(liquidityTx as unknown as Transaction, ACTIVE_NETWORK, address);
         } catch (error) {
             console.error("Error migrating to FlowX:", error);
             throw error;

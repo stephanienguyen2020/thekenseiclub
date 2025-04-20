@@ -1,4 +1,4 @@
-import {getClient} from "../sui-utils";
+import {getClient} from "../src/utils/sui-utils";
 import {BONDING_CURVE_MODULE_PACKAGE_ID, BondingCurveSDK, CoinSDK} from "../src";
 
 

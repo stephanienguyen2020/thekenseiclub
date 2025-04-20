@@ -26,6 +26,7 @@ yarn-error.log*
 
 # Build artifacts
 sui-utils.js
+sui-utils.ts
 
 # Temporary files
 *.tmp

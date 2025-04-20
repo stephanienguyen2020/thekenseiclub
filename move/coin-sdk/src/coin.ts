@@ -49,12 +49,10 @@ class CoinSDK {
             description: string;
             iconUrl: string;
             client: SuiClient;
-            address: any;
+            address: string;
         }
     ): Promise<CoinSDK> {
         name = name.toLowerCase();
-        //log current directory
-        console.log(__dirname);
         const templatePath = path.resolve(__dirname, 'template.txt');
         const movePath = path.resolve(__dirname, '../coin-create/sources', `${name}.move`);
 
@@ -88,11 +86,6 @@ class CoinSDK {
                 change.type === "published"
         )?.packageId as string;
 
-        console.log("packageId", packageId);
-        console.log("coinMetadata", coinMetadata);
-        console.log("treasuryCap", treasuryCap);
-        console.log(`${packageId}::${name}::${name.toUpperCase()}`);
-
         await BondingCurveSDK.createBondingCurve(
             treasuryCap,
             coinMetadata,
@@ -118,7 +111,7 @@ class CoinSDK {
             symbol: string;
             description: string;
             iconUrl: string;
-            address: any;
+            address: string;
         }
     ): Promise<SuiTransactionBlockResponse> {
         if (!this.coinMetadata) {
