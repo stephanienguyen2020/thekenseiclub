@@ -321,7 +321,7 @@ export interface BuyEvents {
 export interface Comments {
   content: string;
   created_at: Timestamp;
-  id: Int8;
+  id: Generated<Int8>;
   post_id: Int8;
   user_id: Int8;
 }
@@ -334,7 +334,7 @@ export interface Cursors {
 
 export interface Likes {
   created_at: Timestamp;
-  id: Int8;
+  id: Generated<Int8>;
   post_id: Int8;
   user_id: Int8;
 }
@@ -342,7 +342,7 @@ export interface Likes {
 export interface Posts {
   content: string;
   created_at: Timestamp;
-  id: Int8;
+  id: Generated<Int8>;
   media_urls: string[] | null;
   user_id: Int8;
 }
@@ -530,7 +530,7 @@ export interface TimescaledbInformationJobStats {
 }
 
 export interface Users {
-  id: Int8;
+  id: Generated<Int8>;
   profile_picture_url: string;
   sui_address: string;
   username: string;
