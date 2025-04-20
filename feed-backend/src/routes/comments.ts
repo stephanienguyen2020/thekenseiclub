@@ -12,7 +12,7 @@ const commentSchema = z.object({
 });
 
 // POST /comments
-router.post('/', async (req: any, res: any) => {
+router.post('/comments', async (req: any, res: any) => {
   const parsed = commentSchema.safeParse(req.body);
 
   if (!parsed.success) {
