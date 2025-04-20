@@ -3,7 +3,7 @@ import {db} from "../db/database";
 
 const router = express.Router();
 
-router.post('/', async (req: any, res: any) => {
+router.post('/posts', async (req: any, res: any) => {
   try {
     const { content, user_id, media_urls } = req.body;
 
@@ -14,7 +14,7 @@ router.post('/', async (req: any, res: any) => {
 
     // Insert post
     const result = await db
-      .insertInto('')
+      .insertInto('posts')
       .values({
         content,
         created_at: new Date(),
