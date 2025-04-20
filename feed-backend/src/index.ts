@@ -3,6 +3,7 @@ import path from 'path';
 import {setupListeners} from "./indexer/event-indexer";
 import ohlcvRouter from "./routes/ohlcv";
 import coinRouter from "./routes/coin";
+import imageRouter from "./routes/image";
 // import './indexer/cron';
 
 // Get port from environment variable or use default
@@ -33,6 +34,7 @@ app.get('/docs', (req, res) => {
 // Register API routes
 app.use(ohlcvRouter);
 app.use(coinRouter);
+app.use(imageRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

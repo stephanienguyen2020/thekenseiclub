@@ -85,10 +85,18 @@ export async function up(db: Kysely<any>): Promise<void> {
       .addColumn('created_at', 'timestamp', col => col.notNull())
       .addUniqueConstraint('likes_unique', ['user_id', 'post_id'])
       .execute()
+
+    await db.schema
+      .createTable('images')
+      .addColumn('imageName', 'varchar', col => col.notNull())
+      .addColumn('postId', 'varchar', col => col.notNull())
+      .addColumn('imagePath', 'varchar', col => col.notNull())
+      .execute()
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
     // Reverse the table creations if needed.
+    await db.schema.dropTable('images').execute()
     await db.schema.dropTable('sell_events').execute()
     await db.schema.dropTable('buy_events').execute()
     await db.schema.dropTable('cursors').execute()

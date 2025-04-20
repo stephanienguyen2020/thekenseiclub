@@ -44,10 +44,17 @@ export interface BondingCurve {
     migrationTarget: string,
 }
 
+export interface ImageTable {
+    imageName: string
+    postId: string
+    imagePath: string
+}
+
 export interface Database {
     cursors: CursorTable
     buy_events: BuyEventTable
     sell_events: SellEventTable
     raw_prices: RawPrice
     bonding_curve: BondingCurve
+    images: ImageTable
 }
