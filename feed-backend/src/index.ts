@@ -1,6 +1,7 @@
 import express from 'express';
 import {setupListeners} from "./indexer/event-indexer";
-import router from "./routes/ohlcv";
+import ohlcvRouter from "./routes/ohlcv";
+import coinRouter from "./routes/coin";
 // import './indexer/cron';
 
 export const app = express();
@@ -16,4 +17,5 @@ app.listen(port, async () => {
     console.log(`Server is running at http://localhost:${port}`);
 });
 
-app.use(router);
+app.use(ohlcvRouter);
+app.use(coinRouter);
