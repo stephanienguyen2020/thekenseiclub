@@ -72,10 +72,22 @@ export async function up(db: Kysely<any>): Promise<void> {
       .addColumn('postId', 'varchar', col => col.notNull())
       .addColumn('imagePath', 'varchar', col => col.notNull())
       .execute()
+
+    await db.schema
+      .createTable('coins')
+      .addColumn('id', 'varchar', col => col.primaryKey().notNull())
+      .addColumn('name', 'varchar', col => col.notNull())
+      .addColumn('symbol', 'varchar', col => col.notNull())
+      .addColumn('description', 'text', col => col.notNull())
+      .addColumn('imageUrl', 'text', col => col.notNull())
+      .addColumn('address', 'varchar', col => col.notNull())
+      .addColumn('created_at', 'timestamp', col => col.notNull().defaultTo(sql`now()`))
+      .execute()
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
     // Reverse the table creations if needed.
+    await db.schema.dropTable('coins').execute()
     await db.schema.dropTable('images').execute()
     await db.schema.dropTable('sell_events').execute()
     await db.schema.dropTable('buy_events').execute()

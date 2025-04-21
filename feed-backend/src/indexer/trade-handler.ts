@@ -99,7 +99,7 @@ export const handleBondingCurveEvent = async (events: SuiEvent[], type: string):
 
         const rawPriceData: RawPrices = {
             bondingCurveId: payload.bonding_curve_id,
-            timestamp: timestamp as unknown as Timestamp,
+            timestamp: timestamp,
             price: payload.price,
             amountIn: payload.amount_in,
             amountOut: payload.amount_out,

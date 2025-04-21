@@ -308,6 +308,16 @@ export interface BondingCurve {
   treasuryCap: string;
 }
 
+export interface Coins {
+  address: string;
+  created_at: Generated<Timestamp>;
+  description: string;
+  id: string;
+  imageUrl: string;
+  name: string;
+  symbol: string;
+}
+
 export interface Comments {
   content: string;
   created_at: Timestamp;
@@ -349,7 +359,7 @@ export interface RawPrices {
   bondingCurveId: string;
   direction: string;
   price: string;
-  timestamp: Timestamp;
+  timestamp: Date;
 }
 
 export interface TimescaledbExperimentalPolicies {
@@ -551,6 +561,7 @@ export interface DB {
   "_timescaledb_internal.compressed_chunk_stats": _TimescaledbInternalCompressedChunkStats;
   "_timescaledb_internal.hypertable_chunk_local_size": _TimescaledbInternalHypertableChunkLocalSize;
   bonding_curve: BondingCurve;
+  coins: Coins;
   comments: Comments;
   cursors: Cursors;
   images: Images;
