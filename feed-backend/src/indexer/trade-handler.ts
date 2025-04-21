@@ -1,6 +1,6 @@
 // File: src/indexer/trade-handler.ts
 import {db} from '../db/database'
-import {BondingCurve, RawPrices, Timestamp} from '../db/kysely-types/postgres'
+import {BondingCurve, RawPrices} from '../db/kysely-types/postgres'
 import {SuiEvent} from '@mysten/sui/client'
 
 // Define interfaces for the parsed JSON data
@@ -97,18 +97,16 @@ export const handleBondingCurveEvent = async (events: SuiEvent[], type: string):
             timestamp = new Date();
         }
 
-        const rawPriceData: RawPrices = {
-            bondingCurveId: payload.bonding_curve_id,
-            timestamp: timestamp,
-            price: payload.price,
-            amountIn: payload.amount_in,
-            amountOut: payload.amount_out,
-            direction: payload.direction,
-        };
-
         await db
             .insertInto('raw_prices')
-            .values(rawPriceData)
+            .values({
+                bondingCurveId: payload.bonding_curve_id,
+                timestamp: timestamp,
+                price: payload.price,
+                amountIn: payload.amount_in,
+                amountOut: payload.amount_out,
+                direction: payload.direction,
+            })
             .execute();
     }
 };

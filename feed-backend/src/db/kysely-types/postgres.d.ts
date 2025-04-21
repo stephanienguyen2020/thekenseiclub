@@ -346,6 +346,7 @@ export interface Likes {
 }
 
 export interface Posts {
+  coin_id: string | null;
   content: string;
   created_at: Timestamp;
   id: Generated<Int8>;
@@ -359,7 +360,7 @@ export interface RawPrices {
   bondingCurveId: string;
   direction: string;
   price: string;
-  timestamp: Date;
+  timestamp: Timestamp;
 }
 
 export interface TimescaledbExperimentalPolicies {

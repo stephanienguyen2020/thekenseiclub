@@ -20,7 +20,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         .execute();
 
     await sql`SELECT create_hypertable('raw_prices', by_range('timestamp'));`
-      .execute(db);
+        .execute(db);
 
     await db.schema
         .createTable('bonding_curve')
@@ -32,57 +32,60 @@ export async function up(db: Kysely<any>): Promise<void> {
         .execute()
 
     await db.schema
-      .createTable('users')
-      .addColumn('id', 'bigserial', col => col.primaryKey().notNull())
-      .addColumn('username', 'varchar', col => col.notNull())
-      .addColumn('sui_address', 'varchar', col => col.notNull())
-      .addColumn('profile_picture_url', 'text', col => col.notNull())
-      .execute()
+        .createTable('users')
+        .addColumn('id', 'bigserial', col => col.primaryKey().notNull())
+        .addColumn('username', 'varchar', col => col.notNull())
+        .addColumn('sui_address', 'varchar', col => col.notNull())
+        .addColumn('profile_picture_url', 'text', col => col.notNull())
+        .execute()
 
     await db.schema
-      .createTable('posts')
-      .addColumn('id', 'bigserial', col => col.primaryKey().notNull())
-      .addColumn('user_id', 'bigint', col => col.notNull())
-      .addColumn('content', 'varchar', col => col.notNull())
-      .addColumn('media_urls', sql`text[]`)
-      .addColumn('created_at', 'timestamp', col => col.notNull())
-      .execute()
+        .createTable('posts')
+        .addColumn('id', 'bigserial', col => col.primaryKey().notNull())
+        .addColumn('user_id', 'bigint', col => col.notNull())
+        .addColumn('coin_id', 'varchar')
+        .addColumn('content', 'varchar', col => col.notNull())
+        .addColumn('media_urls', sql`text
+        []`)
+        .addColumn('created_at', 'timestamp', col => col.notNull())
+        .execute()
 
     await db.schema
-      .createTable('comments')
-      .addColumn('id', 'bigserial', col => col.primaryKey().notNull())
-      .addColumn('user_id', 'bigint', col => col.notNull())
-      .addColumn('post_id', 'bigint', col => col.notNull())
-      .addColumn('content', 'varchar', col => col.notNull())
-      .addColumn('created_at', 'timestamp', col => col.notNull())
-      .execute()
+        .createTable('comments')
+        .addColumn('id', 'bigserial', col => col.primaryKey().notNull())
+        .addColumn('user_id', 'bigint', col => col.notNull())
+        .addColumn('post_id', 'bigint', col => col.notNull())
+        .addColumn('content', 'varchar', col => col.notNull())
+        .addColumn('created_at', 'timestamp', col => col.notNull())
+        .execute()
 
     await db.schema
-      .createTable('likes')
-      .addColumn('id', 'bigserial', col => col.primaryKey().notNull())
-      .addColumn('user_id', 'bigint', col => col.notNull())
-      .addColumn('post_id', 'bigint', col => col.notNull())
-      .addColumn('created_at', 'timestamp', col => col.notNull())
-      .addUniqueConstraint('likes_unique', ['user_id', 'post_id'])
-      .execute()
+        .createTable('likes')
+        .addColumn('id', 'bigserial', col => col.primaryKey().notNull())
+        .addColumn('user_id', 'bigint', col => col.notNull())
+        .addColumn('post_id', 'bigint', col => col.notNull())
+        .addColumn('created_at', 'timestamp', col => col.notNull())
+        .addUniqueConstraint('likes_unique', ['user_id', 'post_id'])
+        .execute()
 
     await db.schema
-      .createTable('images')
-      .addColumn('imageName', 'varchar', col => col.notNull())
-      .addColumn('postId', 'varchar', col => col.notNull())
-      .addColumn('imagePath', 'varchar', col => col.notNull())
-      .execute()
+        .createTable('images')
+        .addColumn('imageName', 'varchar', col => col.notNull())
+        .addColumn('postId', 'varchar', col => col.notNull())
+        .addColumn('imagePath', 'varchar', col => col.notNull())
+        .execute()
 
     await db.schema
-      .createTable('coins')
-      .addColumn('id', 'varchar', col => col.primaryKey().notNull())
-      .addColumn('name', 'varchar', col => col.notNull())
-      .addColumn('symbol', 'varchar', col => col.notNull())
-      .addColumn('description', 'text', col => col.notNull())
-      .addColumn('imageUrl', 'text', col => col.notNull())
-      .addColumn('address', 'varchar', col => col.notNull())
-      .addColumn('created_at', 'timestamp', col => col.notNull().defaultTo(sql`now()`))
-      .execute()
+        .createTable('coins')
+        .addColumn('id', 'varchar', col => col.primaryKey().notNull())
+        .addColumn('name', 'varchar', col => col.notNull())
+        .addColumn('symbol', 'varchar', col => col.notNull())
+        .addColumn('description', 'text', col => col.notNull())
+        .addColumn('imageUrl', 'text', col => col.notNull())
+        .addColumn('address', 'varchar', col => col.notNull())
+        .addColumn('created_at', 'timestamp', col => col.notNull().defaultTo(sql`now
+        ()`))
+        .execute()
 }
 
 export async function down(db: Kysely<any>): Promise<void> {

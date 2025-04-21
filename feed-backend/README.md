@@ -53,10 +53,11 @@ NETWORK=testnet  # Options: mainnet, testnet, devnet, localnet
 
 ## API Documentation
 
-The service provides two main APIs:
+The service provides the following APIs:
 
 - [OHLCV API](./docs/ohlcv-api.md) - For retrieving price data
 - [Coin API](./docs/coin-api.md) - For deploying new coins
+- [Social Feed API](./docs/social-feed-api.md) - For social media functionality including users, posts, comments, likes, and images
 
 ## Development
 
