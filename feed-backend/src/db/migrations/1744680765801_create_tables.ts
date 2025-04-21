@@ -10,28 +10,6 @@ export async function up(db: Kysely<any>): Promise<void> {
         .execute()
 
     await db.schema
-        .createTable('buy_events')
-        .addColumn('id', 'varchar', col => col.primaryKey().notNull())
-        .addColumn('timestamp', 'timestamp', col => col.notNull())
-        .addColumn('buyer', 'varchar', col => col.notNull())
-        .addColumn('coinType', 'varchar', col => col.notNull())
-        .addColumn('amountIn', 'bigint', col => col.notNull())
-        .addColumn('tokenOut', 'bigint', col => col.notNull())
-        .addColumn('txDigest', 'varchar', col => col.notNull())
-        .execute()
-
-    await db.schema
-        .createTable('sell_events')
-        .addColumn('id', 'varchar', col => col.primaryKey().notNull())
-        .addColumn('timestamp', 'timestamp', col => col.notNull())
-        .addColumn('seller', 'varchar', col => col.notNull())
-        .addColumn('coinType', 'varchar', col => col.notNull())
-        .addColumn('tokenIn', 'bigint', col => col.notNull())
-        .addColumn('amountOut', 'bigint', col => col.notNull())
-        .addColumn('txDigest', 'varchar', col => col.notNull())
-        .execute()
-
-    await db.schema
         .createTable('raw_prices')
         .addColumn('bondingCurveId', 'varchar', col => col.notNull())
         .addColumn('timestamp', 'timestamp', col => col.notNull())

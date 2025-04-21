@@ -308,16 +308,6 @@ export interface BondingCurve {
   treasuryCap: string;
 }
 
-export interface BuyEvents {
-  amountIn: Int8;
-  buyer: string;
-  coinType: string;
-  id: string;
-  timestamp: Timestamp;
-  tokenOut: Int8;
-  txDigest: string;
-}
-
 export interface Comments {
   content: string;
   created_at: Timestamp;
@@ -358,19 +348,8 @@ export interface RawPrices {
   amountOut: string;
   bondingCurveId: string;
   direction: string;
-  id: string;
   price: string;
   timestamp: Timestamp;
-}
-
-export interface SellEvents {
-  amountOut: Int8;
-  coinType: string;
-  id: string;
-  seller: string;
-  timestamp: Timestamp;
-  tokenIn: Int8;
-  txDigest: string;
 }
 
 export interface TimescaledbExperimentalPolicies {
@@ -572,14 +551,12 @@ export interface DB {
   "_timescaledb_internal.compressed_chunk_stats": _TimescaledbInternalCompressedChunkStats;
   "_timescaledb_internal.hypertable_chunk_local_size": _TimescaledbInternalHypertableChunkLocalSize;
   bonding_curve: BondingCurve;
-  buy_events: BuyEvents;
   comments: Comments;
   cursors: Cursors;
   images: Images;
   likes: Likes;
   posts: Posts;
   raw_prices: RawPrices;
-  sell_events: SellEvents;
   "timescaledb_experimental.policies": TimescaledbExperimentalPolicies;
   "timescaledb_information.chunk_columnstore_settings": TimescaledbInformationChunkColumnstoreSettings;
   "timescaledb_information.chunk_compression_settings": TimescaledbInformationChunkCompressionSettings;

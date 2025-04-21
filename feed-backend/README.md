@@ -22,14 +22,6 @@ A backend service for blockchain data feeds, providing APIs for OHLCV (Open, Hig
    ```bash
    npm install
    ```
-- Install postgres client:
-   ```bash
-   sudo apt update
-   sudo apt install postgresql postgresql-contrib
-  
-   # Check if postgres is running
-   sudo systemctl status postgresql
-   ```
 - Create timeseries database:
    ```bash
    docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=password timescale/timescaledb-ha:pg17

@@ -66,7 +66,6 @@ export const handleBondingCurveEvent = async (events: SuiEvent[], type: string):
                 migrationTarget: payload.migration_target,
             };
 
-            console.log(bondingCurveData);
             await db
                 .insertInto('bonding_curve')
                 .values(bondingCurveData)
@@ -106,8 +105,6 @@ export const handleBondingCurveEvent = async (events: SuiEvent[], type: string):
             amountOut: payload.amount_out,
             direction: payload.direction,
         };
-
-        console.log("[inserted] Raw Price Event:", rawPriceData);
 
         await db
             .insertInto('raw_prices')

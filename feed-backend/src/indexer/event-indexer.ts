@@ -75,7 +75,7 @@ const runEventJob = async (client: SuiClient, tracker: EventTracker, cursor: Sui
         () => {
             runEventJob(client, tracker, result.cursor);
         },
-        CONFIG.POLLING_INTERVAL_MS,
+        result.hasNextPage ? 0 : CONFIG.POLLING_INTERVAL_MS,
     );
 };
 
