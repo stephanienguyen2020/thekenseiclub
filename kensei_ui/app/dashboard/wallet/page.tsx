@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Grid, List, Search } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { Search, ArrowUp, ArrowDown, ChevronDown, ChevronUp, Grid, List } from "lucide-react"
+import { useState } from "react"
 
 export default function WalletPage() {
   const [activeTab, setActiveTab] = useState<"holdings" | "created">("holdings")
@@ -157,8 +157,7 @@ export default function WalletPage() {
           <div className="flex-1">
             <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
               <h2 className="text-2xl font-bold">0x1a2b...3c4d</h2>
-              <span className="bg-[#0039C6] text-white px-2 py-1 rounded-full text-sm">Connected to SUI</span>
-            </div>
+              </div>
             <div className="flex flex-wrap gap-4">
               <div className="bg-gray-100 px-4 py-2 rounded-xl border-2 border-black">
                 <span className="text-gray-500 text-sm">Total Value</span>

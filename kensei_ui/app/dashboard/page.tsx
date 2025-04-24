@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { ArrowDown, ArrowUp, FileText, MessageSquare, Plus, Twitter, Wallet } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowUp, ArrowDown, Wallet, FileText, Twitter, MessageSquare, Plus } from "lucide-react"
+import { useState } from "react"
 
 export default function DashboardPage() {
   const [timeframe, setTimeframe] = useState("1W")
@@ -103,12 +103,12 @@ export default function DashboardPage() {
       {/* Portfolio Overview */}
       <div className="bg-white rounded-3xl p-6 mb-6 border-4 border-black">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-black">Portfolio Overview</h2>
+          <h2 className="text-2xl font-black text-black">Portfolio Overview</h2>
           <div className="flex gap-2">
             {["1D", "1W", "1M", "1Y", "ALL"].map((time) => (
               <button
                 key={time}
-                className={`px-3 py-1 rounded-xl font-bold border-2 border-black ${
+                className={`px-3 py-1 rounded-xl font-bold border-2 border-black text-black ${
                   timeframe === time ? "bg-[#c0ff00]" : "bg-gray-100"
                 }`}
                 onClick={() => setTimeframe(time)}
@@ -123,7 +123,7 @@ export default function DashboardPage() {
           <div className="flex-1">
             <div className="mb-2">
               <div className="text-gray-500 text-sm">Total Value</div>
-              <div className="text-4xl font-black">${portfolioValue.toLocaleString()}</div>
+              <div className="text-4xl font-black text-black">${portfolioValue.toLocaleString()}</div>
               <div className={`flex items-center ${portfolioChange >= 0 ? "text-green-500" : "text-red-500"}`}>
                 {portfolioChange >= 0 ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
                 <span className="font-bold">{Math.abs(portfolioChange).toFixed(2)}%</span>
@@ -193,8 +193,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <div className="font-bold text-sm">0x1a2b...3c4d</div>
-                    <div className="text-gray-500 text-xs">Connected to SUI</div>
-                  </div>
+                    </div>
                 </div>
               </div>
             </div>
@@ -212,7 +211,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <div className="text-gray-500 text-sm">{stat.title}</div>
-                <div className="text-2xl font-black">{stat.value}</div>
+                <div className="text-2xl font-black text-black">{stat.value}</div>
               </div>
             </div>
           </div>
@@ -223,7 +222,7 @@ export default function DashboardPage() {
         {/* Top Holdings */}
         <div className="bg-white rounded-3xl p-6 border-4 border-black">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-black">Top Holdings</h2>
+            <h2 className="text-xl font-black text-black">Top Holdings</h2>
             <Link
               href="/dashboard/wallet"
               className="bg-[#c0ff00] text-black px-3 py-1 rounded-xl text-sm font-bold border-2 border-black"
@@ -256,12 +255,12 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div>
-                    <div className="font-bold">{holding.name}</div>
+                    <div className="font-bold text-black">{holding.name}</div>
                     <div className="text-gray-500 text-sm">{holding.symbol}</div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold">${holding.value.toLocaleString()}</div>
+                  <div className="font-bold text-black">${holding.value.toLocaleString()}</div>
                   <div className={`text-sm ${holding.change >= 0 ? "text-green-500" : "text-red-500"}`}>
                     {holding.change >= 0 ? "+" : ""}
                     {holding.change}%
@@ -275,7 +274,7 @@ export default function DashboardPage() {
         {/* Recent Proposals */}
         <div className="bg-white rounded-3xl p-6 border-4 border-black">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-black">Recent Proposals</h2>
+            <h2 className="text-xl font-black text-black">Recent Proposals</h2>
             <Link
               href="/dashboard/proposals"
               className="bg-[#c0ff00] text-black px-3 py-1 rounded-xl text-sm font-bold border-2 border-black"
@@ -305,7 +304,7 @@ export default function DashboardPage() {
                         />
                       </div>
                     </div>
-                    <div className="font-bold">{proposal.token}</div>
+                    <div className="font-bold text-black">{proposal.token}</div>
                     <div
                       className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                         proposal.status === "active"
@@ -320,7 +319,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="text-gray-500 text-xs">Ends: {proposal.endDate}</div>
                 </div>
-                <div className="font-medium">{proposal.title}</div>
+                <div className="font-medium text-black">{proposal.title}</div>
                 <div className="mt-2">
                   <Link
                     href={`/marketplace/${proposal.token.toLowerCase()}/proposal/${proposal.id}`}

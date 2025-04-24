@@ -1,8 +1,10 @@
 "use client"
 
-import { Bell, ChevronDown, Search, User } from "lucide-react";
+import { Bell, ChevronDown, Globe, Search, Settings, User, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useAccount, useChainId, useConfig } from "wagmi";
+import { useWallet } from "../providers/WalletProvider";
 
 interface NavbarProps {
   isAuthenticated?: boolean
@@ -12,6 +14,18 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false)
   const [isDashboardOpen, setIsDashboardOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isNetworkOpen, setIsNetworkOpen] = useState(false)
+  const { connect, disconnect } = useWallet()
+  const { address, isConnected } = useAccount()
+  const chainId = useChainId()
+  const config = useConfig()
+  const chain = config.chains.find(c => c.id === chainId)
+  const chains = config.chains
+
+  const switchNetwork = async (chainId: number) => {
+    // TODO: Implement network switching
+    console.log("Switching to network:", chainId)
+  }
 
   return (
     <nav className="flex items-center justify-between p-6">
@@ -174,7 +188,7 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
           </div>
         )}
 
-        {isAuthenticated ? (
+        {isConnected ? (
           <>
             {/* Launch Token Button */}
             <Link
@@ -183,6 +197,38 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
             >
               Launch a Token
             </Link>
+
+            {/* Network Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setIsNetworkOpen(!isNetworkOpen)}
+                className="bg-[#0046F4] text-white px-4 py-2 rounded-full hover:bg-opacity-90 transition-colors flex items-center gap-2"
+              >
+                <Globe size={16} />
+                <span>{chain?.name || 'Network'}</span>
+                <ChevronDown size={16} />
+              </button>
+              {isNetworkOpen && (
+                <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[180px] border-2 border-black">
+                  {chains?.map((x) => (
+                    <button
+                      key={x.id}
+                      onClick={() => {
+                        switchNetwork?.(x.id)
+                        setIsNetworkOpen(false)
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm rounded-lg ${
+                        x.id === chain?.id
+                          ? 'bg-[#c0ff00] text-black'
+                          : 'text-black hover:bg-[#0046F4] hover:text-white'
+                      }`}
+                    >
+                      {x.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Notifications */}
             <button className="bg-[#0046F4] text-white p-2 rounded-full hover:bg-opacity-90 transition-colors relative">
@@ -198,47 +244,76 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="w-10 h-10 rounded-full bg-[#c0ff00] flex items-center justify-center border-2 border-black"
               >
-                <User size={20} />
+                <User size={20} className="text-black" />
               </button>
               {isProfileOpen && (
-                <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[180px] border-2 border-black">
+                <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[220px] border-2 border-black">
                   <div className="px-4 py-2 border-b border-gray-200">
-                    <p className="font-bold">0x1a2b...3c4d</p>
-                      </div>
+                    <p className="font-bold text-black">{address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ''}</p>
+                    <p className="text-gray-500">Connected to {chain?.name || 'Unknown'}</p>
+                  </div>
+                  
+                  {/* Wallet Management Section */}
+                  <div className="px-4 py-2 border-b border-gray-200">
+                    <div className="flex items-center justify-between text-sm text-black mb-1">
+                      <span>Balance</span>
+                      <span className="font-medium">0.00 SUI</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-black">
+                      <span>Network</span>
+                      <span className="font-medium">{chain?.name || 'Unknown'}</span>
+                    </div>
+                  </div>
+
                   <Link
                     href="/profile"
-                    className="block px-4 py-2 text-sm hover:bg-[#0046F4] hover:text-white rounded-lg"
+                    className="block px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
                     onClick={() => setIsProfileOpen(false)}
                   >
-                    Profile
+                    <div className="flex items-center gap-2">
+                      <User size={16} />
+                      <span>Profile</span>
+                    </div>
                   </Link>
+                  
                   <Link
                     href="/dashboard/settings"
-                    className="block px-4 py-2 text-sm hover:bg-[#0046F4] hover:text-white rounded-lg"
+                    className="block px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
                     onClick={() => setIsProfileOpen(false)}
                   >
-                    Settings
+                    <div className="flex items-center gap-2">
+                      <Settings size={16} />
+                      <span>Settings</span>
+                    </div>
                   </Link>
+
                   <button
                     className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500 hover:text-white rounded-lg"
                     onClick={() => {
-                      // Handle disconnect
+                      disconnect()
                       setIsProfileOpen(false)
                     }}
                   >
-                    Disconnect
+                    <div className="flex items-center gap-2">
+                      <Wallet size={16} />
+                      <span>Disconnect</span>
+                    </div>
                   </button>
                 </div>
               )}
             </div>
           </>
         ) : (
-          <Link
-            href="/marketplace"
+          <button
+            onClick={() => connect()}
+            type="button"
             className="bg-white text-[#0039C6] px-5 py-2 rounded-full font-medium hover:bg-opacity-90 transition-colors border border-white"
           >
-            Connect wallet
-          </Link>
+            <div className="flex items-center">
+              <Wallet className="mr-2 h-4 w-4" />
+              <span>Connect wallet</span>
+            </div>
+          </button>
         )}
       </div>
     </nav>

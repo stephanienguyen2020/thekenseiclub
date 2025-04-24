@@ -1,8 +1,8 @@
 "use client"
-import Link from "next/link"
+import { FileText, LayoutDashboard, LogOut, MessageSquare, Settings, Star, Twitter, Wallet } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Wallet, FileText, MessageSquare, Twitter, LayoutDashboard, Settings, LogOut, Star } from "lucide-react"
 
 export default function DashboardSidebar() {
   const pathname = usePathname()
@@ -71,7 +71,6 @@ export default function DashboardSidebar() {
             </div>
             <div>
               <div className="text-white font-bold text-sm">0x1a2b...3c4d</div>
-              <div className="text-gray-300 text-xs">Connected to SUI</div>
             </div>
           </div>
         </div>

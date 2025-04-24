@@ -1,9 +1,9 @@
 "use client"
 
+import { motion } from "framer-motion"
 import Image from "next/image"
 import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
-import Navbar from "@/components/navbar"
+import Navbar from "./components/navbar"
 
 export default function Page() {
   const [mounted, setMounted] = useState(false)
