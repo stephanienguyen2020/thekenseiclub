@@ -96,8 +96,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <RainbowKitProvider>
           <NextThemesProvider
             attribute="class"
-            defaultTheme="dark"
-            enableSystem
+            defaultTheme="light"
+            enableSystem={false}
             disableTransitionOnChange
           >
             <WalletProvider>
