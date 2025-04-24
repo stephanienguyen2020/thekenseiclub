@@ -21,7 +21,7 @@ class CoinSDK {
     private treasuryCap: string;
     private client: SuiClient;
     private packageId: string;
-    private coinMetadata?: string;
+    public coinMetadata?: string;
 
     constructor(
         treasuryCap: string,
