@@ -1,0 +1,41 @@
+{
+  "name": "coin-sdk",
+  "version": "1.0.9",
+  "description": "A TypeScript SDK for interacting with the coin contract on Sui blockchain.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc && cp -r coin-create dist/ && cp -r src/template.txt dist/src/",
+    "prepublishOnly": "npm run build",
+    "dev": "NETWORK=testnet ts-node src/index.ts",
+    "indexer": "ts-node src/indexer.ts",
+    "test": "jest"
+  },
+  "keywords": [
+    "blockchain",
+    "sdk",
+    "coin",
+    "typescript",
+    "sui",
+    "cryptocurrency"
+  ],
+  "author": "Sui Hackathon Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/coin-sdk.git"
+  },
+  "dependencies": {
+    "@flowx-finance/sdk": "1.2.2-3",
+    "@mysten/sui": "^1.27.0",
+    "axios": "^1.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
