@@ -4,6 +4,8 @@ import { useState, type ChangeEvent } from "react"
 import Image from "next/image"
 import { Upload, Sparkles } from "lucide-react"
 import Navbar from "@/components/navbar"
+import axios from "axios";
+import api from "@/lib/api";
 
 type LaunchMethod = "auto" | "manual"
 
@@ -37,13 +39,17 @@ export default function LaunchTokenPage() {
     }, 1500)
   }
 
-  const handleCreateToken = () => {
+  const handleCreateToken = async () => {
     setIsCreatingToken(true)
+    const result: CoinResponse = await api.post("/coin", {
+      name: tokenName, symbol: tokenSymbol, description: tokenDescription, iconUrl: imagePreview, address: "0x89052a175017eb52f49d24e7de1f48b0c38c6b1d67f9fc4e471420524e4dc2d4"
+    })
+    console.log("result: ", result);
+    window.location.href = `/marketplace/${result.coin.id}`
     // Simulate token creation
-    setTimeout(() => {
-      // Redirect to the new token page or show success
-      window.location.href = "/marketplace/new-token"
-    }, 2000)
+    // setTimeout(() => {
+    //   // Redirect to the new token page or show success
+    // }, 2000)
   }
 
   return (
