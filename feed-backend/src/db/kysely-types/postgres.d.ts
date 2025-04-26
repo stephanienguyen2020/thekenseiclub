@@ -301,8 +301,8 @@ export interface _TimescaledbInternalHypertableChunkLocalSize {
 }
 
 export interface BondingCurve {
-  bondingCurveId: string;
   coinMetadata: string;
+  id: string;
   issuer: string;
   migrationTarget: string;
   treasuryCap: string;
@@ -310,7 +310,7 @@ export interface BondingCurve {
 
 export interface Coins {
   address: string;
-  created_at: Generated<Timestamp>;
+  createdAt: Generated<Timestamp>;
   description: string;
   id: string;
   imageUrl: string;
@@ -335,7 +335,7 @@ export interface Cursors {
 export interface Images {
   imageName: string;
   imagePath: string;
-  postId: string;
+  postId: Generated<Int8>;
 }
 
 export interface Likes {

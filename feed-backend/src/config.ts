@@ -1,9 +1,10 @@
-import {ACTIVE_NETWORK} from "./utils";
+import { ACTIVE_NETWORK } from "./utils";
 
 export const CONFIG = {
-    BONDING_CURVE: {
-        packageId: "0x97f38a7a5f8f0c4a811e08ed4d3c9481ea8d4aa54efb486ae55cb92d6c4928aa",
-    },
-    NETWORK: ACTIVE_NETWORK,
-    POLLING_INTERVAL_MS: 5000,
-}
+  BONDING_CURVE: {
+    packageId:
+      "0x077de3701c3b64fbabaf2a51db51e0b358fda6be1e3ace2a97f9caa35cdcf9c4",
+  },
+  NETWORK: ACTIVE_NETWORK,
+  POLLING_INTERVAL_MS: 5000 * 60,
+};
