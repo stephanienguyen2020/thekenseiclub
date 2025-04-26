@@ -1,4 +1,3 @@
-// File: src/db/migrations/1744680765801_create_tables.ts
 import { Kysely, sql } from "kysely";
 
 export async function up(db: Kysely<any>): Promise<void> {
@@ -16,9 +15,9 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("name", "varchar", (col) => col.notNull())
     .addColumn("symbol", "varchar", (col) => col.notNull())
     .addColumn("description", "text", (col) => col.notNull())
-    .addColumn("imageUrl", "text", (col) => col.notNull())
+    .addColumn("image_url", "text", (col) => col.notNull())
     .addColumn("address", "varchar", (col) => col.notNull())
-    .addColumn("createdAt", "timestamp", (col) =>
+    .addColumn("created_at", "timestamp", (col) =>
       col.notNull().defaultTo(sql`now
         ()`),
     )
@@ -27,19 +26,19 @@ export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable("cursors")
     .addColumn("id", "varchar", (col) => col.primaryKey().notNull())
-    .addColumn("eventSeq", "varchar", (col) => col.notNull())
-    .addColumn("txDigest", "varchar", (col) => col.notNull())
+    .addColumn("event_seq", "varchar", (col) => col.notNull())
+    .addColumn("tx_digest", "varchar", (col) => col.notNull())
     .execute();
 
   await db.schema
     .createTable("bonding_curve")
     .addColumn("id", "varchar", (col) => col.primaryKey().notNull())
     .addColumn("issuer", "varchar", (col) => col.notNull())
-    .addColumn("treasuryCap", "varchar", (col) => col.notNull())
-    .addColumn("coinMetadata", "varchar", (col) =>
+    .addColumn("treasury_cap", "varchar", (col) => col.notNull())
+    .addColumn("coin_metadata", "varchar", (col) =>
       col.references("coins.id").notNull(),
     )
-    .addColumn("migrationTarget", "varchar", (col) => col.notNull())
+    .addColumn("migration_target", "varchar", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -84,22 +83,22 @@ export async function up(db: Kysely<any>): Promise<void> {
 
   await db.schema
     .createTable("images")
-    .addColumn("imageName", "varchar", (col) => col.notNull())
-    .addColumn("postId", "bigserial", (col) =>
+    .addColumn("image_name", "varchar", (col) => col.notNull())
+    .addColumn("post_id", "bigserial", (col) =>
       col.references("posts.id").notNull(),
     )
-    .addColumn("imagePath", "varchar", (col) => col.notNull())
+    .addColumn("image_path", "varchar", (col) => col.notNull())
     .execute();
 
   await db.schema
     .createTable("raw_prices")
-    .addColumn("bondingCurveId", "varchar", (col) =>
+    .addColumn("bonding_curve_id", "varchar", (col) =>
       col.references("bonding_curve.id").notNull(),
     )
     .addColumn("timestamp", "timestamp", (col) => col.notNull())
     .addColumn("price", "varchar", (col) => col.notNull())
-    .addColumn("amountIn", "varchar", (col) => col.notNull())
-    .addColumn("amountOut", "varchar", (col) => col.notNull())
+    .addColumn("amount_in", "varchar", (col) => col.notNull())
+    .addColumn("amount_out", "varchar", (col) => col.notNull())
     .addColumn("direction", "varchar", (col) => col.notNull())
     .execute();
 
@@ -107,13 +106,13 @@ export async function up(db: Kysely<any>): Promise<void> {
     db,
   );
 
-  await sql`CREATE INDEX ON raw_prices ("bondingCurveId", "timestamp");`.execute(
+  await sql`CREATE INDEX ON raw_prices ("bonding_curve_id", "timestamp");`.execute(
     db,
   );
 
   await sql`ALTER TABLE raw_prices SET (
     timescaledb.compress,
-    timescaledb.compress_segmentby = '"bondingCurveId"',
+    timescaledb.compress_segmentby = '"bonding_curve_id"',
     timescaledb.compress_orderby = 'timestamp DESC'
   )`.execute(db);
 
@@ -125,7 +124,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   // WITH (timescaledb.continuous) AS
   // SELECT
   //     time_bucket('5 seconds', timestamp) AS bucket,
-  //     'bondingCurveId',
+  //     'bonding_curve_id',
   //     MAX(price) AS high,
   //     FIRST(price, timestamp) AS open,
   //     LAST(price, timestamp) AS close,

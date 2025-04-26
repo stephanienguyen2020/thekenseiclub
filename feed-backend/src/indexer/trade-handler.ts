@@ -76,7 +76,7 @@ export const handleBondingCurveEvent = async (
         migrationTarget: payload.migration_target,
       };
 
-      await db.insertInto("bonding_curve").values(bondingCurveData).execute();
+      await db.insertInto("bondingCurve").values(bondingCurveData).execute();
       continue;
     }
 
@@ -107,7 +107,7 @@ export const handleBondingCurveEvent = async (
     }
 
     await db
-      .insertInto("raw_prices")
+      .insertInto("rawPrices")
       .values({
         bondingCurveId: payload.bonding_curve_id,
         timestamp: timestamp,
