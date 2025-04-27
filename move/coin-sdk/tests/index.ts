@@ -55,7 +55,7 @@ const bondingCurveSdk = new BondingCurveSDK(
   bondingCurvePackageId,
 );
 // bondingCurveSdk.buy({
-//   amount: 5000000,
+//   amount: 100000000,
 //   minTokenRequired: 0,
 //   type: coinType,
 //   address: address,

@@ -313,7 +313,7 @@ export interface Coins {
   createdAt: Generated<Timestamp>;
   description: string;
   id: string;
-  imageUrl: string;
+  logo: string;
   name: string;
   symbol: string;
 }

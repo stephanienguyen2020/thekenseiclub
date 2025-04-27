@@ -48,14 +48,6 @@ const CryptoChart: React.FC<CryptoChartProps> = ({
       })
       .sort((a, b) => a.time - b.time);
 
-    // Log the first and last data points to verify time formatting
-    if (formattedData.length > 0) {
-      console.log("First data point:", formattedData[0]);
-      console.log("Last data point:", formattedData[formattedData.length - 1]);
-    }
-
-    console.log("Formatted data:", formattedData);
-
     try {
       // Create the chart with improved options for better visualization
       chart.current = createChart(chartContainerRef.current, {

@@ -45,7 +45,6 @@ export default function MarketplacePage() {
         ...ele,
         proposals: 8,
       }));
-      console.log(coinList);
       setCoins(coinList);
     };
     fetchCoins();
@@ -58,75 +57,6 @@ export default function MarketplacePage() {
         : [...prev, coinId],
     );
   };
-
-  // const coins = [
-  //   {
-  //     id: "pepe",
-  //     name: "Pepe",
-  //     symbol: "PEPE",
-  //     logo: "/happy-frog-on-a-lilypad.png",
-  //     price: 0.00000123,
-  //     change24h: 12.5,
-  //     marketCap: 12500000,
-  //     holders: 5432,
-  //     proposals: 8,
-  //   },
-  //   {
-  //     id: "doge",
-  //     name: "Doge",
-  //     symbol: "DOGE",
-  //     logo: "/alert-shiba.png",
-  //     price: 0.00045678,
-  //     change24h: -3.2,
-  //     marketCap: 98700000,
-  //     holders: 12345,
-  //     proposals: 15,
-  //   },
-  //   {
-  //     id: "shib",
-  //     name: "Shiba Inu",
-  //     symbol: "SHIB",
-  //     logo: "/stylized-shiba-inu.png",
-  //     price: 0.00000987,
-  //     change24h: 5.7,
-  //     marketCap: 45600000,
-  //     holders: 9876,
-  //     proposals: 12,
-  //   },
-  //   {
-  //     id: "wojak",
-  //     name: "Wojak",
-  //     symbol: "WOJ",
-  //     logo: "/Distressed-Figure.png",
-  //     price: 0.00000045,
-  //     change24h: 32.1,
-  //     marketCap: 3400000,
-  //     holders: 2345,
-  //     proposals: 3,
-  //   },
-  //   {
-  //     id: "moon",
-  //     name: "Moon",
-  //     symbol: "MOON",
-  //     logo: "/crescent-moon-silhouette.png",
-  //     price: 0.00000789,
-  //     change24h: -8.4,
-  //     marketCap: 7800000,
-  //     holders: 4567,
-  //     proposals: 6,
-  //   },
-  //   {
-  //     id: "cat",
-  //     name: "Cat Coin",
-  //     symbol: "CAT",
-  //     logo: "/playful-calico.png",
-  //     price: 0.00000321,
-  //     change24h: 15.3,
-  //     marketCap: 5600000,
-  //     holders: 3456,
-  //     proposals: 5,
-  //   },
-  // ]
 
   const filteredCoins = coins.filter(
     (coin: Coin) =>

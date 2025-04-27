@@ -67,7 +67,7 @@ router.get("/posts", async (req: any, res: any) => {
         "u.profilePictureUrl",
         "c.name as coinName",
         "c.symbol as coinSymbol",
-        "c.imageUrl as coinImageUrl",
+        "c.logo as coinImageUrl",
       ])
       .select(({ selectFrom }) => [
         selectFrom("likes")
