@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from "react";
 // Import directly from the specific module to ensure we get the correct API
-import { createChart } from "lightweight-charts";
+import { createChart, ColorType } from "lightweight-charts";
 
 export interface CandleData {
-  time: string;
-  bondingCurveId: string;
+  time: string | number;
+  bondingCurveId?: string;
   high: number;
   open: number;
   close: number;
@@ -30,61 +30,136 @@ const CryptoChart: React.FC<CryptoChartProps> = ({
     console.log("Data received: ", data);
     if (!chartContainerRef.current || data.length === 0) return;
 
-    // Ensure any previous chart instance is removed
-    if (chart.current) {
-      chart.current.remove();
-      chart.current = null;
-    }
-
     // Format the data for the chart
     const formattedData = data
-      .map((item) => ({
-        // Use a proper time format that works with all versions
-        time: new Date(item.time).getTime() / 1000, // Convert to timestamp
-        open: item.open,
-        high: item.high,
-        low: item.low,
-        close: item.close,
-      }))
+      .map((item) => {
+        // For lightweight-charts, time needs to be in seconds for Unix timestamps
+        const timeValue = typeof item.time === "number" 
+          ? Math.floor(item.time) // Ensure it's an integer
+          : Math.floor(new Date(item.time).getTime() / 1000);
+
+        return {
+          time: timeValue,
+          open: item.open,
+          high: item.high,
+          low: item.low,
+          close: item.close,
+        };
+      })
       .sort((a, b) => a.time - b.time);
+
+    // Log the first and last data points to verify time formatting
+    if (formattedData.length > 0) {
+      console.log("First data point:", formattedData[0]);
+      console.log("Last data point:", formattedData[formattedData.length - 1]);
+    }
 
     console.log("Formatted data:", formattedData);
 
     try {
-      // Create the chart with minimal options to reduce potential errors
+      // Create the chart with improved options for better visualization
       chart.current = createChart(chartContainerRef.current, {
         width,
         height,
+        layout: {
+          background: { type: ColorType.Solid, color: "transparent" },
+          textColor: "#D9D9D9",
+        },
+        grid: {
+          vertLines: { color: "rgba(42, 46, 57, 0.5)" },
+          horzLines: { color: "rgba(42, 46, 57, 0.5)" },
+        },
+        timeScale: {
+          timeVisible: true,
+          secondsVisible: false,
+          borderColor: "rgba(197, 203, 206, 0.8)",
+          barSpacing: 10, // Adjust spacing between candles
+          fixLeftEdge: true,
+          fixRightEdge: true,
+          lockVisibleTimeRangeOnResize: true,
+        },
+        rightPriceScale: {
+          borderColor: "rgba(197, 203, 206, 0.8)",
+          textColor: "#D9D9D9",
+          scaleMargins: {
+            top: 0.2,
+            bottom: 0.2,
+          },
+          visible: true,
+          autoScale: true,
+          entireTextOnly: false,
+          priceFormat: {
+            type: 'custom',
+            formatter: (price: number) => {
+              // Format very small numbers in scientific notation
+              if (price < 0.000001) {
+                return price.toExponential(8);
+              }
+              return price.toPrecision(8);
+            },
+          },
+        },
+        crosshair: {
+          vertLine: {
+            color: "#758696",
+            width: 1,
+            style: 3,
+            visible: true,
+            labelVisible: true,
+          },
+          horzLine: {
+            color: "#758696",
+            width: 1,
+            style: 3,
+            visible: true,
+            labelVisible: true,
+          },
+          mode: 1,
+        },
       });
 
       console.log("Chart created:", chart.current);
 
-      // Log all methods available on the chart and its prototype chain
-      console.log("Chart keys:", Object.keys(chart.current));
-      console.log(
-        "Chart prototype methods:",
-        Object.getOwnPropertyNames(Object.getPrototypeOf(chart.current))
-      );
-
-      // Attempt to use line series as a fallback that should work in all versions
-      const lineSeries = chart.current.addLineSeries({
-        color: "#2196F3",
-        lineWidth: 2,
+      // Create a candlestick series for displaying OHLC data
+      const candlestickSeries = chart.current.addCandlestickSeries({
+        upColor: '#26a69a',
+        downColor: '#ef5350',
+        borderVisible: true,
+        borderColor: '#378658',
+        borderUpColor: '#26a69a',
+        borderDownColor: '#ef5350',
+        wickUpColor: '#26a69a',
+        wickDownColor: '#ef5350',
+        priceScaleId: 'right',
+        // Ensure the series uses the right price scale with our custom formatting
+        priceFormat: {
+          type: 'custom',
+          formatter: (price: number) => {
+            // Format very small numbers in scientific notation
+            if (price < 0.000001) {
+              return price.toExponential(8);
+            }
+            return price.toPrecision(8);
+          },
+        },
       });
 
-      if (!lineSeries) {
-        console.error("Failed to create line series");
-        return;
-      }
+      // Set the data
+      console.log("Candlestick data:", formattedData);
+      candlestickSeries.setData(formattedData);
 
-      // Convert data to line series format
-      const lineData = formattedData.map((item) => ({
-        time: item.time,
-        value: item.close,
-      }));
+      // Fit content to ensure all data is visible
+      chart.current.timeScale().fitContent();
 
-      console.log("Line data:", lineData);
-      lineSeries.setData(lineData);
+      // Force the price scale to recalculate and show appropriate intervals
+      candlestickSeries.applyOptions({
+        autoscaleInfoProvider: () => ({
+          priceRange: {
+            minValue: Math.min(...formattedData.map(d => d.low)) * 0.999,
+            maxValue: Math.max(...formattedData.map(d => d.high)) * 1.001
+          },
+        }),
+      });
 
       // Make the chart responsive
       if (resizeObserver.current) {
@@ -97,6 +172,16 @@ const CryptoChart: React.FC<CryptoChartProps> = ({
         if (chart.current) {
           chart.current.applyOptions({ width: newWidth, height: newHeight });
           chart.current.timeScale().fitContent();
+
+          // Reapply our custom scaling when window is resized
+          candlestickSeries.applyOptions({
+            autoscaleInfoProvider: () => ({
+              priceRange: {
+                minValue: Math.min(...formattedData.map(d => d.low)) * 0.999,
+                maxValue: Math.max(...formattedData.map(d => d.high)) * 1.001
+              },
+            }),
+          });
         }
       });
 

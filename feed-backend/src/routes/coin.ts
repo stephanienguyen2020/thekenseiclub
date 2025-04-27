@@ -203,4 +203,37 @@ router.get("/coin/:id", async (req: any, res: any) => {
   }
 });
 
+/**
+ * Endpoint to get all coins without pagination
+ * @route GET /allCoins
+ */
+router.get("/allCoins", async (req: any, res: any) => {
+  try {
+    // Get all coins directly from coins table without joins
+    const coins = await db
+      .selectFrom("coins")
+      .select([
+        "id",
+        "name",
+        "symbol",
+        "description",
+        "imageUrl",
+        "address",
+        "createdAt",
+      ])
+      .orderBy("createdAt", "desc")
+      .execute();
+
+    return res.status(200).json({
+      data: coins,
+    });
+  } catch (error) {
+    console.error("Error fetching all coins:", error);
+    return res.status(500).json({
+      error: "Failed to fetch all coins",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
 export default router;

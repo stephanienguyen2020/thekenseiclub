@@ -1,6 +1,6 @@
 "use client";
 
-import type React from "react";
+import React, {useEffect} from "react";
 
 import { useState, useRef } from "react";
 import Image from "next/image";
@@ -15,6 +15,7 @@ import {
   BarChart2,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import api from "@/lib/api";
 
 interface Token {
   id: string;
@@ -37,36 +38,16 @@ export default function EnhancedPostInput({
     preselectedToken,
   );
   const [tokenSearchQuery, setTokenSearchQuery] = useState("");
+  const [tokens, settokens] = useState<Token[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Mock tokens for dropdown
-  const tokens = [
-    {
-      id: "pepe",
-      name: "Pepe",
-      symbol: "PEPE",
-      logo: "/happy-frog-on-a-lilypad.png",
-    },
-    {
-      id: "doge",
-      name: "Doge",
-      symbol: "DOGE",
-      logo: "/stylized-shiba-inu.png",
-    },
-    { id: "cat", name: "Cat Coin", symbol: "CAT", logo: "/playful-calico.png" },
-    {
-      id: "wojak",
-      name: "Wojak",
-      symbol: "WOJ",
-      logo: "/Distressed-Figure.png",
-    },
-    {
-      id: "moon",
-      name: "Moon",
-      symbol: "MOON",
-      logo: "/crescent-moon-silhouette.png",
-    },
-  ];
+  useEffect(() => {
+    const fetchAllTokens = async () => {
+      const res = await api.get("/allCoins");
+      settokens(res.data.data);
+    }
+    fetchAllTokens()
+  }, []);
 
   const filteredTokens = tokens.filter(
     (token) =>

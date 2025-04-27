@@ -59,7 +59,7 @@ export default function TradingView({
             "0x0a043c131704508c16298458320c059c171e01c7493c9b357bed36fe6d539c15",
           from: "2025-04-10 15:08:00.000000",
           to: "2025-05-19 16:08:00.000000",
-          resolution: "1 second",
+          resolution: timeframe,
         },
       });
       const data: CandleData[] = response.data.rows;
@@ -68,7 +68,7 @@ export default function TradingView({
     };
 
     fetchChartData();
-  }, []);
+  }, [timeframe]);
 
   // Scroll chat to bottom when new messages are added
   useEffect(() => {
@@ -179,17 +179,17 @@ export default function TradingView({
         {/* Chart Timeframe Selector */}
         <div className="bg-[#0039C6] rounded-xl border-4 border-black p-4">
           <div className="flex gap-2 overflow-x-auto">
-            {["15m", "1H", "4H", "1D", "1W", "1M"].map((time) => (
+            {[["5s", "5 seconds"], ["15m", "15 minutes"], ["1H", "1 hour"], ["4H" , "4 hours" ], ["1D", "1 day"], ["1W", "1 week"], ["1M", "1 month"]].map((time) => (
               <button
-                key={time}
+                key={time[0]}
                 className={`px-4 py-2 rounded-xl font-bold border-4 border-black ${
-                  timeframe === time
+                  timeframe === time[1]
                     ? "bg-[#c0ff00] text-black"
                     : "bg-white text-black"
                 }`}
-                onClick={() => setTimeframe(time)}
+                onClick={() => setTimeframe(time[1])}
               >
-                {time}
+                {time[0]}
               </button>
             ))}
             <button className="ml-auto px-4 py-2 rounded-xl font-bold border-4 border-black bg-white text-black flex items-center gap-2">

@@ -1,20 +1,10 @@
 "use client";
 
-import type React from "react";
-
-import { useState, useRef, useEffect } from "react";
+import React, {useEffect, useRef, useState} from "react";
 import Image from "next/image";
-import {
-  ImageIcon,
-  X,
-  ChevronDown,
-  Search,
-  Smile,
-  MapPin,
-  Calendar,
-  BarChart2,
-} from "lucide-react";
-import { motion } from "framer-motion";
+import {BarChart2, Calendar, ChevronDown, ImageIcon, MapPin, Search, Smile, X,} from "lucide-react";
+import {motion} from "framer-motion";
+import api from "@/lib/api";
 
 interface Token {
   id: string;
@@ -24,8 +14,8 @@ interface Token {
 }
 
 export default function PostInput({
-  preselectedToken = null,
-}: {
+                                    preselectedToken = null,
+                                  }: {
   preselectedToken?: Token | null;
 }) {
   const [content, setContent] = useState("");
@@ -35,38 +25,18 @@ export default function PostInput({
     preselectedToken,
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [allTokens, setAllTokens] = useState<Token[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Mock tokens for dropdown
-  const allTokens = [
-    {
-      id: "pepe",
-      name: "Pepe",
-      symbol: "PEPE",
-      logo: "/happy-frog-on-a-lilypad.png",
-    },
-    {
-      id: "doge",
-      name: "Doge",
-      symbol: "DOGE",
-      logo: "/stylized-shiba-inu.png",
-    },
-    { id: "cat", name: "Cat Coin", symbol: "CAT", logo: "/playful-calico.png" },
-    {
-      id: "moon",
-      name: "Moon",
-      symbol: "MOON",
-      logo: "/crescent-moon-silhouette.png",
-    },
-    {
-      id: "wojak",
-      name: "Wojak",
-      symbol: "WOJ",
-      logo: "/Distressed-Figure.png",
-    },
-    { id: "shib", name: "Shiba Inu", symbol: "SHIB", logo: "/alert-shiba.png" },
-  ];
+  useEffect(() => {
+    const fetchAllTokens = async () => {
+      const res = await api.get("/allCoins");
+      console.log(res.data);
+      setAllTokens(res.data);
+    }
+    fetchAllTokens()
+  }, []);
 
   const filteredTokens = allTokens.filter(
     (token) =>
@@ -84,6 +54,7 @@ export default function PostInput({
         setIsTokenDropdownOpen(false);
       }
     }
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -115,9 +86,9 @@ export default function PostInput({
   return (
     <motion.div
       className="bg-white rounded-3xl p-6 mb-6 border-2 border-black"
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      initial={{opacity: 0, y: -20}}
+      animate={{opacity: 1, y: 0}}
+      transition={{duration: 0.3}}
     >
       <div className="flex gap-4">
         <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-black">
@@ -150,7 +121,7 @@ export default function PostInput({
                 className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1"
                 onClick={() => setSelectedImage(null)}
               >
-                <X size={16} />
+                <X size={16}/>
               </button>
             </div>
           )}
@@ -164,7 +135,7 @@ export default function PostInput({
                   onClick={() => fileInputRef.current?.click()}
                   title="Media"
                 >
-                  <ImageIcon size={20} />
+                  <ImageIcon size={20}/>
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -236,7 +207,7 @@ export default function PostInput({
                   className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
                   title="Emoji"
                 >
-                  <Smile size={20} />
+                  <Smile size={20}/>
                 </button>
 
                 {/* Location */}
@@ -244,7 +215,7 @@ export default function PostInput({
                   className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
                   title="Location"
                 >
-                  <MapPin size={20} />
+                  <MapPin size={20}/>
                 </button>
 
                 {/* Poll */}
@@ -252,7 +223,7 @@ export default function PostInput({
                   className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
                   title="Poll"
                 >
-                  <BarChart2 size={20} />
+                  <BarChart2 size={20}/>
                 </button>
 
                 {/* Schedule */}
@@ -260,7 +231,7 @@ export default function PostInput({
                   className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
                   title="Schedule"
                 >
-                  <Calendar size={20} />
+                  <Calendar size={20}/>
                 </button>
 
                 {/* AI Enhance */}
@@ -327,11 +298,12 @@ export default function PostInput({
                       ) : (
                         <span>Tag a token</span>
                       )}
-                      <ChevronDown size={14} />
+                      <ChevronDown size={14}/>
                     </button>
 
                     {isTokenDropdownOpen && (
-                      <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg p-2 z-10 min-w-[250px] border-2 border-black">
+                      <div
+                        className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg p-2 z-10 min-w-[250px] border-2 border-black">
                         <div className="px-3 py-2 border-b border-gray-200">
                           <div className="relative">
                             <Search
