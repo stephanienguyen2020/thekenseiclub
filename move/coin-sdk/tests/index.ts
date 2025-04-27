@@ -54,18 +54,18 @@ const bondingCurveSdk = new BondingCurveSDK(
   client,
   bondingCurvePackageId,
 );
-// bondingCurveSdk.buy({
-//   amount: 100000000,
-//   minTokenRequired: 0,
-//   type: coinType,
-//   address: address,
-// });
-
-bondingCurveSdk.sell({
-  amount: 164972779491383,
-  minSuiRequired: 0,
+bondingCurveSdk.buy({
+  amount: 1000000000,
+  minTokenRequired: 0,
   type: coinType,
   address: address,
 });
+
+// bondingCurveSdk.sell({
+//   amount: 164972779491383,
+//   minSuiRequired: 0,
+//   type: coinType,
+//   address: address,
+// });
 
 // bondingCurveSdk.migrateToFlowx(address);

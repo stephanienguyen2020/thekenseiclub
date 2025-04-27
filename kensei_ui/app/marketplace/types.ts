@@ -12,6 +12,7 @@ export interface Coin {
     twitter: string;
     telegram: string;
     proposals: number;
+    bondingCurveId: string;
 }
 
 export interface CoinList {

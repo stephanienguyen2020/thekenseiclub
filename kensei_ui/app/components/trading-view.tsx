@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import {useState, useEffect, useRef} from "react";
 import Image from "next/image";
-import { ArrowUp, ArrowDown, RefreshCw, ChevronDown, Send } from "lucide-react";
-import CryptoChart, { CandleData } from "./CryptoChart";
+import {ArrowUp, ArrowDown, RefreshCw, ChevronDown, Send} from "lucide-react";
+import CryptoChart, {CandleData} from "./CryptoChart";
 import api from "@/lib/api";
 
 interface TradingViewProps {
@@ -12,15 +12,17 @@ interface TradingViewProps {
   tokenLogo: string;
   currentPrice: number;
   change24h: number;
+  bondingCurveId: string;
 }
 
 export default function TradingView({
-  tokenSymbol,
-  tokenName,
-  tokenLogo,
-  currentPrice,
-  change24h,
-}: TradingViewProps) {
+                                      tokenSymbol,
+                                      tokenName,
+                                      tokenLogo,
+                                      currentPrice,
+                                      change24h,
+                                      bondingCurveId,
+                                    }: TradingViewProps) {
   const [amount, setAmount] = useState("");
   const [activeTradeTab, setActiveTradeTab] = useState<
     "buy" | "sell" | "swap" | "assistant"
@@ -51,23 +53,86 @@ export default function TradingView({
   }, []);
 
   useEffect(() => {
-    // Mock fetching chart data
+    // Fetch chart data with error handling
     const fetchChartData = async () => {
-      const response = await api.get(`/ohlcv`, {
-        params: {
-          bonding_curve_id:
-            "0x0a043c131704508c16298458320c059c171e01c7493c9b357bed36fe6d539c15",
-          from: "2025-04-10 15:08:00.000000",
-          to: "2025-05-19 16:08:00.000000",
-          resolution: timeframe,
-        },
-      });
-      const data: CandleData[] = response.data.rows;
-      console.log("Chart data: ", response.data);
-      setChartData(data);
+      try {
+        console.log(`Fetching chart data for timeframe: ${timeframe}`);
+        const response = await api.get(`/ohlcv`, {
+          params: {
+            bonding_curve_id: bondingCurveId,
+            from: "2025-04-10 15:08:00.000000",
+            to: "2025-05-19 16:08:00.000000",
+            resolution: timeframe,
+          },
+        });
+        const data: CandleData[] = response.data.rows;
+        setChartData(data);
+      } catch (error) {
+        console.error("Error fetching chart data:", error);
+        // Continue with periodic fetching despite errors
+      }
     };
 
+    // Initial fetch
     fetchChartData();
+
+    // Set up interval for periodic fetching based on timeframe
+    let intervalId: NodeJS.Timeout | null = null;
+
+    // Parse timeframe to determine interval duration
+    let intervalMs = 0;
+
+    if (timeframe.includes('seconds')) {
+      // Seconds (e.g., "5 seconds")
+      const seconds = parseInt(timeframe.split(' ')[0]);
+      if (!isNaN(seconds)) {
+        intervalMs = seconds * 1000;
+      }
+    } else if (timeframe.includes('minutes')) {
+      // Minutes (e.g., "15 minutes")
+      const minutes = parseInt(timeframe.split(' ')[0]);
+      if (!isNaN(minutes)) {
+        intervalMs = minutes * 60 * 1000;
+      }
+    } else if (timeframe.includes('hour')) {
+      // Hours (e.g., "1 hour" or "4 hours")
+      const hours = parseInt(timeframe.split(' ')[0]);
+      if (!isNaN(hours)) {
+        intervalMs = hours * 60 * 60 * 1000;
+      }
+    } else if (timeframe.includes('day')) {
+      // Days (e.g., "1 day")
+      const days = parseInt(timeframe.split(' ')[0]);
+      if (!isNaN(days)) {
+        intervalMs = days * 24 * 60 * 60 * 1000;
+      }
+    } else if (timeframe.includes('week')) {
+      // Weeks (e.g., "1 week")
+      const weeks = parseInt(timeframe.split(' ')[0]);
+      if (!isNaN(weeks)) {
+        intervalMs = weeks * 7 * 24 * 60 * 60 * 1000;
+      }
+    } else if (timeframe.includes('month')) {
+      // Months (e.g., "1 month")
+      const months = parseInt(timeframe.split(' ')[0]);
+      if (!isNaN(months)) {
+        // Approximate a month as 30 days
+        intervalMs = months * 30 * 24 * 60 * 60 * 1000;
+      }
+    }
+
+    // Set up interval if a valid interval was determined
+    if (intervalMs > 0) {
+      console.log(`Setting up interval for ${timeframe}: ${intervalMs}ms`);
+      intervalId = setInterval(fetchChartData, intervalMs);
+    }
+
+    // Clean up interval on unmount or when timeframe changes
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
   }, [timeframe]);
 
   // Scroll chat to bottom when new messages are added
@@ -95,7 +160,7 @@ export default function TradingView({
     if (!chatMessage.trim()) return;
 
     // Add user message to chat
-    setChatHistory([...chatHistory, { role: "user", message: chatMessage }]);
+    setChatHistory([...chatHistory, {role: "user", message: chatMessage}]);
 
     // Clear input
     setChatMessage("");
@@ -126,7 +191,7 @@ export default function TradingView({
 
       setChatHistory((prev) => [
         ...prev,
-        { role: "bot", message: botResponse },
+        {role: "bot", message: botResponse},
       ]);
     }, 1000);
   };
@@ -163,9 +228,9 @@ export default function TradingView({
                 }`}
               >
                 {change24h >= 0 ? (
-                  <ArrowUp size={16} />
+                  <ArrowUp size={16}/>
                 ) : (
-                  <ArrowDown size={16} />
+                  <ArrowDown size={16}/>
                 )}
                 <span className="font-bold">
                   {Math.abs(change24h).toFixed(2)}%
@@ -179,7 +244,7 @@ export default function TradingView({
         {/* Chart Timeframe Selector */}
         <div className="bg-[#0039C6] rounded-xl border-4 border-black p-4">
           <div className="flex gap-2 overflow-x-auto">
-            {[["5s", "5 seconds"], ["15m", "15 minutes"], ["1H", "1 hour"], ["4H" , "4 hours" ], ["1D", "1 day"], ["1W", "1 week"], ["1M", "1 month"]].map((time) => (
+            {[["5s", "5 seconds"], ["15m", "15 minutes"], ["1H", "1 hour"], ["4H", "4 hours"], ["1D", "1 day"], ["1W", "1 week"], ["1M", "1 month"]].map((time) => (
               <button
                 key={time[0]}
                 className={`px-4 py-2 rounded-xl font-bold border-4 border-black ${
@@ -192,8 +257,9 @@ export default function TradingView({
                 {time[0]}
               </button>
             ))}
-            <button className="ml-auto px-4 py-2 rounded-xl font-bold border-4 border-black bg-white text-black flex items-center gap-2">
-              <RefreshCw size={16} />
+            <button
+              className="ml-auto px-4 py-2 rounded-xl font-bold border-4 border-black bg-white text-black flex items-center gap-2">
+              <RefreshCw size={16}/>
               <span>Refresh</span>
             </button>
           </div>
@@ -203,14 +269,16 @@ export default function TradingView({
         <div className="bg-white rounded-xl border-4 border-black p-4 h-[400px] relative">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 border-4 border-t-[#c0ff00] border-r-[#c0ff00] border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+              <div
+                className="w-12 h-12 border-4 border-t-[#c0ff00] border-r-[#c0ff00] border-b-transparent border-l-transparent rounded-full animate-spin"></div>
               <p className="ml-3 font-bold">Loading chart...</p>
             </div>
           ) : (
             <div ref={chartRef} className="w-full h-full">
               {/* This would be replaced with an actual trading chart library in a real implementation */}
-              <div className="w-full h-full flex items-center justify-center bg-[#131722] text-white rounded-lg overflow-hidden">
-                <CryptoChart data={chartData} />
+              <div
+                className="w-full h-full flex items-center justify-center bg-[#131722] text-white rounded-lg overflow-hidden">
+                <CryptoChart data={chartData}/>
               </div>
             </div>
           )}
@@ -379,15 +447,16 @@ export default function TradingView({
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                     />
-                    <div className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
+                    <div
+                      className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
                       USD
-                      <ChevronDown size={16} />
+                      <ChevronDown size={16}/>
                     </div>
                   </div>
 
                   <div className="flex justify-center my-2">
                     <div className="bg-[#0039C6] p-2 rounded-full border-2 border-black">
-                      <RefreshCw size={20} className="text-white" />
+                      <RefreshCw size={20} className="text-white"/>
                     </div>
                   </div>
 
@@ -402,15 +471,16 @@ export default function TradingView({
                       value={
                         amount
                           ? (Number.parseFloat(amount) / currentPrice).toFixed(
-                              8
-                            )
+                            8
+                          )
                           : ""
                       }
                       readOnly
                     />
-                    <div className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
+                    <div
+                      className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
                       {tokenSymbol}
-                      <ChevronDown size={16} />
+                      <ChevronDown size={16}/>
                     </div>
                   </div>
                 </div>
@@ -481,7 +551,7 @@ export default function TradingView({
                       className="bg-purple-500 p-3 rounded-xl border-4 border-black"
                       onClick={handleSendMessage}
                     >
-                      <Send size={20} className="text-white" />
+                      <Send size={20} className="text-white"/>
                     </button>
                   </div>
                 </div>

@@ -47,6 +47,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
     twitter: "",
     telegram: "",
     proposals: 0,
+    bondingCurveId: ""
   });
   const [loading, setLoading] = useState(true);
 
@@ -61,41 +62,6 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
         twitter: "https://twitter.com/example",
         telegram: "https://t.me/example",
       });
-      //
-      // // Simulate API fetch
-      // setTimeout(() => {
-      //   setCoin({
-      //     id: id,
-      //     name:
-      //       id === "pepe"
-      //         ? "Pepe"
-      //         : id === "doge"
-      //           ? "Doge"
-      //           : id.charAt(0).toUpperCase() + id.slice(1),
-      //     symbol: id.toUpperCase(),
-      //     logo:
-      //       id === "pepe"
-      //         ? "/happy-frog-on-a-lilypad.png"
-      //         : id === "doge"
-      //           ? "/alert-shiba.png"
-      //           : id === "shib"
-      //             ? "/stylized-shiba-inu.png"
-      //             : id === "wojak"
-      //               ? "/Distressed-Figure.png"
-      //               : id === "moon"
-      //                 ? "/crescent-moon-silhouette.png"
-      //                 : id === "cat"
-      //                   ? "/playful-calico.png"
-      //                   : `/placeholder.svg?height=64&width=64&query=${id} logo`,
-      //     price: 0.00000123,
-      //     change24h: 12.5,
-      //     description: "A community-driven meme coin on the SUI blockchain with governance features.",
-      //     marketCap: 12500000,
-      //     holders: 5432,
-      //     website: "https://example.com",
-      //     twitter: "https://twitter.com/example",
-      //     telegram: "https://t.me/example",
-      //   })
       setLoading(false);
     };
     fetchCoin();
@@ -555,6 +521,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
               tokenLogo={coin.logo}
               currentPrice={coin.price}
               change24h={coin.change24h}
+              bondingCurveId={coin.bondingCurveId}
             />
           )}
         </div>
