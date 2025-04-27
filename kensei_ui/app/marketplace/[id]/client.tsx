@@ -281,7 +281,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
               <div className="flex flex-wrap gap-4">
                 <div className="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
                   <LineChart size={16} />
-                  <span>${coin.price.toFixed(8)}</span>
+                  <span>${coin.price.toFixed(15)}</span>
                   <span
                     className={
                       coin.change24h >= 0 ? "text-green-500" : "text-red-500"

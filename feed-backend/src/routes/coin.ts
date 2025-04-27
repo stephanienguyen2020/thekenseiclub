@@ -116,6 +116,8 @@ router.get("/coins", async (req: any, res: any) => {
         }
         return {
           ...coin,
+          suiPrice: 0,
+          price: 0, // USD price
           change24h: 0,
           volume24h: "0",
           marketCap: "0",
@@ -177,7 +179,8 @@ router.get("/coin/:id", async (req: any, res: any) => {
 
     // Calculate market data if bonding curve exists
     let marketData = {
-      price: 0,
+      suiPrice: 0,
+      price: 0, // USD price
       change24h: 0,
       volume24h: "0",
       marketCap: "0",

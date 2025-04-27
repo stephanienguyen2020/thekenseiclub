@@ -35,10 +35,10 @@ const CryptoChart: React.FC<CryptoChartProps> = ({
 
         return {
           time: timeValue as UTCTimestamp,
-          open: item.open * Math.pow(10, 9),
-          high: item.high* Math.pow(10, 9),
-          low: item.low* Math.pow(10, 9),
-          close: item.close* Math.pow(10, 9),
+          open: item.open,
+          high: item.high,
+          low: item.low,
+          close: item.close,
         };
       })
       .sort((a, b) => a.time - b.time);
@@ -50,12 +50,25 @@ const CryptoChart: React.FC<CryptoChartProps> = ({
         background: {type: ColorType.Solid, color: "transparent"},
         textColor: "#D9D9D9",
       },
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: true,
+      },
+      rightPriceScale: {
+        autoScale: true,
+      },
+
     });
 
     const candlestickSeries = chart.addSeries(CandlestickSeries, {
       upColor: '#26a69a',
       downColor: '#ef5350',
       priceScaleId: 'right',
+      priceFormat: {
+        type: 'price',
+        precision: 15,
+        minMove: 0.000000000000001
+      },
     });
 
     candlestickSeries.setData(formattedData);

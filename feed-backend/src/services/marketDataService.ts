@@ -2,12 +2,74 @@ import { db } from "../db/database";
 import { sql } from "kysely";
 import { ACTIVE_NETWORK, getClient } from "../utils";
 
+// Cache for SUI to USD rate to avoid frequent API calls
+interface RateCache {
+  rate: number;
+  timestamp: number;
+  expiresIn: number; // milliseconds
+}
+
+// Cache variable for SUI to USD rate
+let rateCache: RateCache | null = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+// Function to get SUI to USD conversion rate from CoinGecko API
+export async function getSuiToUsdRate(): Promise<number> {
+  try {
+    // Check if we have a valid cached rate
+    const now = Date.now();
+    if (rateCache && (now - rateCache.timestamp) < rateCache.expiresIn) {
+      console.log(`Using cached SUI to USD rate: ${rateCache.rate} (expires in ${Math.round((rateCache.timestamp + rateCache.expiresIn - now) / 1000)}s)`);
+      return rateCache.rate;
+    }
+
+    // If no valid cache, fetch from CoinGecko API
+    console.log('Fetching fresh SUI to USD rate from CoinGecko API...');
+    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=sui&vs_currencies=usd');
+
+    if (!response.ok) {
+      throw new Error(`CoinGecko API responded with status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Check if the response contains the expected data
+    if (data && data.sui && data.sui.usd) {
+      const rate = data.sui.usd;
+      console.log(`Received SUI to USD rate: ${rate}`);
+
+      // Update the cache
+      rateCache = {
+        rate,
+        timestamp: now,
+        expiresIn: CACHE_DURATION
+      };
+
+      return rate;
+    } else {
+      throw new Error('Invalid response format from CoinGecko API');
+    }
+  } catch (error) {
+    // Log the error and fallback to a default value or cached value if available
+    console.error('Error fetching SUI to USD rate:', error);
+
+    if (rateCache) {
+      console.warn(`Using expired cached rate: ${rateCache.rate} (expired ${Math.round((Date.now() - rateCache.timestamp - rateCache.expiresIn) / 1000)}s ago)`);
+      return rateCache.rate;
+    }
+
+    console.warn('Using fallback SUI to USD rate: 0.85');
+    return 0.85; // Fallback rate: 1 SUI = 0.85 USD
+  }
+}
+
 export interface MarketData {
   change24h: number;
   volume24h: string;
   marketCap: string;
   holders: number;
-  price: number;
+  suiPrice: number;
+  price: number; // USD price
 }
 
 export interface PriceHistoryPoint {
@@ -19,17 +81,23 @@ export interface PriceHistoryPoint {
 export async function getMarketData(
   coinId: string,
   bondingCurveId: string,
-  price: number
+  suiPrice: number
 ): Promise<MarketData> {
   try {
-    // Calculate 24h price change
-    const change24h = await calculate24hChange(bondingCurveId, price);
+    // Get SUI to USD conversion rate
+    const suiToUsdRate = await getSuiToUsdRate();
 
-    // Calculate 24h volume
+    // Calculate USD price
+    const usdPrice = suiPrice * suiToUsdRate;
+
+    // Calculate 24h price change based on USD price
+    const change24h = await calculate24hChange(bondingCurveId, suiPrice, suiToUsdRate);
+
+    // Calculate 24h volume (already in USD)
     const volume24h = await calculate24hVolume(bondingCurveId);
 
-    // Get estimated market cap (current price * supply estimate)
-    const marketCap = await estimateMarketCap(bondingCurveId, price);
+    // Get estimated market cap using USD price
+    const marketCap = await estimateMarketCap(bondingCurveId, usdPrice);
 
     // Get holders count (this would ideally come from blockchain data)
     const holders = await estimateHolders(bondingCurveId);
@@ -39,7 +107,8 @@ export async function getMarketData(
       volume24h,
       marketCap,
       holders,
-      price,
+      suiPrice,
+      price: usdPrice,
     };
   } catch (error) {
     console.error("Error calculating market data:", error);
@@ -48,6 +117,7 @@ export async function getMarketData(
       volume24h: "0",
       marketCap: "0",
       holders: 0,
+      suiPrice: 0,
       price: 0,
     };
   }
@@ -55,7 +125,8 @@ export async function getMarketData(
 
 async function calculate24hChange(
   bondingCurveId: string,
-  currentPrice: number
+  currentSuiPrice: number,
+  suiToUsdRate: number
 ): Promise<number> {
   try {
     // Get price 24 hours ago
@@ -71,20 +142,20 @@ async function calculate24hChange(
       .limit(1)
       .executeTakeFirst();
 
-    if (currentPrice && price24hAgo) {
-      // Current price is already adjusted by getCurrentPrice
-      const current = currentPrice;
+    if (currentSuiPrice && price24hAgo) {
+      // Convert current SUI price to USD
+      const currentUsdPrice = currentSuiPrice * suiToUsdRate;
 
-      // Parse and adjust past price for 9 decimal places
-      const rawPastPrice = price24hAgo.price;
-      const past = rawPastPrice;
+      // Parse and adjust past SUI price, then convert to USD
+      const pastSuiPrice = price24hAgo.price;
+      const pastUsdPrice = pastSuiPrice * suiToUsdRate;
 
-      if (past > 0) {
-        return ((current - past) / past) * 100;
+      if (pastUsdPrice > 0) {
+        return ((currentUsdPrice - pastUsdPrice) / pastUsdPrice) * 100;
       }
     }
 
-    if (currentPrice) {
+    if (currentSuiPrice) {
       return 100;
     }
 
@@ -134,15 +205,15 @@ async function calculate24hVolume(bondingCurveId: string): Promise<string> {
 
 async function estimateMarketCap(
   bondingCurveId: string,
-  currentPrice: number
+  currentUsdPrice: number
 ): Promise<string> {
   try {
-    if (currentPrice) {
+    if (currentUsdPrice) {
       const rawSupply = await getCirculatingSupply(bondingCurveId);
-      console.log("currentPrice", currentPrice);
+      console.log("currentUsdPrice", currentUsdPrice);
 
-      // Calculate market cap using the adjusted price and supply
-      const marketCap = (rawSupply * currentPrice) / Math.pow(10, 9);
+      // Calculate market cap using the USD price and supply
+      const marketCap = (rawSupply * currentUsdPrice) / Math.pow(10, 9);
 
       return marketCap.toString();
     }

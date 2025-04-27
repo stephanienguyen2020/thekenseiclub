@@ -150,7 +150,7 @@ export default function TradingView({
     alert(
       `${
         activeTradeTab === "buy" ? "Bought" : "Sold"
-      } ${amount} ${tokenSymbol} at $${currentPrice.toFixed(8)}`
+      } ${amount} ${tokenSymbol} at $${currentPrice.toFixed(15)}`
     );
     setAmount("");
   };
@@ -171,7 +171,7 @@ export default function TradingView({
 
       if (chatMessage.toLowerCase().includes("price")) {
         botResponse = `The current price of ${tokenSymbol} is $${currentPrice.toFixed(
-          8
+          15
         )}.`;
       } else if (
         chatMessage.toLowerCase().includes("buy") ||
@@ -220,7 +220,7 @@ export default function TradingView({
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold">
-                ${currentPrice.toFixed(8)}
+                ${currentPrice.toFixed(15)}
               </div>
               <div
                 className={`flex items-center justify-end ${
