@@ -1,122 +1,153 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { Search, TrendingUp, Clock, Star, ChevronUp, ChevronDown, Grid, List } from "lucide-react"
-import Navbar from "@/components/navbar"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  Search,
+  TrendingUp,
+  Clock,
+  Star,
+  ChevronUp,
+  ChevronDown,
+  Grid,
+  List,
+} from "lucide-react";
+import Navbar from "@/components/navbar";
+import api from "@/lib/api";
+import { Coin, CoinList } from "@/app/marketplace/types";
+import { AxiosResponse } from "axios";
 
 export default function MarketplacePage() {
-  const [sortBy, setSortBy] = useState("trending")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [viewMode, setViewMode] = useState<"table" | "cards">("table")
+  const [sortBy, setSortBy] = useState("trending");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [watchlist, setWatchlist] = useState<string[]>(() => {
     // Initialize from localStorage if available
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("watchlist")
-      return saved ? JSON.parse(saved) : []
+      const saved = localStorage.getItem("watchlist");
+      return saved ? JSON.parse(saved) : [];
     }
-    return []
-  })
+    return [];
+  });
+  const [coins, setCoins] = useState<Array<Coin>>([]);
 
   // Save watchlist to localStorage when it changes
   useEffect(() => {
-    localStorage.setItem("watchlist", JSON.stringify(watchlist))
-  }, [watchlist])
+    localStorage.setItem("watchlist", JSON.stringify(watchlist));
+  }, [watchlist]);
+
+  useEffect(() => {
+    const fetchCoins = async () => {
+      const rs: AxiosResponse<CoinList> = await api.get("/coins");
+      console.log(rs.data);
+      const coinList = rs.data.data.map((ele) => ({
+        ...ele,
+        proposals: 8,
+      }));
+      console.log(coinList);
+      setCoins(coinList);
+    };
+    fetchCoins();
+  }, []);
 
   const toggleWatchlist = (coinId: string) => {
-    setWatchlist((prev) => (prev.includes(coinId) ? prev.filter((id) => id !== coinId) : [...prev, coinId]))
-  }
+    setWatchlist((prev) =>
+      prev.includes(coinId)
+        ? prev.filter((id) => id !== coinId)
+        : [...prev, coinId],
+    );
+  };
 
-  const coins = [
-    {
-      id: "pepe",
-      name: "Pepe",
-      symbol: "PEPE",
-      logo: "/happy-frog-on-a-lilypad.png",
-      price: 0.00000123,
-      change24h: 12.5,
-      marketCap: 12500000,
-      holders: 5432,
-      proposals: 8,
-    },
-    {
-      id: "doge",
-      name: "Doge",
-      symbol: "DOGE",
-      logo: "/alert-shiba.png",
-      price: 0.00045678,
-      change24h: -3.2,
-      marketCap: 98700000,
-      holders: 12345,
-      proposals: 15,
-    },
-    {
-      id: "shib",
-      name: "Shiba Inu",
-      symbol: "SHIB",
-      logo: "/stylized-shiba-inu.png",
-      price: 0.00000987,
-      change24h: 5.7,
-      marketCap: 45600000,
-      holders: 9876,
-      proposals: 12,
-    },
-    {
-      id: "wojak",
-      name: "Wojak",
-      symbol: "WOJ",
-      logo: "/Distressed-Figure.png",
-      price: 0.00000045,
-      change24h: 32.1,
-      marketCap: 3400000,
-      holders: 2345,
-      proposals: 3,
-    },
-    {
-      id: "moon",
-      name: "Moon",
-      symbol: "MOON",
-      logo: "/crescent-moon-silhouette.png",
-      price: 0.00000789,
-      change24h: -8.4,
-      marketCap: 7800000,
-      holders: 4567,
-      proposals: 6,
-    },
-    {
-      id: "cat",
-      name: "Cat Coin",
-      symbol: "CAT",
-      logo: "/playful-calico.png",
-      price: 0.00000321,
-      change24h: 15.3,
-      marketCap: 5600000,
-      holders: 3456,
-      proposals: 5,
-    },
-  ]
+  // const coins = [
+  //   {
+  //     id: "pepe",
+  //     name: "Pepe",
+  //     symbol: "PEPE",
+  //     logo: "/happy-frog-on-a-lilypad.png",
+  //     price: 0.00000123,
+  //     change24h: 12.5,
+  //     marketCap: 12500000,
+  //     holders: 5432,
+  //     proposals: 8,
+  //   },
+  //   {
+  //     id: "doge",
+  //     name: "Doge",
+  //     symbol: "DOGE",
+  //     logo: "/alert-shiba.png",
+  //     price: 0.00045678,
+  //     change24h: -3.2,
+  //     marketCap: 98700000,
+  //     holders: 12345,
+  //     proposals: 15,
+  //   },
+  //   {
+  //     id: "shib",
+  //     name: "Shiba Inu",
+  //     symbol: "SHIB",
+  //     logo: "/stylized-shiba-inu.png",
+  //     price: 0.00000987,
+  //     change24h: 5.7,
+  //     marketCap: 45600000,
+  //     holders: 9876,
+  //     proposals: 12,
+  //   },
+  //   {
+  //     id: "wojak",
+  //     name: "Wojak",
+  //     symbol: "WOJ",
+  //     logo: "/Distressed-Figure.png",
+  //     price: 0.00000045,
+  //     change24h: 32.1,
+  //     marketCap: 3400000,
+  //     holders: 2345,
+  //     proposals: 3,
+  //   },
+  //   {
+  //     id: "moon",
+  //     name: "Moon",
+  //     symbol: "MOON",
+  //     logo: "/crescent-moon-silhouette.png",
+  //     price: 0.00000789,
+  //     change24h: -8.4,
+  //     marketCap: 7800000,
+  //     holders: 4567,
+  //     proposals: 6,
+  //   },
+  //   {
+  //     id: "cat",
+  //     name: "Cat Coin",
+  //     symbol: "CAT",
+  //     logo: "/playful-calico.png",
+  //     price: 0.00000321,
+  //     change24h: 15.3,
+  //     marketCap: 5600000,
+  //     holders: 3456,
+  //     proposals: 5,
+  //   },
+  // ]
 
   const filteredCoins = coins.filter(
-    (coin) =>
+    (coin: Coin) =>
       coin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       coin.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  );
 
   const sortedCoins = [...filteredCoins].sort((a, b) => {
     switch (sortBy) {
       case "trending":
-        return b.holders - a.holders
+        return b.holders - a.holders;
       case "newest":
-        return b.id.localeCompare(a.id) // Just for demo, would use timestamp in real app
+        return b.id.localeCompare(a.id); // Just for demo, would use timestamp in real app
       case "marketCap":
-        return b.marketCap - a.marketCap
+        return b.marketCap - a.marketCap;
       case "priceChange":
-        return b.change24h - a.change24h
+        return b.change24h - a.change24h;
       default:
-        return 0
+        return 0;
     }
-  })
+  });
 
   return (
     <div className="min-h-screen bg-[#0039C6]">
@@ -128,7 +159,10 @@ export default function MarketplacePage() {
         <div className="bg-white rounded-3xl p-6 mb-8 mt-8">
           <div className="flex flex-col md:flex-row gap-4 justify-between">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
               <input
                 type="text"
                 placeholder="Search meme coins..."
@@ -140,7 +174,9 @@ export default function MarketplacePage() {
             <div className="flex gap-2">
               <button
                 className={`px-4 py-2 rounded-full flex items-center gap-1 ${
-                  sortBy === "trending" ? "bg-[#0039C6] text-white" : "bg-gray-100"
+                  sortBy === "trending"
+                    ? "bg-[#0039C6] text-white"
+                    : "bg-gray-100"
                 }`}
                 onClick={() => setSortBy("trending")}
               >
@@ -149,7 +185,9 @@ export default function MarketplacePage() {
               </button>
               <button
                 className={`px-4 py-2 rounded-full flex items-center gap-1 ${
-                  sortBy === "newest" ? "bg-[#0039C6] text-white" : "bg-gray-100"
+                  sortBy === "newest"
+                    ? "bg-[#0039C6] text-white"
+                    : "bg-gray-100"
                 }`}
                 onClick={() => setSortBy("newest")}
               >
@@ -158,7 +196,9 @@ export default function MarketplacePage() {
               </button>
               <button
                 className={`px-4 py-2 rounded-full flex items-center gap-1 ${
-                  sortBy === "marketCap" ? "bg-[#0039C6] text-white" : "bg-gray-100"
+                  sortBy === "marketCap"
+                    ? "bg-[#0039C6] text-white"
+                    : "bg-gray-100"
                 }`}
                 onClick={() => setSortBy("marketCap")}
               >
@@ -192,7 +232,6 @@ export default function MarketplacePage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    
                     <th className="text-center py-4 px-2">Watchlist</th>
                     <th className="text-left py-4 px-2">#</th>
                     <th className="text-left py-4 px-2">Coin</th>
@@ -206,8 +245,10 @@ export default function MarketplacePage() {
                 </thead>
                 <tbody>
                   {sortedCoins.map((coin, index) => (
-                    <tr key={coin.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      
+                    <tr
+                      key={coin.id}
+                      className="border-b border-gray-100 hover:bg-gray-50"
+                    >
                       <td className="text-center py-4 px-2">
                         <button
                           onClick={() => toggleWatchlist(coin.id)}
@@ -216,9 +257,18 @@ export default function MarketplacePage() {
                               ? "bg-[#c0ff00] text-black border-2 border-black"
                               : "bg-gray-100 hover:bg-gray-200"
                           }`}
-                          aria-label={watchlist.includes(coin.id) ? "Remove from watchlist" : "Add to watchlist"}
+                          aria-label={
+                            watchlist.includes(coin.id)
+                              ? "Remove from watchlist"
+                              : "Add to watchlist"
+                          }
                         >
-                          <Star size={18} className={watchlist.includes(coin.id) ? "fill-black" : ""} />
+                          <Star
+                            size={18}
+                            className={
+                              watchlist.includes(coin.id) ? "fill-black" : ""
+                            }
+                          />
                         </button>
                       </td>
                       <td className="py-4 px-2">{index + 1}</td>
@@ -233,23 +283,37 @@ export default function MarketplacePage() {
                           />
                           <div>
                             <div className="font-medium">{coin.name}</div>
-                            <div className="text-sm text-gray-500">{coin.symbol}</div>
+                            <div className="text-sm text-gray-500">
+                              {coin.symbol}
+                            </div>
                           </div>
                         </div>
                       </td>
-                      <td className="text-right py-4 px-2">${coin.price.toFixed(8)}</td>
+                      <td className="text-right py-4 px-2">
+                        ${coin.price.toFixed(8)}
+                      </td>
                       <td className="text-right py-4 px-2">
                         <span
                           className={`flex items-center justify-end gap-1 ${
-                            coin.change24h >= 0 ? "text-green-500" : "text-red-500"
+                            coin.change24h >= 0
+                              ? "text-green-500"
+                              : "text-red-500"
                           }`}
                         >
-                          {coin.change24h >= 0 ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          {coin.change24h >= 0 ? (
+                            <ChevronUp size={16} />
+                          ) : (
+                            <ChevronDown size={16} />
+                          )}
                           {Math.abs(coin.change24h)}%
                         </span>
                       </td>
-                      <td className="text-right py-4 px-2">${(coin.marketCap / 1000000).toFixed(1)}M</td>
-                      <td className="text-right py-4 px-2">{coin.holders.toLocaleString()}</td>
+                      <td className="text-right py-4 px-2">
+                        ${coin.marketCap}M
+                      </td>
+                      <td className="text-right py-4 px-2">
+                        {coin.holders.toLocaleString()}
+                      </td>
                       <td className="text-right py-4 px-2">{coin.proposals}</td>
                       <td className="text-right py-4 px-2">
                         <Link
@@ -275,11 +339,23 @@ export default function MarketplacePage() {
                         ? "bg-[#c0ff00] text-black border-2 border-black"
                         : "bg-white hover:bg-gray-100 border-2 border-gray-200"
                     }`}
-                    aria-label={watchlist.includes(coin.id) ? "Remove from watchlist" : "Add to watchlist"}
+                    aria-label={
+                      watchlist.includes(coin.id)
+                        ? "Remove from watchlist"
+                        : "Add to watchlist"
+                    }
                   >
-                    <Star size={18} className={watchlist.includes(coin.id) ? "fill-black" : ""} />
+                    <Star
+                      size={18}
+                      className={
+                        watchlist.includes(coin.id) ? "fill-black" : ""
+                      }
+                    />
                   </button>
-                  <Link href={`/marketplace/${coin.id}`} className="block h-full">
+                  <Link
+                    href={`/marketplace/${coin.id}`}
+                    className="block h-full"
+                  >
                     <div className="bg-white rounded-xl border-2 border-black p-4 hover:shadow-lg transition-shadow h-full flex flex-col">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
@@ -299,26 +375,38 @@ export default function MarketplacePage() {
                       <div className="grid grid-cols-2 gap-2 mb-4">
                         <div className="bg-gray-50 p-2 rounded-lg">
                           <p className="text-xs text-gray-500">Price</p>
-                          <p className="font-medium truncate">${coin.price.toFixed(8)}</p>
+                          <p className="font-medium truncate">
+                            ${coin.price.toFixed(8)}
+                          </p>
                         </div>
                         <div className="bg-gray-50 p-2 rounded-lg">
                           <p className="text-xs text-gray-500">24h</p>
                           <p
                             className={`font-medium flex items-center ${
-                              coin.change24h >= 0 ? "text-green-500" : "text-red-500"
+                              coin.change24h >= 0
+                                ? "text-green-500"
+                                : "text-red-500"
                             }`}
                           >
-                            {coin.change24h >= 0 ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                            {coin.change24h >= 0 ? (
+                              <ChevronUp size={14} />
+                            ) : (
+                              <ChevronDown size={14} />
+                            )}
                             {Math.abs(coin.change24h)}%
                           </p>
                         </div>
                         <div className="bg-gray-50 p-2 rounded-lg">
                           <p className="text-xs text-gray-500">Market Cap</p>
-                          <p className="font-medium">${(coin.marketCap / 1000000).toFixed(1)}M</p>
+                          <p className="font-medium">
+                            ${(coin.marketCap / 1000000).toFixed(1)}M
+                          </p>
                         </div>
                         <div className="bg-gray-50 p-2 rounded-lg">
                           <p className="text-xs text-gray-500">Holders</p>
-                          <p className="font-medium">{coin.holders.toLocaleString()}</p>
+                          <p className="font-medium">
+                            {coin.holders.toLocaleString()}
+                          </p>
                         </div>
                       </div>
                       <div className="mt-auto">
@@ -335,5 +423,5 @@ export default function MarketplacePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

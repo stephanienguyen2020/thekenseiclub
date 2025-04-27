@@ -96,10 +96,11 @@ export async function up(db: Kysely<any>): Promise<void> {
       col.references("bonding_curve.id").notNull(),
     )
     .addColumn("timestamp", "timestamp", (col) => col.notNull())
-    .addColumn("price", "varchar", (col) => col.notNull())
-    .addColumn("amount_in", "varchar", (col) => col.notNull())
-    .addColumn("amount_out", "varchar", (col) => col.notNull())
+    .addColumn("price", "float8", (col) => col.notNull())
+    .addColumn("amount_in", "float8", (col) => col.notNull())
+    .addColumn("amount_out", "float8", (col) => col.notNull())
     .addColumn("direction", "varchar", (col) => col.notNull())
+    .addColumn("sender", "varchar", (col) => col.notNull())
     .execute();
 
   await sql`SELECT create_hypertable('raw_prices', by_range('timestamp'));`.execute(

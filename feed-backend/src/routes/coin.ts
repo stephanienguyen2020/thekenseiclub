@@ -1,29 +1,14 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import { CoinSDK } from "coin-sdk/dist/src";
 import { ACTIVE_NETWORK, getClient } from "../utils";
 import { db } from "../db/database";
+import { getCurrentPrice, getMarketData } from "../services/marketDataService";
 
 const router = express.Router();
-
-interface Coin {
-  name: string;
-  symbol: string;
-  description: string;
-  iconUrl: string;
-  client?: any; // Optional as we'll add it in the handler
-  address: string;
-}
-
-interface CoinRequest extends Request {
-  body: Coin;
-}
 
 /**
  * Endpoint to deploy a new coin on the Sui blockchain
  * @route POST /coin
- * @param {CoinRequest} req - Express request object with Coin data in body
- * @param {Response} res - Express response object
- * @returns {Response} 200 on success, error status on failure
  */
 router.post("/coin", async (req: any, res: any) => {
   try {
@@ -81,9 +66,6 @@ router.post("/coin", async (req: any, res: any) => {
 /**
  * Endpoint to get all coins with pagination
  * @route GET /coins
- * @param {Request} req - Express request object with page and limit in query params
- * @param {Response} res - Express response object
- * @returns {Response} 200 with paginated coins data on success, error status on failure
  */
 router.get("/coins", async (req: any, res: any) => {
   try {
@@ -101,17 +83,49 @@ router.get("/coins", async (req: any, res: any) => {
     const totalCount = parseInt(countResult?.count as string) || 0;
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Get paginated coins
+    // Get paginated coins with bonding curve IDs
     const coins = await db
-      .selectFrom("coins")
-      .selectAll()
-      .orderBy("createdAt", "desc")
+      .selectFrom("coins as c")
+      .leftJoin("bondingCurve as b", "c.id", "b.coinMetadata")
+      .select([
+        "c.id",
+        "c.name",
+        "c.symbol",
+        "c.description",
+        "c.imageUrl",
+        "c.address",
+        "c.createdAt",
+        "b.id as bondingCurveId",
+      ])
+      .orderBy("c.createdAt", "desc")
       .limit(limit)
       .offset(offset)
       .execute();
 
+    // For each coin, calculate market data if it has a bonding curve
+    const enrichedCoins = await Promise.all(
+      coins.map(async (coin) => {
+        if (coin.bondingCurveId) {
+          const price = await getCurrentPrice(coin.bondingCurveId);
+          const marketData = await getMarketData(
+            coin.id,
+            coin.bondingCurveId,
+            price,
+          );
+          return { ...coin, ...marketData };
+        }
+        return {
+          ...coin,
+          change24h: 0,
+          volume24h: "0",
+          marketCap: "0",
+          holders: 0,
+        };
+      }),
+    );
+
     return res.status(200).json({
-      data: coins,
+      data: enrichedCoins,
       pagination: {
         total: totalCount,
         page,
@@ -131,9 +145,6 @@ router.get("/coins", async (req: any, res: any) => {
 /**
  * Endpoint to get a coin by ID
  * @route GET /coin/:id
- * @param {Request} req - Express request object with coin ID in params
- * @param {Response} res - Express response object
- * @returns {Response} 200 with coin data on success, error status on failure
  */
 router.get("/coin/:id", async (req: any, res: any) => {
   try {
@@ -143,17 +154,46 @@ router.get("/coin/:id", async (req: any, res: any) => {
       return res.status(400).json({ error: "Coin ID is required" });
     }
 
+    // Get the coin with bonding curve ID
     const coin = await db
-      .selectFrom("coins")
-      .selectAll()
-      .where("id", "=", id)
+      .selectFrom("coins as c")
+      .leftJoin("bondingCurve as b", "c.id", "b.coinMetadata")
+      .select([
+        "c.id",
+        "c.name",
+        "c.symbol",
+        "c.description",
+        "c.imageUrl",
+        "c.address",
+        "c.createdAt",
+        "b.id as bondingCurveId",
+      ])
+      .where("c.id", "=", id)
       .executeTakeFirst();
 
     if (!coin) {
       return res.status(404).json({ error: "Coin not found" });
     }
 
-    return res.status(200).json(coin);
+    // Calculate market data if bonding curve exists
+    let marketData = {
+      price: 0,
+      change24h: 0,
+      volume24h: "0",
+      marketCap: "0",
+      holders: 0,
+    };
+
+    if (coin.bondingCurveId) {
+      const price = await getCurrentPrice(coin.bondingCurveId);
+      marketData = await getMarketData(coin.id, coin.bondingCurveId, price);
+    }
+
+    // Return coin with market data
+    return res.status(200).json({
+      ...coin,
+      ...marketData,
+    });
   } catch (error) {
     console.error("Error fetching coin:", error);
     return res.status(500).json({

@@ -355,11 +355,12 @@ export interface Posts {
 }
 
 export interface RawPrices {
-  amountIn: string;
-  amountOut: string;
+  amountIn: number;
+  amountOut: number;
   bondingCurveId: string;
   direction: string;
-  price: string;
+  price: number;
+  sender: string;
   timestamp: Timestamp;
 }
 

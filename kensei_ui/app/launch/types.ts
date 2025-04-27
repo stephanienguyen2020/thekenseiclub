@@ -1,4 +1,4 @@
-interface CoinResponse {
+export interface CoinResponse {
   message: string;
   network: string;
   coin: {

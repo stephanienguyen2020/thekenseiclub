@@ -128,7 +128,7 @@ public fun buy<T>(
             issuer: sender,
             amount_in: original_amount,
             amount_out: token_received,
-            price: token_received / original_amount,
+            price: original_amount / token_received,
         }
     );
 }

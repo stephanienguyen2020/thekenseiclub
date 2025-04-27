@@ -6,6 +6,7 @@ import { Upload, Sparkles } from "lucide-react"
 import Navbar from "@/components/navbar"
 import axios from "axios";
 import api from "@/lib/api";
+import {CoinResponse} from "@/app/launch/types";
 
 type LaunchMethod = "auto" | "manual"
 

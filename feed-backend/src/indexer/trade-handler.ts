@@ -18,6 +18,7 @@ interface TradeEventPayload {
   amount_out: string;
   bonding_curve_id: string;
   direction: string;
+  sender: string;
 }
 
 // Type guard for BondingCurveCreatedEventPayload
@@ -53,8 +54,8 @@ export const handleBondingCurveEvent = async (
   events: SuiEvent[],
   type: string,
 ): Promise<void> => {
-  console.log("Handling bonding curve event", events);
   for (const event of events) {
+    console.log("Handling bonding curve event", events);
     if (!event.type.startsWith(type))
       throw new Error("Invalid event module origin");
 
@@ -105,16 +106,22 @@ export const handleBondingCurveEvent = async (
     } else {
       timestamp = new Date();
     }
+    const amountIn = parseFloat(payload.amount_in);
+    const amountOut = parseFloat(payload.amount_out);
 
     await db
       .insertInto("rawPrices")
       .values({
         bondingCurveId: payload.bonding_curve_id,
         timestamp: timestamp,
-        price: payload.price,
-        amountIn: payload.amount_in,
-        amountOut: payload.amount_out,
+        price:
+          payload.direction == "BUY"
+            ? amountIn / amountOut
+            : amountOut / amountIn,
+        amountIn: amountIn,
+        amountOut: amountOut,
         direction: payload.direction,
+        sender: event.sender,
       })
       .execute();
   }

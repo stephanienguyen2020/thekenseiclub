@@ -1,74 +1,107 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useRef } from "react"
-import Image from "next/image"
-import { ImageIcon, X, ChevronDown, Search, MapPin, Smile, Calendar, BarChart2 } from "lucide-react"
-import { motion } from "framer-motion"
+import { useState, useRef } from "react";
+import Image from "next/image";
+import {
+  ImageIcon,
+  X,
+  ChevronDown,
+  Search,
+  MapPin,
+  Smile,
+  Calendar,
+  BarChart2,
+} from "lucide-react";
+import { motion } from "framer-motion";
 
 interface Token {
-  id: string
-  name: string
-  symbol: string
-  logo: string
+  id: string;
+  name: string;
+  symbol: string;
+  logo: string;
 }
 
 interface EnhancedPostInputProps {
-  preselectedToken?: Token | null
+  preselectedToken?: Token | null;
 }
 
-export default function EnhancedPostInput({ preselectedToken = null }: EnhancedPostInputProps) {
-  const [content, setContent] = useState("")
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const [isTokenDropdownOpen, setIsTokenDropdownOpen] = useState(false)
-  const [selectedToken, setSelectedToken] = useState<Token | null>(preselectedToken)
-  const [tokenSearchQuery, setTokenSearchQuery] = useState("")
-  const fileInputRef = useRef<HTMLInputElement>(null)
+export default function EnhancedPostInput({
+  preselectedToken = null,
+}: EnhancedPostInputProps) {
+  const [content, setContent] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isTokenDropdownOpen, setIsTokenDropdownOpen] = useState(false);
+  const [selectedToken, setSelectedToken] = useState<Token | null>(
+    preselectedToken,
+  );
+  const [tokenSearchQuery, setTokenSearchQuery] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Mock tokens for dropdown
   const tokens = [
-    { id: "pepe", name: "Pepe", symbol: "PEPE", logo: "/happy-frog-on-a-lilypad.png" },
-    { id: "doge", name: "Doge", symbol: "DOGE", logo: "/stylized-shiba-inu.png" },
+    {
+      id: "pepe",
+      name: "Pepe",
+      symbol: "PEPE",
+      logo: "/happy-frog-on-a-lilypad.png",
+    },
+    {
+      id: "doge",
+      name: "Doge",
+      symbol: "DOGE",
+      logo: "/stylized-shiba-inu.png",
+    },
     { id: "cat", name: "Cat Coin", symbol: "CAT", logo: "/playful-calico.png" },
-    { id: "wojak", name: "Wojak", symbol: "WOJ", logo: "/Distressed-Figure.png" },
-    { id: "moon", name: "Moon", symbol: "MOON", logo: "/crescent-moon-silhouette.png" },
-  ]
+    {
+      id: "wojak",
+      name: "Wojak",
+      symbol: "WOJ",
+      logo: "/Distressed-Figure.png",
+    },
+    {
+      id: "moon",
+      name: "Moon",
+      symbol: "MOON",
+      logo: "/crescent-moon-silhouette.png",
+    },
+  ];
 
   const filteredTokens = tokens.filter(
     (token) =>
       token.name.toLowerCase().includes(tokenSearchQuery.toLowerCase()) ||
       token.symbol.toLowerCase().includes(tokenSearchQuery.toLowerCase()),
-  )
+  );
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (e) => {
-        setSelectedImage(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
+        setSelectedImage(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   const handleSubmit = () => {
-    if (!content.trim() && !selectedImage) return
+    if (!content.trim() && !selectedImage) return;
 
     // Here you would handle the post submission
     console.log({
       content,
       image: selectedImage,
       token: selectedToken,
-    })
+    });
 
     // Reset form
-    setContent("")
-    setSelectedImage(null)
+    setContent("");
+    setSelectedImage(null);
     if (!preselectedToken) {
-      setSelectedToken(null)
+      setSelectedToken(null);
     }
-  }
+  };
 
   return (
     <motion.div
@@ -79,7 +112,13 @@ export default function EnhancedPostInput({ preselectedToken = null }: EnhancedP
     >
       <div className="flex gap-4">
         <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-black">
-          <Image src="/pixel-cool-cat.png" alt="Your avatar" width={48} height={48} className="object-cover" />
+          <Image
+            src="/pixel-cool-cat.png"
+            alt="Your avatar"
+            width={48}
+            height={48}
+            className="object-cover"
+          />
         </div>
         <div className="flex-1">
           <textarea
@@ -126,8 +165,17 @@ export default function EnhancedPostInput({ preselectedToken = null }: EnhancedP
               </button>
 
               {/* GIF */}
-              <button className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2" title="Add a GIF">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <button
+                className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
+                title="Add a GIF"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
                   <path
                     d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
                     stroke="currentColor"
@@ -167,22 +215,34 @@ export default function EnhancedPostInput({ preselectedToken = null }: EnhancedP
               </button>
 
               {/* Location */}
-              <button className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2" title="Add location">
+              <button
+                className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
+                title="Add location"
+              >
                 <MapPin size={20} />
               </button>
 
               {/* Emoji */}
-              <button className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2" title="Add emoji">
+              <button
+                className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
+                title="Add emoji"
+              >
                 <Smile size={20} />
               </button>
 
               {/* Schedule */}
-              <button className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2" title="Schedule post">
+              <button
+                className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
+                title="Schedule post"
+              >
                 <Calendar size={20} />
               </button>
 
               {/* AI Enhance */}
-              <button className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2" title="Enhance with AI">
+              <button
+                className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
+                title="Enhance with AI"
+              >
                 <BarChart2 size={20} />
               </button>
 
@@ -191,7 +251,9 @@ export default function EnhancedPostInput({ preselectedToken = null }: EnhancedP
                 <div className="relative">
                   <button
                     className={`flex items-center gap-1 px-3 py-1 rounded-full ${
-                      selectedToken ? "bg-[#0046F4] text-white" : "border border-gray-300"
+                      selectedToken
+                        ? "bg-[#0046F4] text-white"
+                        : "border border-gray-300"
                     }`}
                     onClick={() => setIsTokenDropdownOpen(!isTokenDropdownOpen)}
                   >
@@ -226,7 +288,9 @@ export default function EnhancedPostInput({ preselectedToken = null }: EnhancedP
                             placeholder="Search tokens..."
                             className="w-full pl-8 pr-2 py-1 text-sm rounded-full border border-gray-200 focus:outline-none focus:ring-1 focus:ring-[#0039C6]"
                             value={tokenSearchQuery}
-                            onChange={(e) => setTokenSearchQuery(e.target.value)}
+                            onChange={(e) =>
+                              setTokenSearchQuery(e.target.value)
+                            }
                           />
                         </div>
                       </div>
@@ -237,20 +301,29 @@ export default function EnhancedPostInput({ preselectedToken = null }: EnhancedP
                               key={token.id}
                               className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 rounded-lg text-left"
                               onClick={() => {
-                                setSelectedToken(token)
-                                setIsTokenDropdownOpen(false)
-                                setTokenSearchQuery("")
+                                setSelectedToken(token);
+                                setIsTokenDropdownOpen(false);
+                                setTokenSearchQuery("");
                               }}
                             >
                               <div className="w-5 h-5 rounded-full overflow-hidden">
-                                <Image src={token.logo || "/placeholder.svg"} alt={token.name} width={20} height={20} />
+                                <Image
+                                  src={token.logo || "/placeholder.svg"}
+                                  alt={token.name}
+                                  width={20}
+                                  height={20}
+                                />
                               </div>
                               <span>{token.name}</span>
-                              <span className="text-gray-500 text-sm">${token.symbol}</span>
+                              <span className="text-gray-500 text-sm">
+                                ${token.symbol}
+                              </span>
                             </button>
                           ))
                         ) : (
-                          <div className="px-3 py-2 text-sm text-gray-500">No tokens found</div>
+                          <div className="px-3 py-2 text-sm text-gray-500">
+                            No tokens found
+                          </div>
                         )}
                       </div>
                     </div>
@@ -261,7 +334,9 @@ export default function EnhancedPostInput({ preselectedToken = null }: EnhancedP
 
             <button
               className={`bg-[#c0ff00] text-black px-5 py-2 rounded-full font-medium border-2 border-black ${
-                !content.trim() && !selectedImage ? "opacity-50 cursor-not-allowed" : "hover:bg-opacity-90"
+                !content.trim() && !selectedImage
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-opacity-90"
               }`}
               disabled={!content.trim() && !selectedImage}
               onClick={handleSubmit}
@@ -272,5 +347,5 @@ export default function EnhancedPostInput({ preselectedToken = null }: EnhancedP
         </div>
       </div>
     </motion.div>
-  )
+  );
 }
