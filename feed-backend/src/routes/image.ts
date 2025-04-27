@@ -3,26 +3,33 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import {db} from "../db/database";
+import {PinataSDK} from "pinata";
+import 'dotenv/config'
 
 const router = express.Router();
+console.log("gateway", process.env.GATEWAY_URL)
 
-// Create uploads directory if it doesn't exist
-const uploadDir = path.join(__dirname, "../../uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+const pinata = new PinataSDK({
+  pinataJwt: process.env.PINATA_JWT,
+  pinataGateway: process.env.GATEWAY_URL
+});
+
+// Create temporary uploads directory if it doesn't exist
+const tempUploadDir = path.join(__dirname, "../../temp-uploads");
+if (!fs.existsSync(tempUploadDir)) {
+  fs.mkdirSync(tempUploadDir, { recursive: true });
 }
 
-// Configure multer storage
+// Configure multer storage for temporary storage
 const storage = multer.diskStorage({
   destination: function (req: any, file: any, cb: any) {
-    cb(null, uploadDir);
+    cb(null, tempUploadDir);
   },
   filename: function (req: any, file: any, cb: any) {
-    const postId = req.body.postId;
-    // Get original file extension
+    // Create a unique filename to avoid collisions
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
-    // Create filename with postId and original filename
-    const filename = `${postId}-${file.originalname}`;
+    const filename = `${uniqueSuffix}${ext}`;
     cb(null, filename);
   }
 });
@@ -61,41 +68,70 @@ router.post('/images', upload.single('file'), async (req: any, res: any) => {
     }
 
     const postId = req.body.postId;
+    const userId = req.body.userId;
+    const imageType = req.body.type || 'post'; // Default to 'post', can be 'post', 'profile', or 'coin'
 
-    // Validate postId
-    if (!postId) {
+    // Validate postId for post images
+    if (imageType === 'post' && !postId) {
       // Remove the uploaded file if postId is missing
       if (req.file.path) {
         fs.unlinkSync(req.file.path);
       }
-      return res.status(400).json({ error: "Missing required parameter: postId" });
+      return res.status(400).json({ error: "Missing required parameter: postId for post images" });
     }
 
-    // Calculate the full path of the uploaded image
-    const imagePath = path.join(uploadDir, req.file.filename);
+    // Read file into a base64 string
+    const fileBuffer = fs.readFileSync(req.file.path);
+    // const base64File = fileBuffer.toString('base64');
+
+    const options = {
+      metadata: {
+        name: req.file.originalname,
+        keyvalues: {
+          type: imageType,
+          postId: postId || '',
+          userId: userId || ''
+        }
+      }
+    };
+
+    const file = new File([fileBuffer], req.file.originalname, { type: req.file.mimetype });
+
+    // Upload to Pinata using the upload.base64 method
+    const pinataResult = await pinata.upload.public.file(file, options);
+
+    // Clean up temporary file after upload
+    if (req.file.path) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    if (!pinataResult.cid) {
+      return res.status(500).json({ error: "Failed to upload to Pinata" });
+    }
+
+    // Generate the gateway URL for the uploaded file
+    const gatewayUrl = `https://${process.env.GATEWAY_URL}/ipfs/${pinataResult.cid}`;
 
     // Store image information in database
     const result = await db.insertInto('images')
       .values({
-        imageName: req.file.filename,
-        postId: postId,
-        imagePath: imagePath
+        imageName: req.file.originalname,
+        postId: imageType === 'post' ? postId : null,
+        imagePath: gatewayUrl
       })
       .returning(['imageName', 'postId', 'imagePath'])
       .executeTakeFirst();
 
     return res.status(201).json({
       message: "Image uploaded successfully",
-      image: result
+      image: {
+        ...result,
+        cid: pinataResult.cid,
+        gatewayUrl
+      }
     });
   } catch (error) {
     console.error("Error uploading image:", error);
-
-    // Clean up file if it was uploaded
-    if (req.file && req.file.path) {
-      fs.unlinkSync(req.file.path);
-    }
-
     return res.status(500).json({
       error: "Failed to upload image",
       details: error instanceof Error ? error.message : "Unknown error"
@@ -108,7 +144,7 @@ router.post('/images', upload.single('file'), async (req: any, res: any) => {
  * @route GET /images/:imageName
  * @param {Request} req - Express request object with imageName in params
  * @param {Response} res - Express response object
- * @returns {Response} 200 on success with image file, error status on failure
+ * @returns {Response} 302 redirect to Pinata gateway URL
  */
 router.get('/images/:imageName', async (req: any, res: any) => {
   try {
@@ -124,29 +160,52 @@ router.get('/images/:imageName', async (req: any, res: any) => {
       return res.status(404).json({ error: "Image not found" });
     }
 
-    // Check if the file exists
-    if (!fs.existsSync(image.imagePath)) {
-      return res.status(404).json({ error: "Image file not found on server" });
+    // Check if the imagePath is a valid URL (should be a Pinata gateway URL)
+    if (!image.imagePath || !image.imagePath.startsWith('http')) {
+      return res.status(404).json({ error: "Image URL not found or invalid" });
     }
 
-    // Determine the content type based on file extension
-    const ext = path.extname(image.imageName).toLowerCase();
-    let contentType = 'application/octet-stream'; // Default content type
-
-    if (ext === '.jpg' || ext === '.jpeg') {
-      contentType = 'image/jpeg';
-    } else if (ext === '.png') {
-      contentType = 'image/png';
-    }
-
-    // Set the content type and send the file
-    res.setHeader('Content-Type', contentType);
-    res.sendFile(image.imagePath);
+    // Redirect to the Pinata gateway URL
+    return res.redirect(image.imagePath);
 
   } catch (error) {
     console.error("Error retrieving image:", error);
     return res.status(500).json({
       error: "Failed to retrieve image",
+      details: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+});
+
+/**
+ * Get image information by its name
+ * @route GET /images/info/:imageName
+ * @param {Request} req - Express request object with imageName in params
+ * @param {Response} res - Express response object
+ * @returns {Response} 200 with image information
+ */
+router.get('/images/info/:imageName', async (req: any, res: any) => {
+  try {
+    const { imageName } = req.params;
+
+    // Find the image in the database
+    const image = await db.selectFrom('images')
+      .where('imageName', '=', imageName)
+      .select(['imageName', 'postId', 'imagePath'])
+      .executeTakeFirst();
+
+    if (!image) {
+      return res.status(404).json({ error: "Image not found" });
+    }
+
+    return res.status(200).json({
+      image
+    });
+
+  } catch (error) {
+    console.error("Error retrieving image info:", error);
+    return res.status(500).json({
+      error: "Failed to retrieve image information",
       details: error instanceof Error ? error.message : "Unknown error"
     });
   }
