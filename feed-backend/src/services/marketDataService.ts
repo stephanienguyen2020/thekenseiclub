@@ -227,13 +227,9 @@ async function estimateMarketCap(
 
 async function estimateHolders(bondingCurveId: string): Promise<number> {
   try {
-    // In a real application, you would query the blockchain for holder count
-    // For this example, we'll use a random number between 1-500 with a bias toward smaller numbers
-
-    // Check if the coin has been around for a while based on post count
     const holderCount = await db
       .selectFrom("rawPrices")
-      .select(db.fn.count("rawPrices.sender").as("count"))
+      .select(db.fn.count("rawPrices.sender").distinct().as("count"))
       .where("bondingCurveId", "=", bondingCurveId)
       .groupBy("rawPrices.bondingCurveId")
       .groupBy("rawPrices.sender")
