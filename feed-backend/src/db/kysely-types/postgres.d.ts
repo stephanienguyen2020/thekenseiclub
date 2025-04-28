@@ -29,39 +29,39 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface _TimescaledbCatalogChunk {
-  compressed_chunk_id: number | null;
-  creation_time: Timestamp;
+  compressedChunkId: number | null;
+  creationTime: Timestamp;
   dropped: Generated<boolean>;
-  hypertable_id: number;
+  hypertableId: number;
   id: Generated<number>;
-  osm_chunk: Generated<boolean>;
-  schema_name: string;
+  osmChunk: Generated<boolean>;
+  schemaName: string;
   status: Generated<number>;
-  table_name: string;
+  tableName: string;
 }
 
 export interface _TimescaledbCatalogChunkColumnStats {
-  chunk_id: number;
-  column_name: string;
-  hypertable_id: number;
+  chunkId: number;
+  columnName: string;
+  hypertableId: number;
   id: Generated<number>;
-  range_end: Int8;
-  range_start: Int8;
+  rangeEnd: Int8;
+  rangeStart: Int8;
   valid: boolean;
 }
 
 export interface _TimescaledbCatalogChunkConstraint {
-  chunk_id: number;
-  constraint_name: string;
-  dimension_slice_id: number | null;
-  hypertable_constraint_name: string | null;
+  chunkId: number;
+  constraintName: string;
+  dimensionSliceId: number | null;
+  hypertableConstraintName: string | null;
 }
 
 export interface _TimescaledbCatalogChunkIndex {
-  chunk_id: number;
-  hypertable_id: number;
-  hypertable_index_name: string;
-  index_name: string;
+  chunkId: number;
+  hypertableId: number;
+  hypertableIndexName: string;
+  indexName: string;
 }
 
 export interface _TimescaledbCatalogCompressionAlgorithm {
@@ -72,138 +72,138 @@ export interface _TimescaledbCatalogCompressionAlgorithm {
 }
 
 export interface _TimescaledbCatalogCompressionChunkSize {
-  chunk_id: number;
-  compressed_chunk_id: number;
-  compressed_heap_size: Int8;
-  compressed_index_size: Int8;
-  compressed_toast_size: Int8;
-  numrows_frozen_immediately: Int8 | null;
-  numrows_post_compression: Int8 | null;
-  numrows_pre_compression: Int8 | null;
-  uncompressed_heap_size: Int8;
-  uncompressed_index_size: Int8;
-  uncompressed_toast_size: Int8;
+  chunkId: number;
+  compressedChunkId: number;
+  compressedHeapSize: Int8;
+  compressedIndexSize: Int8;
+  compressedToastSize: Int8;
+  numrowsFrozenImmediately: Int8 | null;
+  numrowsPostCompression: Int8 | null;
+  numrowsPreCompression: Int8 | null;
+  uncompressedHeapSize: Int8;
+  uncompressedIndexSize: Int8;
+  uncompressedToastSize: Int8;
 }
 
 export interface _TimescaledbCatalogCompressionSettings {
-  compress_relid: string | null;
+  compressRelid: string | null;
   orderby: string[] | null;
-  orderby_desc: boolean[] | null;
-  orderby_nullsfirst: boolean[] | null;
+  orderbyDesc: boolean[] | null;
+  orderbyNullsfirst: boolean[] | null;
   relid: string;
   segmentby: string[] | null;
 }
 
 export interface _TimescaledbCatalogContinuousAgg {
-  direct_view_name: string;
-  direct_view_schema: string;
+  directViewName: string;
+  directViewSchema: string;
   finalized: Generated<boolean>;
-  mat_hypertable_id: number;
-  materialized_only: Generated<boolean>;
-  parent_mat_hypertable_id: number | null;
-  partial_view_name: string;
-  partial_view_schema: string;
-  raw_hypertable_id: number;
-  user_view_name: string;
-  user_view_schema: string;
+  materializedOnly: Generated<boolean>;
+  matHypertableId: number;
+  parentMatHypertableId: number | null;
+  partialViewName: string;
+  partialViewSchema: string;
+  rawHypertableId: number;
+  userViewName: string;
+  userViewSchema: string;
 }
 
 export interface _TimescaledbCatalogContinuousAggMigratePlan {
-  end_ts: Timestamp | null;
-  mat_hypertable_id: number;
-  start_ts: Generated<Timestamp>;
-  user_view_definition: string | null;
+  endTs: Timestamp | null;
+  matHypertableId: number;
+  startTs: Generated<Timestamp>;
+  userViewDefinition: string | null;
 }
 
 export interface _TimescaledbCatalogContinuousAggMigratePlanStep {
   config: Json | null;
-  end_ts: Timestamp | null;
-  mat_hypertable_id: number;
-  start_ts: Timestamp | null;
+  endTs: Timestamp | null;
+  matHypertableId: number;
+  startTs: Timestamp | null;
   status: Generated<string>;
-  step_id: Generated<number>;
+  stepId: Generated<number>;
   type: string;
 }
 
 export interface _TimescaledbCatalogContinuousAggsBucketFunction {
-  bucket_fixed_width: boolean;
-  bucket_func: string;
-  bucket_offset: string | null;
-  bucket_origin: string | null;
-  bucket_timezone: string | null;
-  bucket_width: string;
-  mat_hypertable_id: number;
+  bucketFixedWidth: boolean;
+  bucketFunc: string;
+  bucketOffset: string | null;
+  bucketOrigin: string | null;
+  bucketTimezone: string | null;
+  bucketWidth: string;
+  matHypertableId: number;
 }
 
 export interface _TimescaledbCatalogContinuousAggsHypertableInvalidationLog {
-  greatest_modified_value: Int8;
-  hypertable_id: number;
-  lowest_modified_value: Int8;
+  greatestModifiedValue: Int8;
+  hypertableId: number;
+  lowestModifiedValue: Int8;
 }
 
 export interface _TimescaledbCatalogContinuousAggsInvalidationThreshold {
-  hypertable_id: number;
+  hypertableId: number;
   watermark: Int8;
 }
 
 export interface _TimescaledbCatalogContinuousAggsMaterializationInvalidationLog {
-  greatest_modified_value: Int8;
-  lowest_modified_value: Int8;
-  materialization_id: number | null;
+  greatestModifiedValue: Int8;
+  lowestModifiedValue: Int8;
+  materializationId: number | null;
 }
 
 export interface _TimescaledbCatalogContinuousAggsWatermark {
-  mat_hypertable_id: number;
+  matHypertableId: number;
   watermark: Int8;
 }
 
 export interface _TimescaledbCatalogDimension {
   aligned: boolean;
-  column_name: string;
-  column_type: string;
-  compress_interval_length: Int8 | null;
-  hypertable_id: number;
+  columnName: string;
+  columnType: string;
+  compressIntervalLength: Int8 | null;
+  hypertableId: number;
   id: Generated<number>;
-  integer_now_func: string | null;
-  integer_now_func_schema: string | null;
-  interval_length: Int8 | null;
-  num_slices: number | null;
-  partitioning_func: string | null;
-  partitioning_func_schema: string | null;
+  integerNowFunc: string | null;
+  integerNowFuncSchema: string | null;
+  intervalLength: Int8 | null;
+  numSlices: number | null;
+  partitioningFunc: string | null;
+  partitioningFuncSchema: string | null;
 }
 
 export interface _TimescaledbCatalogDimensionSlice {
-  dimension_id: number;
+  dimensionId: number;
   id: Generated<number>;
-  range_end: Int8;
-  range_start: Int8;
+  rangeEnd: Int8;
+  rangeStart: Int8;
 }
 
 export interface _TimescaledbCatalogHypertable {
-  associated_schema_name: string;
-  associated_table_prefix: string;
-  chunk_sizing_func_name: string;
-  chunk_sizing_func_schema: string;
-  chunk_target_size: Int8;
-  compressed_hypertable_id: number | null;
-  compression_state: Generated<number>;
+  associatedSchemaName: string;
+  associatedTablePrefix: string;
+  chunkSizingFuncName: string;
+  chunkSizingFuncSchema: string;
+  chunkTargetSize: Int8;
+  compressedHypertableId: number | null;
+  compressionState: Generated<number>;
   id: Generated<number>;
-  num_dimensions: number;
-  schema_name: string;
+  numDimensions: number;
+  schemaName: string;
   status: Generated<number>;
-  table_name: string;
+  tableName: string;
 }
 
 export interface _TimescaledbCatalogMetadata {
-  include_in_telemetry: boolean;
+  includeInTelemetry: boolean;
   key: string;
   value: string;
 }
 
 export interface _TimescaledbCatalogTablespace {
-  hypertable_id: number;
+  hypertableId: number;
   id: Generated<number>;
-  tablespace_name: string;
+  tablespaceName: string;
 }
 
 export interface _TimescaledbCatalogTelemetryEvent {
@@ -213,96 +213,96 @@ export interface _TimescaledbCatalogTelemetryEvent {
 }
 
 export interface _TimescaledbConfigBgwJob {
-  application_name: string;
-  check_name: string | null;
-  check_schema: string | null;
+  applicationName: string;
+  checkName: string | null;
+  checkSchema: string | null;
   config: Json | null;
-  fixed_schedule: Generated<boolean>;
-  hypertable_id: number | null;
+  fixedSchedule: Generated<boolean>;
+  hypertableId: number | null;
   id: Generated<number>;
-  initial_start: Timestamp | null;
-  max_retries: number;
-  max_runtime: Interval;
+  initialStart: Timestamp | null;
+  maxRetries: number;
+  maxRuntime: Interval;
   owner: Generated<string>;
-  proc_name: string;
-  proc_schema: string;
-  retry_period: Interval;
-  schedule_interval: Interval;
+  procName: string;
+  procSchema: string;
+  retryPeriod: Interval;
   scheduled: Generated<boolean>;
+  scheduleInterval: Interval;
   timezone: string | null;
 }
 
 export interface _TimescaledbInternalBgwJobStat {
-  consecutive_crashes: number;
-  consecutive_failures: number;
+  consecutiveCrashes: number;
+  consecutiveFailures: number;
   flags: Generated<number>;
-  job_id: number;
-  last_finish: Timestamp;
-  last_run_success: boolean;
-  last_start: Generated<Timestamp>;
-  last_successful_finish: Timestamp;
-  next_start: Timestamp;
-  total_crashes: Int8;
-  total_duration: Interval;
-  total_duration_failures: Interval;
-  total_failures: Int8;
-  total_runs: Int8;
-  total_successes: Int8;
+  jobId: number;
+  lastFinish: Timestamp;
+  lastRunSuccess: boolean;
+  lastStart: Generated<Timestamp>;
+  lastSuccessfulFinish: Timestamp;
+  nextStart: Timestamp;
+  totalCrashes: Int8;
+  totalDuration: Interval;
+  totalDurationFailures: Interval;
+  totalFailures: Int8;
+  totalRuns: Int8;
+  totalSuccesses: Int8;
 }
 
 export interface _TimescaledbInternalBgwJobStatHistory {
   data: Json | null;
-  execution_finish: Timestamp | null;
-  execution_start: Generated<Timestamp>;
+  executionFinish: Timestamp | null;
+  executionStart: Generated<Timestamp>;
   id: Generated<Int8>;
-  job_id: number;
+  jobId: number;
   pid: number | null;
   succeeded: boolean | null;
 }
 
 export interface _TimescaledbInternalBgwPolicyChunkStats {
-  chunk_id: number;
-  job_id: number;
-  last_time_job_run: Timestamp | null;
-  num_times_job_run: number | null;
+  chunkId: number;
+  jobId: number;
+  lastTimeJobRun: Timestamp | null;
+  numTimesJobRun: number | null;
 }
 
 export interface _TimescaledbInternalCompressedChunkStats {
-  chunk_name: string | null;
-  chunk_schema: string | null;
-  compressed_heap_size: Int8 | null;
-  compressed_index_size: Int8 | null;
-  compressed_toast_size: Int8 | null;
-  compressed_total_size: Int8 | null;
-  compression_status: string | null;
-  hypertable_name: string | null;
-  hypertable_schema: string | null;
-  uncompressed_heap_size: Int8 | null;
-  uncompressed_index_size: Int8 | null;
-  uncompressed_toast_size: Int8 | null;
-  uncompressed_total_size: Int8 | null;
+  chunkName: string | null;
+  chunkSchema: string | null;
+  compressedHeapSize: Int8 | null;
+  compressedIndexSize: Int8 | null;
+  compressedToastSize: Int8 | null;
+  compressedTotalSize: Int8 | null;
+  compressionStatus: string | null;
+  hypertableName: string | null;
+  hypertableSchema: string | null;
+  uncompressedHeapSize: Int8 | null;
+  uncompressedIndexSize: Int8 | null;
+  uncompressedToastSize: Int8 | null;
+  uncompressedTotalSize: Int8 | null;
 }
 
 export interface _TimescaledbInternalHypertableChunkLocalSize {
-  chunk_id: number | null;
-  chunk_name: string | null;
-  chunk_schema: string | null;
-  compressed_heap_size: Int8 | null;
-  compressed_index_size: Int8 | null;
-  compressed_toast_size: Int8 | null;
-  compressed_total_size: Int8 | null;
-  heap_bytes: Int8 | null;
-  hypertable_id: number | null;
-  hypertable_name: string | null;
-  hypertable_schema: string | null;
-  index_bytes: Int8 | null;
-  toast_bytes: Int8 | null;
-  total_bytes: Int8 | null;
+  chunkId: number | null;
+  chunkName: string | null;
+  chunkSchema: string | null;
+  compressedHeapSize: Int8 | null;
+  compressedIndexSize: Int8 | null;
+  compressedToastSize: Int8 | null;
+  compressedTotalSize: Int8 | null;
+  heapBytes: Int8 | null;
+  hypertableId: number | null;
+  hypertableName: string | null;
+  hypertableSchema: string | null;
+  indexBytes: Int8 | null;
+  toastBytes: Int8 | null;
+  totalBytes: Int8 | null;
 }
 
 export interface BondingCurve {
-  bondingCurveId: string;
   coinMetadata: string;
+  id: string;
   issuer: string;
   migrationTarget: string;
   treasuryCap: string;
@@ -310,20 +310,20 @@ export interface BondingCurve {
 
 export interface Coins {
   address: string;
-  created_at: Generated<Timestamp>;
+  createdAt: Generated<Timestamp>;
   description: string;
   id: string;
-  imageUrl: string;
+  logo: string;
   name: string;
   symbol: string;
 }
 
 export interface Comments {
   content: string;
-  created_at: Timestamp;
+  createdAt: Timestamp;
   id: Generated<Int8>;
-  post_id: Int8;
-  user_id: Int8;
+  postId: Int8;
+  userId: Int8;
 }
 
 export interface Cursors {
@@ -335,43 +335,44 @@ export interface Cursors {
 export interface Images {
   imageName: string;
   imagePath: string;
-  postId: string;
+  postId: Generated<Int8>;
 }
 
 export interface Likes {
-  created_at: Timestamp;
+  createdAt: Timestamp;
   id: Generated<Int8>;
-  post_id: Int8;
-  user_id: Int8;
+  postId: Int8;
+  userId: Int8;
 }
 
 export interface Posts {
-  coin_id: string | null;
+  coinId: string | null;
   content: string;
-  created_at: Timestamp;
+  createdAt: Timestamp;
   id: Generated<Int8>;
-  media_urls: string[] | null;
-  user_id: Int8;
+  mediaUrls: string[] | null;
+  userId: Int8;
 }
 
 export interface RawPrices {
-  amountIn: string;
-  amountOut: string;
+  amountIn: number;
+  amountOut: number;
   bondingCurveId: string;
   direction: string;
-  price: string;
+  price: number;
+  sender: string;
   timestamp: Timestamp;
 }
 
 export interface TimescaledbExperimentalPolicies {
   config: Json | null;
-  hypertable_name: string | null;
-  hypertable_schema: string | null;
-  proc_name: string | null;
-  proc_schema: string | null;
-  relation_name: string | null;
-  relation_schema: string | null;
-  schedule_interval: Interval | null;
+  hypertableName: string | null;
+  hypertableSchema: string | null;
+  procName: string | null;
+  procSchema: string | null;
+  relationName: string | null;
+  relationSchema: string | null;
+  scheduleInterval: Interval | null;
 }
 
 export interface TimescaledbInformationChunkColumnstoreSettings {
@@ -389,199 +390,199 @@ export interface TimescaledbInformationChunkCompressionSettings {
 }
 
 export interface TimescaledbInformationChunks {
-  chunk_creation_time: Timestamp | null;
-  chunk_name: string | null;
-  chunk_schema: string | null;
-  chunk_tablespace: string | null;
-  hypertable_name: string | null;
-  hypertable_schema: string | null;
-  is_compressed: boolean | null;
-  primary_dimension: string | null;
-  primary_dimension_type: string | null;
-  range_end: Timestamp | null;
-  range_end_integer: Int8 | null;
-  range_start: Timestamp | null;
-  range_start_integer: Int8 | null;
+  chunkCreationTime: Timestamp | null;
+  chunkName: string | null;
+  chunkSchema: string | null;
+  chunkTablespace: string | null;
+  hypertableName: string | null;
+  hypertableSchema: string | null;
+  isCompressed: boolean | null;
+  primaryDimension: string | null;
+  primaryDimensionType: string | null;
+  rangeEnd: Timestamp | null;
+  rangeEndInteger: Int8 | null;
+  rangeStart: Timestamp | null;
+  rangeStartInteger: Int8 | null;
 }
 
 export interface TimescaledbInformationCompressionSettings {
   attname: string | null;
-  hypertable_name: string | null;
-  hypertable_schema: string | null;
-  orderby_asc: boolean | null;
-  orderby_column_index: number | null;
-  orderby_nullsfirst: boolean | null;
-  segmentby_column_index: number | null;
+  hypertableName: string | null;
+  hypertableSchema: string | null;
+  orderbyAsc: boolean | null;
+  orderbyColumnIndex: number | null;
+  orderbyNullsfirst: boolean | null;
+  segmentbyColumnIndex: number | null;
 }
 
 export interface TimescaledbInformationContinuousAggregates {
-  compression_enabled: boolean | null;
+  compressionEnabled: boolean | null;
   finalized: boolean | null;
-  hypertable_name: string | null;
-  hypertable_schema: string | null;
-  materialization_hypertable_name: string | null;
-  materialization_hypertable_schema: string | null;
-  materialized_only: boolean | null;
-  view_definition: string | null;
-  view_name: string | null;
-  view_owner: string | null;
-  view_schema: string | null;
+  hypertableName: string | null;
+  hypertableSchema: string | null;
+  materializationHypertableName: string | null;
+  materializationHypertableSchema: string | null;
+  materializedOnly: boolean | null;
+  viewDefinition: string | null;
+  viewName: string | null;
+  viewOwner: string | null;
+  viewSchema: string | null;
 }
 
 export interface TimescaledbInformationDimensions {
-  column_name: string | null;
-  column_type: string | null;
-  dimension_number: Int8 | null;
-  dimension_type: string | null;
-  hypertable_name: string | null;
-  hypertable_schema: string | null;
-  integer_interval: Int8 | null;
-  integer_now_func: string | null;
-  num_partitions: number | null;
-  time_interval: Interval | null;
+  columnName: string | null;
+  columnType: string | null;
+  dimensionNumber: Int8 | null;
+  dimensionType: string | null;
+  hypertableName: string | null;
+  hypertableSchema: string | null;
+  integerInterval: Int8 | null;
+  integerNowFunc: string | null;
+  numPartitions: number | null;
+  timeInterval: Interval | null;
 }
 
 export interface TimescaledbInformationHypertableColumnstoreSettings {
-  compress_interval_length: string | null;
+  compressIntervalLength: string | null;
   hypertable: string | null;
   orderby: string | null;
   segmentby: string | null;
 }
 
 export interface TimescaledbInformationHypertableCompressionSettings {
-  compress_interval_length: string | null;
+  compressIntervalLength: string | null;
   hypertable: string | null;
   orderby: string | null;
   segmentby: string | null;
 }
 
 export interface TimescaledbInformationHypertables {
-  compression_enabled: boolean | null;
-  hypertable_name: string | null;
-  hypertable_schema: string | null;
-  num_chunks: Int8 | null;
-  num_dimensions: number | null;
+  compressionEnabled: boolean | null;
+  hypertableName: string | null;
+  hypertableSchema: string | null;
+  numChunks: Int8 | null;
+  numDimensions: number | null;
   owner: string | null;
   tablespaces: string[] | null;
 }
 
 export interface TimescaledbInformationJobErrors {
-  err_message: string | null;
-  finish_time: Timestamp | null;
-  job_id: number | null;
+  errMessage: string | null;
+  finishTime: Timestamp | null;
+  jobId: number | null;
   pid: number | null;
-  proc_name: string | null;
-  proc_schema: string | null;
+  procName: string | null;
+  procSchema: string | null;
   sqlerrcode: string | null;
-  start_time: Timestamp | null;
+  startTime: Timestamp | null;
 }
 
 export interface TimescaledbInformationJobHistory {
   config: Json | null;
-  err_message: string | null;
-  finish_time: Timestamp | null;
+  errMessage: string | null;
+  finishTime: Timestamp | null;
   id: Int8 | null;
-  job_id: number | null;
+  jobId: number | null;
   pid: number | null;
-  proc_name: string | null;
-  proc_schema: string | null;
+  procName: string | null;
+  procSchema: string | null;
   sqlerrcode: string | null;
-  start_time: Timestamp | null;
+  startTime: Timestamp | null;
   succeeded: boolean | null;
 }
 
 export interface TimescaledbInformationJobs {
-  application_name: string | null;
-  check_name: string | null;
-  check_schema: string | null;
+  applicationName: string | null;
+  checkName: string | null;
+  checkSchema: string | null;
   config: Json | null;
-  fixed_schedule: boolean | null;
-  hypertable_name: string | null;
-  hypertable_schema: string | null;
-  initial_start: Timestamp | null;
-  job_id: number | null;
-  max_retries: number | null;
-  max_runtime: Interval | null;
-  next_start: Timestamp | null;
+  fixedSchedule: boolean | null;
+  hypertableName: string | null;
+  hypertableSchema: string | null;
+  initialStart: Timestamp | null;
+  jobId: number | null;
+  maxRetries: number | null;
+  maxRuntime: Interval | null;
+  nextStart: Timestamp | null;
   owner: string | null;
-  proc_name: string | null;
-  proc_schema: string | null;
-  retry_period: Interval | null;
-  schedule_interval: Interval | null;
+  procName: string | null;
+  procSchema: string | null;
+  retryPeriod: Interval | null;
   scheduled: boolean | null;
+  scheduleInterval: Interval | null;
 }
 
 export interface TimescaledbInformationJobStats {
-  hypertable_name: string | null;
-  hypertable_schema: string | null;
-  job_id: number | null;
-  job_status: string | null;
-  last_run_duration: Interval | null;
-  last_run_started_at: Timestamp | null;
-  last_run_status: string | null;
-  last_successful_finish: Timestamp | null;
-  next_start: Timestamp | null;
-  total_failures: Int8 | null;
-  total_runs: Int8 | null;
-  total_successes: Int8 | null;
+  hypertableName: string | null;
+  hypertableSchema: string | null;
+  jobId: number | null;
+  jobStatus: string | null;
+  lastRunDuration: Interval | null;
+  lastRunStartedAt: Timestamp | null;
+  lastRunStatus: string | null;
+  lastSuccessfulFinish: Timestamp | null;
+  nextStart: Timestamp | null;
+  totalFailures: Int8 | null;
+  totalRuns: Int8 | null;
+  totalSuccesses: Int8 | null;
 }
 
 export interface Users {
   id: Generated<Int8>;
-  profile_picture_url: string;
-  sui_address: string;
+  profilePictureUrl: string;
+  suiAddress: string;
   username: string;
 }
 
 export interface DB {
-  "_timescaledb_catalog.chunk": _TimescaledbCatalogChunk;
-  "_timescaledb_catalog.chunk_column_stats": _TimescaledbCatalogChunkColumnStats;
-  "_timescaledb_catalog.chunk_constraint": _TimescaledbCatalogChunkConstraint;
-  "_timescaledb_catalog.chunk_index": _TimescaledbCatalogChunkIndex;
-  "_timescaledb_catalog.compression_algorithm": _TimescaledbCatalogCompressionAlgorithm;
-  "_timescaledb_catalog.compression_chunk_size": _TimescaledbCatalogCompressionChunkSize;
-  "_timescaledb_catalog.compression_settings": _TimescaledbCatalogCompressionSettings;
-  "_timescaledb_catalog.continuous_agg": _TimescaledbCatalogContinuousAgg;
-  "_timescaledb_catalog.continuous_agg_migrate_plan": _TimescaledbCatalogContinuousAggMigratePlan;
-  "_timescaledb_catalog.continuous_agg_migrate_plan_step": _TimescaledbCatalogContinuousAggMigratePlanStep;
-  "_timescaledb_catalog.continuous_aggs_bucket_function": _TimescaledbCatalogContinuousAggsBucketFunction;
-  "_timescaledb_catalog.continuous_aggs_hypertable_invalidation_log": _TimescaledbCatalogContinuousAggsHypertableInvalidationLog;
-  "_timescaledb_catalog.continuous_aggs_invalidation_threshold": _TimescaledbCatalogContinuousAggsInvalidationThreshold;
-  "_timescaledb_catalog.continuous_aggs_materialization_invalidation_log": _TimescaledbCatalogContinuousAggsMaterializationInvalidationLog;
-  "_timescaledb_catalog.continuous_aggs_watermark": _TimescaledbCatalogContinuousAggsWatermark;
-  "_timescaledb_catalog.dimension": _TimescaledbCatalogDimension;
-  "_timescaledb_catalog.dimension_slice": _TimescaledbCatalogDimensionSlice;
-  "_timescaledb_catalog.hypertable": _TimescaledbCatalogHypertable;
-  "_timescaledb_catalog.metadata": _TimescaledbCatalogMetadata;
-  "_timescaledb_catalog.tablespace": _TimescaledbCatalogTablespace;
-  "_timescaledb_catalog.telemetry_event": _TimescaledbCatalogTelemetryEvent;
-  "_timescaledb_config.bgw_job": _TimescaledbConfigBgwJob;
-  "_timescaledb_internal.bgw_job_stat": _TimescaledbInternalBgwJobStat;
-  "_timescaledb_internal.bgw_job_stat_history": _TimescaledbInternalBgwJobStatHistory;
-  "_timescaledb_internal.bgw_policy_chunk_stats": _TimescaledbInternalBgwPolicyChunkStats;
-  "_timescaledb_internal.compressed_chunk_stats": _TimescaledbInternalCompressedChunkStats;
-  "_timescaledb_internal.hypertable_chunk_local_size": _TimescaledbInternalHypertableChunkLocalSize;
-  bonding_curve: BondingCurve;
+  "_TimescaledbCatalog.chunk": _TimescaledbCatalogChunk;
+  "_TimescaledbCatalog.chunkColumnStats": _TimescaledbCatalogChunkColumnStats;
+  "_TimescaledbCatalog.chunkConstraint": _TimescaledbCatalogChunkConstraint;
+  "_TimescaledbCatalog.chunkIndex": _TimescaledbCatalogChunkIndex;
+  "_TimescaledbCatalog.compressionAlgorithm": _TimescaledbCatalogCompressionAlgorithm;
+  "_TimescaledbCatalog.compressionChunkSize": _TimescaledbCatalogCompressionChunkSize;
+  "_TimescaledbCatalog.compressionSettings": _TimescaledbCatalogCompressionSettings;
+  "_TimescaledbCatalog.continuousAgg": _TimescaledbCatalogContinuousAgg;
+  "_TimescaledbCatalog.continuousAggMigratePlan": _TimescaledbCatalogContinuousAggMigratePlan;
+  "_TimescaledbCatalog.continuousAggMigratePlanStep": _TimescaledbCatalogContinuousAggMigratePlanStep;
+  "_TimescaledbCatalog.continuousAggsBucketFunction": _TimescaledbCatalogContinuousAggsBucketFunction;
+  "_TimescaledbCatalog.continuousAggsHypertableInvalidationLog": _TimescaledbCatalogContinuousAggsHypertableInvalidationLog;
+  "_TimescaledbCatalog.continuousAggsInvalidationThreshold": _TimescaledbCatalogContinuousAggsInvalidationThreshold;
+  "_TimescaledbCatalog.continuousAggsMaterializationInvalidationLog": _TimescaledbCatalogContinuousAggsMaterializationInvalidationLog;
+  "_TimescaledbCatalog.continuousAggsWatermark": _TimescaledbCatalogContinuousAggsWatermark;
+  "_TimescaledbCatalog.dimension": _TimescaledbCatalogDimension;
+  "_TimescaledbCatalog.dimensionSlice": _TimescaledbCatalogDimensionSlice;
+  "_TimescaledbCatalog.hypertable": _TimescaledbCatalogHypertable;
+  "_TimescaledbCatalog.metadata": _TimescaledbCatalogMetadata;
+  "_TimescaledbCatalog.tablespace": _TimescaledbCatalogTablespace;
+  "_TimescaledbCatalog.telemetryEvent": _TimescaledbCatalogTelemetryEvent;
+  "_TimescaledbConfig.bgwJob": _TimescaledbConfigBgwJob;
+  "_TimescaledbInternal.bgwJobStat": _TimescaledbInternalBgwJobStat;
+  "_TimescaledbInternal.bgwJobStatHistory": _TimescaledbInternalBgwJobStatHistory;
+  "_TimescaledbInternal.bgwPolicyChunkStats": _TimescaledbInternalBgwPolicyChunkStats;
+  "_TimescaledbInternal.compressedChunkStats": _TimescaledbInternalCompressedChunkStats;
+  "_TimescaledbInternal.hypertableChunkLocalSize": _TimescaledbInternalHypertableChunkLocalSize;
+  bondingCurve: BondingCurve;
   coins: Coins;
   comments: Comments;
   cursors: Cursors;
   images: Images;
   likes: Likes;
   posts: Posts;
-  raw_prices: RawPrices;
-  "timescaledb_experimental.policies": TimescaledbExperimentalPolicies;
-  "timescaledb_information.chunk_columnstore_settings": TimescaledbInformationChunkColumnstoreSettings;
-  "timescaledb_information.chunk_compression_settings": TimescaledbInformationChunkCompressionSettings;
-  "timescaledb_information.chunks": TimescaledbInformationChunks;
-  "timescaledb_information.compression_settings": TimescaledbInformationCompressionSettings;
-  "timescaledb_information.continuous_aggregates": TimescaledbInformationContinuousAggregates;
-  "timescaledb_information.dimensions": TimescaledbInformationDimensions;
-  "timescaledb_information.hypertable_columnstore_settings": TimescaledbInformationHypertableColumnstoreSettings;
-  "timescaledb_information.hypertable_compression_settings": TimescaledbInformationHypertableCompressionSettings;
-  "timescaledb_information.hypertables": TimescaledbInformationHypertables;
-  "timescaledb_information.job_errors": TimescaledbInformationJobErrors;
-  "timescaledb_information.job_history": TimescaledbInformationJobHistory;
-  "timescaledb_information.job_stats": TimescaledbInformationJobStats;
-  "timescaledb_information.jobs": TimescaledbInformationJobs;
+  rawPrices: RawPrices;
+  "timescaledbExperimental.policies": TimescaledbExperimentalPolicies;
+  "timescaledbInformation.chunkColumnstoreSettings": TimescaledbInformationChunkColumnstoreSettings;
+  "timescaledbInformation.chunkCompressionSettings": TimescaledbInformationChunkCompressionSettings;
+  "timescaledbInformation.chunks": TimescaledbInformationChunks;
+  "timescaledbInformation.compressionSettings": TimescaledbInformationCompressionSettings;
+  "timescaledbInformation.continuousAggregates": TimescaledbInformationContinuousAggregates;
+  "timescaledbInformation.dimensions": TimescaledbInformationDimensions;
+  "timescaledbInformation.hypertableColumnstoreSettings": TimescaledbInformationHypertableColumnstoreSettings;
+  "timescaledbInformation.hypertableCompressionSettings": TimescaledbInformationHypertableCompressionSettings;
+  "timescaledbInformation.hypertables": TimescaledbInformationHypertables;
+  "timescaledbInformation.jobErrors": TimescaledbInformationJobErrors;
+  "timescaledbInformation.jobHistory": TimescaledbInformationJobHistory;
+  "timescaledbInformation.jobs": TimescaledbInformationJobs;
+  "timescaledbInformation.jobStats": TimescaledbInformationJobStats;
   users: Users;
 }

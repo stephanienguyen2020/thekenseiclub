@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import {useEffect, useState} from "react"
 import EnhancedPostInput from "@/components/enhanced-post-input"
 import PostCard from "@/components/post-card"
+import api from "@/lib/api";
 
 interface TokenFeedProps {
   tokenId?: string
@@ -18,8 +19,8 @@ export default function TokenFeed({
   tokenLogo = "/placeholder.svg",
 }: TokenFeedProps) {
   const [activeFilter, setActiveFilter] = useState("all")
+  const [posts, setPosts] = useState<any[]>([]);
 
-  // Create preselected token object
   const preselectedToken = {
     id: tokenId,
     name: tokenName,
@@ -27,71 +28,18 @@ export default function TokenFeed({
     logo: tokenLogo,
   }
 
-  // Mock posts data specific to this token
-  const posts = [
-    {
-      id: `${tokenId}-1`,
-      user: {
-        name: "Token Creator",
-        handle: "creator.sui",
-        avatar: "/pixel-cool-cat.png",
-      },
-      token: {
-        name: tokenName,
-        symbol: tokenSymbol,
-        logo: tokenLogo,
-      },
-      content: `Important announcement for all ${tokenSymbol} holders! We're launching a new feature next week that will revolutionize how we interact with the community.`,
-      timestamp: "3h ago",
-      likes: 156,
-      boosts: 48,
-      comments: 23,
-      signalScore: 210,
-      views: 28500,
-    },
-    {
-      id: `${tokenId}-2`,
-      user: {
-        name: "Whale Holder",
-        handle: "whale.sui",
-        avatar: "/stylized-shiba-inu.png",
-      },
-      token: {
-        name: tokenName,
-        symbol: tokenSymbol,
-        logo: tokenLogo,
-      },
-      content: `Just increased my ${tokenSymbol} position by another 5%! Who's with me? 💎🙌`,
-      image: "/crypto-growth-abstract.png",
-      timestamp: "1d ago",
-      likes: 89,
-      boosts: 32,
-      comments: 17,
-      signalScore: 145,
-      views: 15200,
-    },
-    {
-      id: `${tokenId}-3`,
-      user: {
-        name: "Meme Creator",
-        handle: "memegod.sui",
-        avatar: "/playful-calico.png",
-      },
-      token: {
-        name: tokenName,
-        symbol: tokenSymbol,
-        logo: tokenLogo,
-      },
-      content: `Made this meme for all my ${tokenSymbol} fam! RT if you're still holding!`,
-      image: "/hodl-through-anything.png",
-      timestamp: "2d ago",
-      likes: 67,
-      boosts: 29,
-      comments: 12,
-      signalScore: 98,
-      views: 9800,
-    },
-  ]
+  useEffect(() => {
+    const fetchPost = async () => {
+      const res = await api.get("/posts", {
+        params: {
+          coinId: tokenId,
+        }
+      });
+      setPosts(res.data.data);
+      console.log(res.data);
+    }
+    fetchPost();
+  }, [])
 
   return (
     <div>

@@ -8,6 +8,7 @@ import postRouter from "./routes/posts";
 import userRouter from "./routes/user";
 import commentRouter from "./routes/comments";
 import likesRouter from "./routes/likes";
+import cors from "cors"
 // import './indexer/cron';
 
 // Get port from environment variable or use default
@@ -15,6 +16,19 @@ export const port = parseInt(process.env.PORT || '3000', 10);
 
 // Initialize Express app
 export const app = express();
+
+// CORS configuration
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production'
+        ? ['https://your-frontend-domain.com']
+        : ['http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
 
 // Setup blockchain event listeners
 setupListeners();
