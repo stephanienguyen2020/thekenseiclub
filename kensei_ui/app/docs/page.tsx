@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import Navbar from "@/components/navbar"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import Navbar from "@/components/navbar";
 
 export default function Documentation() {
-  const [activeSection, setActiveSection] = useState("introduction")
+  const [activeSection, setActiveSection] = useState("introduction");
 
   // Track scroll position to update active section
   useEffect(() => {
@@ -23,32 +23,32 @@ export default function Documentation() {
         "marketplace",
         "governance",
         "api",
-      ]
+      ];
 
       // Find the section that is currently in view
       for (const sectionId of sections) {
-        const element = document.getElementById(sectionId)
+        const element = document.getElementById(sectionId);
         if (element) {
-          const rect = element.getBoundingClientRect()
+          const rect = element.getBoundingClientRect();
           if (rect.top <= 100 && rect.bottom >= 100) {
-            setActiveSection(sectionId)
-            break
+            setActiveSection(sectionId);
+            break;
           }
         }
       }
-    }
+    };
 
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const scrollToSection = (sectionId: string) => {
-    setActiveSection(sectionId)
-    const element = document.getElementById(sectionId)
+    setActiveSection(sectionId);
+    const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth" })
+      element.scrollIntoView({ behavior: "smooth" });
     }
-  }
+  };
 
   return (
     <>
@@ -57,19 +57,21 @@ export default function Documentation() {
 
       <div className="min-h-screen bg-gray-100">
         {/* Header */}
-        <div className="bg-[#0046F4] text-white py-16 px-4">
-          <div className="max-w-6xl mx-auto">
-            <h1 className="text-5xl md:text-6xl font-bold mb-4">Kensei Documentation</h1>
+        <div className="bg-[#0046F4] text-white py-16 px-16">
+          <div className="max-w-8xl">
+            <h1 className="text-7xl md:text-6xl font-bold mb-4">
+              Kensei Documentation
+            </h1>
             <p className="text-xl md:text-2xl max-w-3xl">
-              Your comprehensive guide to using the Kensei platform for social trading, token launching, and community
-              governance.
+              Your comprehensive guide to using the Kensei platform for social
+              trading, token launching, and community governance.
             </p>
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
+        <div className="max-w-8xl mx-auto px-16 py-8 flex flex-col md:flex-row gap-12">
           {/* Sidebar Navigation - Improved sticky behavior */}
-          <div className="md:w-1/4">
+          <div className="md:w-1/4 h-full">
             <div className="sticky top-24 border-4 border-black bg-[#c0ff00] p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <h2 className="text-xl font-bold mb-4">Contents</h2>
               <nav>
@@ -91,7 +93,9 @@ export default function Documentation() {
                       <button
                         onClick={() => scrollToSection(item.id)}
                         className={`w-full text-left px-2 py-1 rounded ${
-                          activeSection === item.id ? "bg-black text-white" : "hover:bg-black hover:bg-opacity-10"
+                          activeSection === item.id
+                            ? "bg-black text-white"
+                            : "hover:bg-black hover:bg-opacity-10"
                         }`}
                       >
                         {item.label}
@@ -111,19 +115,21 @@ export default function Documentation() {
             >
               <h2 className="text-3xl font-bold mb-4">Introduction</h2>
               <p className="mb-4">
-                Kensei is a revolutionary platform that combines social media, decentralized finance, and community
-                governance. It allows users to create, trade, and govern social tokens while building communities around
-                shared interests.
+                Kensei is a revolutionary platform that combines social media,
+                decentralized finance, and community governance. It allows users
+                to create, trade, and govern social tokens while building
+                communities around shared interests.
               </p>
               <p className="mb-4">
-                This documentation provides a comprehensive guide to using the platform, from setting up your account to
-                launching your own token and participating in governance decisions.
+                This documentation provides a comprehensive guide to using the
+                platform, from setting up your account to launching your own
+                token and participating in governance decisions.
               </p>
               <div className="bg-white border-l-4 border-[#0046F4] p-4 my-6">
                 <p className="font-bold">Note</p>
                 <p>
-                  Kensei is currently in beta. Features and functionality may change as we continue to develop the
-                  platform.
+                  Kensei is currently in beta. Features and functionality may
+                  change as we continue to develop the platform.
                 </p>
               </div>
             </section>
@@ -135,26 +141,34 @@ export default function Documentation() {
               <h2 className="text-3xl font-bold mb-4">Getting Started</h2>
               <h3 className="text-2xl font-bold mb-2">Creating an Account</h3>
               <p className="mb-4">
-                To get started with Kensei, you'll need to create an account. Click the "Connect Wallet" button in the
-                top right corner of the homepage and follow the instructions to connect your wallet.
+                To get started with Kensei, you'll need to create an account.
+                Click the "Connect Wallet" button in the top right corner of the
+                homepage and follow the instructions to connect your wallet.
               </p>
-              <h3 className="text-2xl font-bold mb-2">Navigating the Platform</h3>
+              <h3 className="text-2xl font-bold mb-2">
+                Navigating the Platform
+              </h3>
               <p className="mb-4">
-                Once you've created an account, you can navigate the platform using the navigation bar at the top of the
-                page. Here's a quick overview of the main sections:
+                Once you've created an account, you can navigate the platform
+                using the navigation bar at the top of the page. Here's a quick
+                overview of the main sections:
               </p>
               <ul className="list-disc pl-6 mb-4 space-y-2">
                 <li>
-                  <strong>Feed:</strong> View posts from other users and communities you follow.
+                  <strong>Feed:</strong> View posts from other users and
+                  communities you follow.
                 </li>
                 <li>
-                  <strong>Marketplace:</strong> Discover and trade social tokens.
+                  <strong>Marketplace:</strong> Discover and trade social
+                  tokens.
                 </li>
                 <li>
-                  <strong>Launch:</strong> Create and launch your own social token.
+                  <strong>Launch:</strong> Create and launch your own social
+                  token.
                 </li>
                 <li>
-                  <strong>Dashboard:</strong> Access your wallet, proposals, chatbot, and tweets.
+                  <strong>Dashboard:</strong> Access your wallet, proposals,
+                  chatbot, and tweets.
                 </li>
               </ul>
             </section>
@@ -165,8 +179,8 @@ export default function Documentation() {
             >
               <h2 className="text-3xl font-bold mb-4">Dashboard</h2>
               <p className="mb-4">
-                Your dashboard is your personal command center for Kensei. It provides access to your wallet, proposals,
-                chatbot, and tweets.
+                Your dashboard is your personal command center for Kensei. It
+                provides access to your wallet, proposals, chatbot, and tweets.
               </p>
               <div className="mb-6">
                 <Image
@@ -178,17 +192,21 @@ export default function Documentation() {
                 />
               </div>
               <p className="mb-4">
-                The dashboard features a sidebar navigation that allows you to quickly access different sections:
+                The dashboard features a sidebar navigation that allows you to
+                quickly access different sections:
               </p>
               <ul className="list-disc pl-6 mb-4 space-y-2">
                 <li>
-                  <strong>My Wallet:</strong> View and manage your token holdings.
+                  <strong>My Wallet:</strong> View and manage your token
+                  holdings.
                 </li>
                 <li>
-                  <strong>My Proposals:</strong> Track proposals you've created or participated in.
+                  <strong>My Proposals:</strong> Track proposals you've created
+                  or participated in.
                 </li>
                 <li>
-                  <strong>Chat Bot:</strong> Get assistance and information through our AI chatbot.
+                  <strong>Chat Bot:</strong> Get assistance and information
+                  through our AI chatbot.
                 </li>
                 <li>
                   <strong>My Tweets:</strong> Manage and view your social posts.
@@ -202,12 +220,13 @@ export default function Documentation() {
             >
               <h2 className="text-3xl font-bold mb-4">My Wallet</h2>
               <p className="mb-4">
-                The My Wallet section displays all your token holdings and allows you to manage them efficiently.
+                The My Wallet section displays all your token holdings and
+                allows you to manage them efficiently.
               </p>
               <h3 className="text-2xl font-bold mb-2">Holdings</h3>
               <p className="mb-4">
-                Your holdings are displayed in a table format, showing the token name, amount, value, and actions you
-                can take.
+                Your holdings are displayed in a table format, showing the token
+                name, amount, value, and actions you can take.
               </p>
               <div className="overflow-x-auto mb-6">
                 <table className="min-w-full border-4 border-black">
@@ -225,8 +244,12 @@ export default function Documentation() {
                       <td className="py-2 px-4">1,000</td>
                       <td className="py-2 px-4">$100</td>
                       <td className="py-2 px-4">
-                        <button className="bg-black text-white px-3 py-1 mr-2">View</button>
-                        <button className="bg-[#c0ff00] text-black px-3 py-1">AutoShill</button>
+                        <button className="bg-black text-white px-3 py-1 mr-2">
+                          View
+                        </button>
+                        <button className="bg-[#c0ff00] text-black px-3 py-1">
+                          AutoShill
+                        </button>
                       </td>
                     </tr>
                     <tr>
@@ -234,8 +257,12 @@ export default function Documentation() {
                       <td className="py-2 px-4">5,000</td>
                       <td className="py-2 px-4">$250</td>
                       <td className="py-2 px-4">
-                        <button className="bg-black text-white px-3 py-1 mr-2">View</button>
-                        <button className="bg-[#c0ff00] text-black px-3 py-1">AutoShill</button>
+                        <button className="bg-black text-white px-3 py-1 mr-2">
+                          View
+                        </button>
+                        <button className="bg-[#c0ff00] text-black px-3 py-1">
+                          AutoShill
+                        </button>
                       </td>
                     </tr>
                   </tbody>
@@ -243,18 +270,22 @@ export default function Documentation() {
               </div>
               <h3 className="text-2xl font-bold mb-2">AutoShill Feature</h3>
               <p className="mb-4">
-                The AutoShill button allows you to automatically generate promotional content for your tokens. When
-                clicked, it will create a post that highlights the benefits and potential of your token.
+                The AutoShill button allows you to automatically generate
+                promotional content for your tokens. When clicked, it will
+                create a post that highlights the benefits and potential of your
+                token.
               </p>
               <div className="bg-white text-black p-4 border-l-4 border-[#c0ff00] mb-4">
                 <p className="font-mono">
-                  Just bought more $DOGE! 🚀 This token is going to the moon! 🌕 #DOGE #ToTheMoon #Crypto
+                  Just bought more $DOGE! 🚀 This token is going to the moon! 🌕
+                  #DOGE #ToTheMoon #Crypto
                 </p>
               </div>
               <h3 className="text-2xl font-bold mb-2">Created Tokens</h3>
               <p className="mb-4">
-                The Created Tokens tab shows all the tokens you've created on the platform. You can manage and monitor
-                their performance from here.
+                The Created Tokens tab shows all the tokens you've created on
+                the platform. You can manage and monitor their performance from
+                here.
               </p>
             </section>
 
@@ -264,15 +295,18 @@ export default function Documentation() {
             >
               <h2 className="text-3xl font-bold mb-4">Proposals</h2>
               <p className="mb-4">
-                The Proposals section allows you to view and manage governance proposals you've created or participated
-                in.
+                The Proposals section allows you to view and manage governance
+                proposals you've created or participated in.
               </p>
               <h3 className="text-2xl font-bold mb-2">Creating a Proposal</h3>
               <p className="mb-4">To create a new proposal:</p>
               <ol className="list-decimal pl-6 mb-4 space-y-2">
                 <li>Navigate to a token's page in the Marketplace</li>
                 <li>Click on "Create Proposal"</li>
-                <li>Fill out the proposal form with a title, description, and options</li>
+                <li>
+                  Fill out the proposal form with a title, description, and
+                  options
+                </li>
                 <li>Submit the proposal for voting</li>
               </ol>
               <h3 className="text-2xl font-bold mb-2">Voting on Proposals</h3>
@@ -284,7 +318,8 @@ export default function Documentation() {
                 <li>Click "Vote" to submit your vote</li>
               </ol>
               <p className="mb-4">
-                Your voting power is determined by the number of tokens you hold for that particular community.
+                Your voting power is determined by the number of tokens you hold
+                for that particular community.
               </p>
             </section>
 
@@ -294,8 +329,9 @@ export default function Documentation() {
             >
               <h2 className="text-3xl font-bold mb-4">Chat Bot</h2>
               <p className="mb-4">
-                The Chat Bot provides AI-powered assistance for navigating the platform, understanding crypto concepts,
-                and getting market insights.
+                The Chat Bot provides AI-powered assistance for navigating the
+                platform, understanding crypto concepts, and getting market
+                insights.
               </p>
               <div className="mb-6">
                 <Image
@@ -307,7 +343,10 @@ export default function Documentation() {
                 />
               </div>
               <h3 className="text-2xl font-bold mb-2">Quick Prompts</h3>
-              <p className="mb-4">The chatbot interface includes quick prompts to help you get started:</p>
+              <p className="mb-4">
+                The chatbot interface includes quick prompts to help you get
+                started:
+              </p>
               <ul className="list-disc pl-6 mb-4 space-y-2">
                 <li>"What's the current market trend?"</li>
                 <li>"How do I create a token?"</li>
@@ -316,8 +355,9 @@ export default function Documentation() {
               </ul>
               <h3 className="text-2xl font-bold mb-2">Custom Queries</h3>
               <p className="mb-4">
-                You can also ask custom questions by typing them into the chat input field. The chatbot will provide
-                relevant information and guidance based on your query.
+                You can also ask custom questions by typing them into the chat
+                input field. The chatbot will provide relevant information and
+                guidance based on your query.
               </p>
             </section>
 
@@ -327,8 +367,8 @@ export default function Documentation() {
             >
               <h2 className="text-3xl font-bold mb-4">My Tweets</h2>
               <p className="mb-4">
-                The My Tweets section displays all your social posts on the platform. You can create, view, and manage
-                your posts from here.
+                The My Tweets section displays all your social posts on the
+                platform. You can create, view, and manage your posts from here.
               </p>
               <h3 className="text-2xl font-bold mb-2">Creating a Tweet</h3>
               <p className="mb-4">To create a new tweet:</p>
@@ -341,7 +381,8 @@ export default function Documentation() {
               </ol>
               <h3 className="text-2xl font-bold mb-2">Managing Tweets</h3>
               <p className="mb-4">
-                You can delete or edit your tweets by clicking on the respective options in the tweet card.
+                You can delete or edit your tweets by clicking on the respective
+                options in the tweet card.
               </p>
             </section>
 
@@ -351,13 +392,17 @@ export default function Documentation() {
             >
               <h2 className="text-3xl font-bold mb-4">Token Launch</h2>
               <p className="mb-4">
-                The Token Launch feature allows you to create and launch your own social token on the platform.
+                The Token Launch feature allows you to create and launch your
+                own social token on the platform.
               </p>
               <h3 className="text-2xl font-bold mb-2">Creating a Token</h3>
               <p className="mb-4">To create a new token:</p>
               <ol className="list-decimal pl-6 mb-4 space-y-2">
                 <li>Navigate to the Launch page</li>
-                <li>Fill out the token creation form with details like name, symbol, and supply</li>
+                <li>
+                  Fill out the token creation form with details like name,
+                  symbol, and supply
+                </li>
                 <li>Set the initial price and distribution parameters</li>
                 <li>Review and confirm your token details</li>
                 <li>Click "Launch Token" to create your token</li>
@@ -372,16 +417,21 @@ export default function Documentation() {
                 />
               </div>
               <h3 className="text-2xl font-bold mb-2">Token Distribution</h3>
-              <p className="mb-4">You can specify how your token will be distributed:</p>
+              <p className="mb-4">
+                You can specify how your token will be distributed:
+              </p>
               <ul className="list-disc pl-6 mb-4 space-y-2">
                 <li>
-                  <strong>Creator Allocation:</strong> Percentage of tokens allocated to the creator
+                  <strong>Creator Allocation:</strong> Percentage of tokens
+                  allocated to the creator
                 </li>
                 <li>
-                  <strong>Community Allocation:</strong> Percentage of tokens allocated to the community
+                  <strong>Community Allocation:</strong> Percentage of tokens
+                  allocated to the community
                 </li>
                 <li>
-                  <strong>Liquidity Pool:</strong> Percentage of tokens allocated to the liquidity pool
+                  <strong>Liquidity Pool:</strong> Percentage of tokens
+                  allocated to the liquidity pool
                 </li>
               </ul>
             </section>
@@ -391,14 +441,21 @@ export default function Documentation() {
               className="border-4 border-black bg-[#F15BB5] text-white p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
             >
               <h2 className="text-3xl font-bold mb-4">Marketplace</h2>
-              <p className="mb-4">The Marketplace is where you can discover, buy, and sell social tokens.</p>
+              <p className="mb-4">
+                The Marketplace is where you can discover, buy, and sell social
+                tokens.
+              </p>
               <h3 className="text-2xl font-bold mb-2">Browsing Tokens</h3>
               <p className="mb-4">
-                The Marketplace displays a list of available tokens with key information such as price, market cap, and
-                volume. You can filter and sort tokens based on various criteria.
+                The Marketplace displays a list of available tokens with key
+                information such as price, market cap, and volume. You can
+                filter and sort tokens based on various criteria.
               </p>
               <h3 className="text-2xl font-bold mb-2">Token Details</h3>
-              <p className="mb-4">Clicking on a token will take you to its detailed page, where you can see:</p>
+              <p className="mb-4">
+                Clicking on a token will take you to its detailed page, where
+                you can see:
+              </p>
               <ul className="list-disc pl-6 mb-4 space-y-2">
                 <li>Price chart</li>
                 <li>Token information</li>
@@ -422,41 +479,53 @@ export default function Documentation() {
             >
               <h2 className="text-3xl font-bold mb-4">Governance</h2>
               <p className="mb-4">
-                Governance is a key feature of Kensei, allowing token holders to participate in decision-making for
-                their communities.
+                Governance is a key feature of Kensei, allowing token holders to
+                participate in decision-making for their communities.
               </p>
               <h3 className="text-2xl font-bold mb-2">Proposal Types</h3>
-              <p className="mb-4">There are several types of proposals you can create:</p>
+              <p className="mb-4">
+                There are several types of proposals you can create:
+              </p>
               <ul className="list-disc pl-6 mb-4 space-y-2">
                 <li>
-                  <strong>Text Proposals:</strong> General proposals for discussion and voting
+                  <strong>Text Proposals:</strong> General proposals for
+                  discussion and voting
                 </li>
                 <li>
-                  <strong>Parameter Change:</strong> Proposals to change community parameters
+                  <strong>Parameter Change:</strong> Proposals to change
+                  community parameters
                 </li>
                 <li>
-                  <strong>Treasury Allocation:</strong> Proposals to allocate community treasury funds
+                  <strong>Treasury Allocation:</strong> Proposals to allocate
+                  community treasury funds
                 </li>
                 <li>
-                  <strong>Feature Request:</strong> Proposals to request new features for the community
+                  <strong>Feature Request:</strong> Proposals to request new
+                  features for the community
                 </li>
               </ul>
               <h3 className="text-2xl font-bold mb-2">Voting Mechanism</h3>
               <p className="mb-4">
-                Voting power is determined by the number of tokens you hold. Each token represents one vote. Proposals
-                require a majority vote to pass, and the voting period typically lasts for 7 days.
+                Voting power is determined by the number of tokens you hold.
+                Each token represents one vote. Proposals require a majority
+                vote to pass, and the voting period typically lasts for 7 days.
               </p>
             </section>
 
-            <section id="api" className="border-4 border-black bg-[#c0ff00] p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <section
+              id="api"
+              className="border-4 border-black bg-[#c0ff00] p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+            >
               <h2 className="text-3xl font-bold mb-4">API Reference</h2>
               <p className="mb-4">
-                Kensei provides a comprehensive API for developers to build applications on top of the platform.
+                Kensei provides a comprehensive API for developers to build
+                applications on top of the platform.
               </p>
               <h3 className="text-2xl font-bold mb-2">Authentication</h3>
               <p className="mb-4">
-                To authenticate with the API, you'll need to generate an API key from your account settings. Include
-                this key in the Authorization header of your requests.
+                To authenticate with the API, you'll need to generate an API key
+                from your account settings. Include this key in the
+                Authorization header of your requests.
               </p>
               <div className="bg-black text-white p-4 rounded-md mb-6 font-mono text-sm overflow-x-auto">
                 <pre>
@@ -475,22 +544,34 @@ const response = await fetch('https://api.kensei.com/v1/tokens', {
               <p className="mb-4">Here are some of the key API endpoints:</p>
               <ul className="list-disc pl-6 mb-4 space-y-2">
                 <li>
-                  <code className="bg-black text-white px-1 rounded">/v1/tokens</code> - Get a list of all tokens
+                  <code className="bg-black text-white px-1 rounded">
+                    /v1/tokens
+                  </code>{" "}
+                  - Get a list of all tokens
                 </li>
                 <li>
-                  <code className="bg-black text-white px-1 rounded">/v1/tokens/{"{id}"}</code> - Get details for a
-                  specific token
+                  <code className="bg-black text-white px-1 rounded">
+                    /v1/tokens/{"{id}"}
+                  </code>{" "}
+                  - Get details for a specific token
                 </li>
                 <li>
-                  <code className="bg-black text-white px-1 rounded">/v1/users/{"{id}"}/holdings</code> - Get a user's
-                  token holdings
+                  <code className="bg-black text-white px-1 rounded">
+                    /v1/users/{"{id}"}/holdings
+                  </code>{" "}
+                  - Get a user's token holdings
                 </li>
                 <li>
-                  <code className="bg-black text-white px-1 rounded">/v1/proposals</code> - Get a list of all proposals
+                  <code className="bg-black text-white px-1 rounded">
+                    /v1/proposals
+                  </code>{" "}
+                  - Get a list of all proposals
                 </li>
                 <li>
-                  <code className="bg-black text-white px-1 rounded">/v1/proposals/{"{id}"}</code> - Get details for a
-                  specific proposal
+                  <code className="bg-black text-white px-1 rounded">
+                    /v1/proposals/{"{id}"}
+                  </code>{" "}
+                  - Get details for a specific proposal
                 </li>
               </ul>
               <p className="mb-4">
@@ -505,8 +586,8 @@ const response = await fetch('https://api.kensei.com/v1/tokens', {
             <div className="border-4 border-black bg-[#0046F4] text-white p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <h2 className="text-3xl font-bold mb-4">Need More Help?</h2>
               <p className="mb-4">
-                If you have any questions or need further assistance, please don't hesitate to reach out to our support
-                team.
+                If you have any questions or need further assistance, please
+                don't hesitate to reach out to our support team.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link
@@ -516,7 +597,7 @@ const response = await fetch('https://api.kensei.com/v1/tokens', {
                   Contact Support
                 </Link>
                 <Link
-                  href="#"
+                  href="https://x.com/thekenseiclub"
                   className="bg-[#c0ff00] text-black px-6 py-3 font-bold border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                 >
                   Follow us on X (Twitter)
@@ -527,5 +608,5 @@ const response = await fetch('https://api.kensei.com/v1/tokens', {
         </div>
       </div>
     </>
-  )
+  );
 }

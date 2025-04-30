@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 import EnhancedPostInput from "@/components/enhanced-post-input";
 import PostCard from "@/components/post-card";
@@ -15,13 +15,13 @@ export default function FeedPage() {
       const res = await api.get("/posts");
       setPosts(res.data.data);
       console.log(res.data);
-    }
+    };
     fetchPost();
-  }, [])
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0039C6]">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-8xl mx-auto px-12 py-8">
         {/* Header with authenticated navbar */}
         <Navbar isAuthenticated={true} />
 
