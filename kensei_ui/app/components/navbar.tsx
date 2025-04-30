@@ -1,38 +1,47 @@
-"use client"
+"use client";
 
-import { Bell, ChevronDown, Globe, Search, Settings, User, Wallet } from "lucide-react";
+import {
+  Bell,
+  ChevronDown,
+  Globe,
+  Search,
+  Settings,
+  User,
+  Wallet,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useAccount, useChainId, useConfig } from "wagmi";
 import { useWallet } from "../providers/WalletProvider";
 
 interface NavbarProps {
-  isAuthenticated?: boolean
+  isAuthenticated?: boolean;
 }
 
 export default function Navbar({ isAuthenticated = false }: NavbarProps) {
-  const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false)
-  const [isDashboardOpen, setIsDashboardOpen] = useState(false)
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [isNetworkOpen, setIsNetworkOpen] = useState(false)
-  const { connect, disconnect } = useWallet()
-  const { address, isConnected } = useAccount()
-  const chainId = useChainId()
-  const config = useConfig()
-  const chain = config.chains.find(c => c.id === chainId)
-  const chains = config.chains
+  const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNetworkOpen, setIsNetworkOpen] = useState(false);
+  const { connect, disconnect } = useWallet();
+  const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const config = useConfig();
+  const chain = config.chains.find((c) => c.id === chainId);
+  const chains = config.chains;
 
   const switchNetwork = async (chainId: number) => {
     // TODO: Implement network switching
-    console.log("Switching to network:", chainId)
-  }
+    console.log("Switching to network:", chainId);
+  };
 
   return (
     <nav className="flex items-center justify-between p-6">
       <div className="flex items-center gap-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-1">
-          <div className="bg-[#c0ff00] text-black px-3 py-1 rounded-full text-sm font-bold">KENSEI</div>
+          <div className="bg-[#c0ff00] text-black px-3 py-1 rounded-full text-sm font-bold">
+            KENSEI
+          </div>
         </Link>
       </div>
 
@@ -53,13 +62,13 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
           </Link>
           <Link
             href="/feed"
-            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-sm hover:bg-opacity-90 transition-colors"
+            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
           >
             Community Feed
           </Link>
           <Link
             href="/docs"
-            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-sm hover:bg-opacity-90 transition-colors"
+            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
           >
             Documentations
           </Link>
@@ -71,103 +80,58 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
         <div className="flex items-center gap-6">
           {/* Marketplace Dropdown */}
           <div className="relative">
-            <button
-              className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-sm hover:bg-opacity-90 transition-colors flex items-center gap-1"
-              onClick={() => setIsMarketplaceOpen(!isMarketplaceOpen)}
+            <Link
+              href="/marketplace"
+              className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors flex items-center gap-1"
             >
               Marketplace
-              {/*<ChevronDown size={14} />*/}
-            </button>
-            {/* {isMarketplaceOpen && (
-              <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[180px] border-2 border-black">
-                <Link
-                  href="/marketplace"
-                  className="block px-4 py-2 text-sm hover:bg-[#0046F4] hover:text-white rounded-lg"
-                  onClick={() => setIsMarketplaceOpen(false)}
-                >
-                  All Tokens
-                </Link>
-                <Link
-                  href="/marketplace/trending"
-                  className="block px-4 py-2 text-sm hover:bg-[#0046F4] hover:text-white rounded-lg"
-                  onClick={() => setIsMarketplaceOpen(false)}
-                >
-                  Trending
-                </Link>
-                <Link
-                  href="/marketplace/newest"
-                  className="block px-4 py-2 text-sm hover:bg-[#0046F4] hover:text-white rounded-lg"
-                  onClick={() => setIsMarketplaceOpen(false)}
-                >
-                  Newest
-                </Link>
-                <Link
-                  href="/marketplace/leaderboard"
-                  className="block px-4 py-2 text-sm hover:bg-[#0046F4] hover:text-white rounded-lg"
-                  onClick={() => setIsMarketplaceOpen(false)}
-                >
-                  Leaderboard
-                </Link>
-              </div>
-            )}*/}
+            </Link>
           </div>
 
           {/* Feed */}
           <Link
             href="/feed"
-            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-sm hover:bg-opacity-90 transition-colors"
+            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
           >
             Community Feed
           </Link>
 
-          {/* My Dashboard Dropdown - Modified to link directly to dashboard */}
-          <div className="relative">
-            <div className="flex items-center">
+          {/* My Dashboard Dropdown - Modified for hover */}
+          <div className="relative group">
+            <Link
+              href="/dashboard"
+              className="inline-block bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
+            >
+              My Dashboard
+            </Link>
+            {/* Buffer div positioned absolutely to not affect button size */}
+            <div className="absolute inset-x-0 h-2 bottom-0 translate-y-full" />
+            <div className="hidden group-hover:block absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[180px] border-2 border-black">
               <Link
-                href="/dashboard"
-                className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-sm hover:bg-opacity-90 transition-colors"
+                href="/dashboard/wallet"
+                className="block px-4 py-2 text-base hover:bg-[#0046F4] hover:text-white rounded-lg"
               >
-                My Dashboard
+                My Wallet
               </Link>
-              <button
-                className="bg-[#0046F4] text-white py-1.5 px-1 rounded-r-full -ml-1 hover:bg-opacity-90 transition-colors"
-                onClick={() => setIsDashboardOpen(!isDashboardOpen)}
+              <Link
+                href="/dashboard/proposals"
+                className="block px-4 py-2 text-base hover:bg-[#0046F4] hover:text-white rounded-lg"
               >
-                <ChevronDown size={14} />
-              </button>
+                My Proposals
+              </Link>
+              <Link
+                href="/dashboard/tweets"
+                className="block px-4 py-2 text-base hover:bg-[#0046F4] hover:text-white rounded-lg"
+              >
+                My Tweets
+              </Link>
+              <Link
+                href="/dashboard/chatbot"
+                className="block px-4 py-2 text-base hover:bg-[#0046F4] hover:text-white rounded-lg"
+              >
+                Chat Bot
+              </Link>
             </div>
-            {isDashboardOpen && (
-              <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[180px] border-2 border-black">
-                <Link
-                  href="/dashboard/wallet"
-                  className="block px-4 py-2 text-sm hover:bg-[#0046F4] hover:text-white rounded-lg"
-                  onClick={() => setIsDashboardOpen(false)}
-                >
-                  My Wallet
-                </Link>
-                <Link
-                  href="/dashboard/proposals"
-                  className="block px-4 py-2 text-sm hover:bg-[#0046F4] hover:text-white rounded-lg"
-                  onClick={() => setIsDashboardOpen(false)}
-                >
-                  My Proposals
-                </Link>
-                <Link
-                  href="/dashboard/tweets"
-                  className="block px-4 py-2 text-sm hover:bg-[#0046F4] hover:text-white rounded-lg"
-                  onClick={() => setIsDashboardOpen(false)}
-                >
-                  My Tweets
-                </Link>
-                <Link
-                  href="/dashboard/chatbot"
-                  className="block px-4 py-2 text-sm hover:bg-[#0046F4] hover:text-white rounded-lg"
-                  onClick={() => setIsDashboardOpen(false)}
-                >
-                  Chat Bot
-                </Link>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -183,7 +147,7 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
             <input
               type="text"
               placeholder="Search tokens, users, proposals..."
-              className="w-full bg-white text-black pl-10 pr-4 py-1.5 rounded-full text-sm border-2 border-black focus:outline-none focus:ring-2 focus:ring-[#c0ff00]"
+              className="w-full bg-white text-black pl-10 pr-4 py-1.5 rounded-full text-base border-2 border-black focus:outline-none focus:ring-2 focus:ring-[#c0ff00]"
             />
           </div>
         )}
@@ -205,7 +169,7 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
                 className="bg-[#0046F4] text-white px-4 py-2 rounded-full hover:bg-opacity-90 transition-colors flex items-center gap-2"
               >
                 <Globe size={16} />
-                <span>{chain?.name || 'Network'}</span>
+                <span>{chain?.name || "Network"}</span>
                 <ChevronDown size={16} />
               </button>
               {isNetworkOpen && (
@@ -214,13 +178,13 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
                     <button
                       key={x.id}
                       onClick={() => {
-                        switchNetwork?.(x.id)
-                        setIsNetworkOpen(false)
+                        switchNetwork?.(x.id);
+                        setIsNetworkOpen(false);
                       }}
-                      className={`w-full text-left px-4 py-2 text-sm rounded-lg ${
+                      className={`w-full text-left px-4 py-2 text-base rounded-lg ${
                         x.id === chain?.id
-                          ? 'bg-[#c0ff00] text-black'
-                          : 'text-black hover:bg-[#0046F4] hover:text-white'
+                          ? "bg-[#c0ff00] text-black"
+                          : "text-black hover:bg-[#0046F4] hover:text-white"
                       }`}
                     >
                       {x.name}
@@ -249,33 +213,21 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
               {isProfileOpen && (
                 <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[220px] border-2 border-black">
                   <div className="px-4 py-2 border-b border-gray-200">
-                    <p className="font-bold text-black">{address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ''}</p>
-                    <p className="text-gray-500">Connected to {chain?.name || 'Unknown'}</p>
+                    <p className="font-bold text-black">
+                      {address
+                        ? `${address.slice(0, 6)}...${address.slice(-4)}`
+                        : ""}
+                    </p>
                   </div>
-                  
+
                   {/* Wallet Management Section */}
                   <div className="px-4 py-2 border-b border-gray-200">
                     <div className="flex items-center justify-between text-sm text-black mb-1">
                       <span>Balance</span>
                       <span className="font-medium">0.00 SUI</span>
                     </div>
-                    <div className="flex items-center justify-between text-sm text-black">
-                      <span>Network</span>
-                      <span className="font-medium">{chain?.name || 'Unknown'}</span>
-                    </div>
                   </div>
 
-                  <Link
-                    href="/profile"
-                    className="block px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
-                    onClick={() => setIsProfileOpen(false)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <User size={16} />
-                      <span>Profile</span>
-                    </div>
-                  </Link>
-                  
                   <Link
                     href="/dashboard/settings"
                     className="block px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
@@ -290,8 +242,8 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
                   <button
                     className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500 hover:text-white rounded-lg"
                     onClick={() => {
-                      disconnect()
-                      setIsProfileOpen(false)
+                      disconnect();
+                      setIsProfileOpen(false);
                     }}
                   >
                     <div className="flex items-center gap-2">
@@ -317,5 +269,5 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
         )}
       </div>
     </nav>
-  )
+  );
 }
