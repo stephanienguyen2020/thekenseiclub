@@ -1,38 +1,19 @@
 "use client";
 
-import {
-  Bell,
-  ChevronDown,
-  Globe,
-  Search,
-  Settings,
-  User,
-  Wallet,
-} from "lucide-react";
+import { Bell, ChevronDown, Globe, Search, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useAccount, useChainId, useConfig } from "wagmi";
-import { useWallet } from "../providers/WalletProvider";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { SuiWalletButton } from "./SuiWalletButton";
 
 interface NavbarProps {
   isAuthenticated?: boolean;
 }
 
 export default function Navbar({ isAuthenticated = false }: NavbarProps) {
-  const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNetworkOpen, setIsNetworkOpen] = useState(false);
-  const { connect, disconnect } = useWallet();
-  const { address, isConnected } = useAccount();
-  const chainId = useChainId();
-  const config = useConfig();
-  const chain = config.chains.find((c) => c.id === chainId);
-  const chains = config.chains;
-
-  const switchNetwork = async (chainId: number) => {
-    // TODO: Implement network switching
-    console.log("Switching to network:", chainId);
-  };
+  const currentAccount = useCurrentAccount();
 
   return (
     <nav className="flex items-center justify-between p-6">
@@ -76,26 +57,8 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
       )}
 
       {/* Left Nav Links - Only show when authenticated */}
-      {isAuthenticated && (
+      {currentAccount && (
         <div className="flex items-center gap-6">
-          {/* Marketplace Dropdown */}
-          <div className="relative">
-            <Link
-              href="/marketplace"
-              className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors flex items-center gap-1"
-            >
-              Marketplace
-            </Link>
-          </div>
-
-          {/* Feed */}
-          <Link
-            href="/feed"
-            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
-          >
-            Community Feed
-          </Link>
-
           {/* My Dashboard Dropdown - Modified for hover */}
           <div className="relative group">
             <Link
@@ -139,7 +102,7 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
       {/* Right Side */}
       <div className="flex items-center gap-4">
         {/* Search Bar - Only show when authenticated */}
-        {isAuthenticated && (
+        {currentAccount && (
           <div className="relative hidden md:block w-64">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search size={16} className="text-gray-400" />
@@ -152,7 +115,7 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
           </div>
         )}
 
-        {isConnected ? (
+        {currentAccount ? (
           <>
             {/* Launch Token Button */}
             <Link
@@ -169,27 +132,18 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
                 className="bg-[#0046F4] text-white px-4 py-2 rounded-full hover:bg-opacity-90 transition-colors flex items-center gap-2"
               >
                 <Globe size={16} />
-                <span>{chain?.name || "Network"}</span>
+                <span>Network</span>
                 <ChevronDown size={16} />
               </button>
               {isNetworkOpen && (
                 <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[180px] border-2 border-black">
-                  {chains?.map((x) => (
-                    <button
-                      key={x.id}
-                      onClick={() => {
-                        switchNetwork?.(x.id);
-                        setIsNetworkOpen(false);
-                      }}
-                      className={`w-full text-left px-4 py-2 text-base rounded-lg ${
-                        x.id === chain?.id
-                          ? "bg-[#c0ff00] text-black"
-                          : "text-black hover:bg-[#0046F4] hover:text-white"
-                      }`}
-                    >
-                      {x.name}
-                    </button>
-                  ))}
+                  {/* We'll keep only SUI networks for now */}
+                  <button className="w-full text-left px-4 py-2 text-base rounded-lg bg-[#c0ff00] text-black">
+                    SUI Mainnet
+                  </button>
+                  <button className="w-full text-left px-4 py-2 text-base rounded-lg text-black hover:bg-[#0046F4] hover:text-white">
+                    SUI Testnet
+                  </button>
                 </div>
               )}
             </div>
@@ -214,18 +168,9 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
                 <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[220px] border-2 border-black">
                   <div className="px-4 py-2 border-b border-gray-200">
                     <p className="font-bold text-black">
-                      {address
-                        ? `${address.slice(0, 6)}...${address.slice(-4)}`
-                        : ""}
+                      {currentAccount.address.slice(0, 6)}...
+                      {currentAccount.address.slice(-4)}
                     </p>
-                  </div>
-
-                  {/* Wallet Management Section */}
-                  <div className="px-4 py-2 border-b border-gray-200">
-                    <div className="flex items-center justify-between text-sm text-black mb-1">
-                      <span>Balance</span>
-                      <span className="font-medium">0.00 SUI</span>
-                    </div>
                   </div>
 
                   <Link
@@ -239,33 +184,13 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
                     </div>
                   </Link>
 
-                  <button
-                    className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500 hover:text-white rounded-lg"
-                    onClick={() => {
-                      disconnect();
-                      setIsProfileOpen(false);
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Wallet size={16} />
-                      <span>Disconnect</span>
-                    </div>
-                  </button>
+                  <SuiWalletButton />
                 </div>
               )}
             </div>
           </>
         ) : (
-          <button
-            onClick={() => connect()}
-            type="button"
-            className="bg-white text-[#0039C6] px-5 py-2 rounded-full font-medium hover:bg-opacity-90 transition-colors border border-white"
-          >
-            <div className="flex items-center">
-              <Wallet className="mr-2 h-4 w-4" />
-              <span>Connect wallet</span>
-            </div>
-          </button>
+          <SuiWalletButton />
         )}
       </div>
     </nav>

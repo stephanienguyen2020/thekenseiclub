@@ -2,9 +2,8 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
-import { useAccount } from "wagmi";
 import { AuthRequired } from "../components/auth-required";
-import { useWallet } from "./WalletProvider";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 
 // List of protected routes that require authentication
 const PROTECTED_ROUTES = [
@@ -36,8 +35,7 @@ interface AuthGuardProps {
 export function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isConnected } = useAccount();
-  const { isAuthenticated } = useWallet();
+  const currentAccount = useCurrentAccount();
   const [showAuthRequired, setShowAuthRequired] = useState(false);
 
   useEffect(() => {
@@ -47,13 +45,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
 
     // If the route requires auth and user is not authenticated, show auth required component
-    if (requiresAuth && (!isConnected || !isAuthenticated)) {
+    if (requiresAuth && !currentAccount) {
       console.log("Access denied: Authentication required");
       setShowAuthRequired(true);
     } else {
       setShowAuthRequired(false);
     }
-  }, [pathname, isConnected, isAuthenticated, router]);
+  }, [pathname, currentAccount, router]);
 
   // If authentication is required but user is not authenticated, show auth required component
   if (showAuthRequired) {

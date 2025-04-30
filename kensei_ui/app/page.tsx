@@ -23,7 +23,7 @@ export default function Page() {
         <div className="w-full max-w-7xl bg-[#0039C6] rounded-3xl overflow-hidden relative border border-blue-500">
           {/* Navigation */}
           <div className="px-6 py-4">
-            <Navbar isAuthenticated={false} />
+            <Navbar />
           </div>
 
           {/* Hero Section with Glassmorphism Cards */}
