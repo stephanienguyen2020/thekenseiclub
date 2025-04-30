@@ -1,22 +1,24 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import Image from "next/image"
-import { useEffect, useState } from "react"
-import Navbar from "./components/navbar"
+import { motion } from "framer-motion";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import Navbar from "./components/navbar";
 
 export default function Page() {
-  const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#0039C6] p-4 md:p-8 flex items-center justify-center">
-      <div className="w-full max-w-6xl bg-[#0039C6] rounded-3xl overflow-hidden relative border border-blue-500">
+    <div className="min-h-screen bg-[#0039C6] p-2 md:p-4 flex items-center justify-center">
+      <div className="w-full max-w-7xl bg-[#0039C6] rounded-3xl overflow-hidden relative border border-blue-500">
         {/* Navigation */}
-        <Navbar isAuthenticated={false} />
+        <div className="px-6 py-4">
+          <Navbar isAuthenticated={false} />
+        </div>
 
         {/* Hero Section with Glassmorphism Cards */}
         <div className="relative px-6 py-12 md:py-24 overflow-hidden min-h-[600px]">
@@ -60,7 +62,13 @@ export default function Page() {
             <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-3xl shadow-lg border border-white border-opacity-20 w-[180px] h-[180px] overflow-hidden">
               <div className="flex flex-col items-center justify-center h-full p-4">
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-300 border-2 border-white border-opacity-30 mb-3">
-                  <Image src="/pixel-pup.png" alt="Profile" width={64} height={64} className="object-cover" />
+                  <Image
+                    src="/pixel-pup.png"
+                    alt="Profile"
+                    width={64}
+                    height={64}
+                    className="object-cover"
+                  />
                 </div>
                 <div className="text-white text-center">
                   <p className="font-bold text-lg">norugz.sui</p>
@@ -89,7 +97,13 @@ export default function Page() {
             <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-3xl shadow-lg border border-white border-opacity-20 w-[180px] h-[180px] overflow-hidden">
               <div className="flex flex-col items-center justify-center h-full p-4">
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-300 border-2 border-white border-opacity-30 mb-3">
-                  <Image src="/happy-frog-on-a-lilypad.png" alt="NFT" width={64} height={64} className="object-cover" />
+                  <Image
+                    src="/happy-frog-on-a-lilypad.png"
+                    alt="NFT"
+                    width={64}
+                    height={64}
+                    className="object-cover"
+                  />
                 </div>
                 <div className="text-white text-center">
                   <p className="font-bold text-lg">pepe.sui</p>
@@ -112,7 +126,13 @@ export default function Page() {
             }}
             whileHover={{ y: -10 }}
           >
-            <svg width="150" height="150" viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              width="150"
+              height="150"
+              viewBox="0 0 150 150"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <motion.path
                 d="M30 120C30 80 80 50 120 30"
                 stroke="#c0ff00"
@@ -147,7 +167,13 @@ export default function Page() {
             }}
             whileHover={{ x: -10 }}
           >
-            <svg width="150" height="150" viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              width="150"
+              height="150"
+              viewBox="0 0 150 150"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <motion.path
                 d="M120 30C80 30 50 80 30 120"
                 stroke="#c0ff00"
@@ -191,10 +217,18 @@ export default function Page() {
                 <motion.div
                   className="absolute inset-0 flex items-center justify-center"
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                  transition={{
+                    duration: 20,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "linear",
+                  }}
                 >
                   <svg className="w-full h-full" viewBox="0 0 100 100">
-                    <path id="circlePath" d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" fill="none" />
+                    <path
+                      id="circlePath"
+                      d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"
+                      fill="none"
+                    />
                     <text fontSize="8" fontWeight="bold" fill="black">
                       <textPath href="#circlePath" startOffset="0%">
                         LAUNCH A TOKEN IN SECONDS | START GOVERNING MEMES |
@@ -203,7 +237,13 @@ export default function Page() {
                   </svg>
                 </motion.div>
                 <div className="transform rotate-45">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
                     <path
                       d="M7 17L17 7M17 7H7M17 7V17"
                       stroke="black"
@@ -229,7 +269,8 @@ export default function Page() {
                 PROPOSALS
               </h3>
               <p className="text-sm text-gray-600 mb-8 text-center">
-                Decide what happens next—use your tokens to vote on treasury spends, burns, liquidity changes, and more.
+                Decide what happens next—use your tokens to vote on treasury
+                spends, burns, liquidity changes, and more.
               </p>
 
               <div className="relative flex justify-center">
@@ -262,7 +303,11 @@ export default function Page() {
               transition={{ delay: 0.5, duration: 0.5 }}
               whileHover={{
                 scale: 1.1,
-                transition: { duration: 0.2, yoyo: Number.POSITIVE_INFINITY, repeatDelay: 0.5 },
+                transition: {
+                  duration: 0.2,
+                  yoyo: Number.POSITIVE_INFINITY,
+                  repeatDelay: 0.5,
+                },
               }}
             >
               <svg width="100" height="60" viewBox="0 0 100 60" fill="none">
@@ -296,7 +341,8 @@ export default function Page() {
                 LIQUIDITY
               </h3>
               <p className="text-sm text-gray-600 mb-8 text-center">
-                Every token on Kensei launches with bonding curve liquidity—just buy or sell from second one.{" "}
+                Every token on Kensei launches with bonding curve liquidity—just
+                buy or sell from second one.{" "}
               </p>
 
               <div className="flex justify-center">
@@ -304,7 +350,9 @@ export default function Page() {
                   className="bg-[#0039C6] rounded-full p-4 inline-block text-center"
                   style={{ borderRadius: "30px" }}
                 >
-                  <div className="text-xs font-medium text-white">No LPs. No friction</div>
+                  <div className="text-xs font-medium text-white">
+                    No LPs. No friction
+                  </div>
                   <div className="text-3xl font-bold text-white">On-demand</div>
                 </div>
               </div>
@@ -318,7 +366,11 @@ export default function Page() {
               transition={{ delay: 0.7, duration: 0.5 }}
               whileHover={{
                 scale: 1.1,
-                transition: { duration: 0.2, yoyo: Number.POSITIVE_INFINITY, repeatDelay: 0.5 },
+                transition: {
+                  duration: 0.2,
+                  yoyo: Number.POSITIVE_INFINITY,
+                  repeatDelay: 0.5,
+                },
               }}
             >
               <svg width="100" height="60" viewBox="0 0 100 60" fill="none">
@@ -352,7 +404,8 @@ export default function Page() {
                 GROWTH
               </h3>
               <p className="text-sm text-gray-600 mb-8 text-center">
-                AutoShill spreads your coin. Agents track trends and whales. You focus on memes—we handle hype.
+                AutoShill spreads your coin. Agents track trends and whales. You
+                focus on memes—we handle hype.
               </p>
 
               <div className="flex justify-center">
@@ -369,5 +422,5 @@ export default function Page() {
         </div>
       </div>
     </div>
-  )
+  );
 }
