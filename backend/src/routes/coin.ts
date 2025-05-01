@@ -73,18 +73,14 @@ router.get("/coins", async (req: any, res: any) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = (page - 1) * limit;
+    const userId = req.query.userId;
 
     // Get total count for pagination metadata
-    const countResult = await db
+    let countQuery = db
       .selectFrom("coins")
-      .select(db.fn.count("id").as("count"))
-      .executeTakeFirst();
+      .select(db.fn.count("id").as("count"));
 
-    const totalCount = parseInt(countResult?.count as string) || 0;
-    const totalPages = Math.ceil(totalCount / limit);
-
-    // Get paginated coins with bonding curve IDs
-    const coins = await db
+    let coinsQuery = db
       .selectFrom("coins as c")
       .leftJoin("bondingCurve as b", "c.id", "b.coinMetadata")
       .select([
@@ -99,8 +95,22 @@ router.get("/coins", async (req: any, res: any) => {
       ])
       .orderBy("c.createdAt", "desc")
       .limit(limit)
-      .offset(offset)
-      .execute();
+      .offset(offset);
+    console.log("coinsQuery");
+    if (userId) {
+      console.log("coinsQuery???", userId);
+
+      countQuery = countQuery.where("address", "=", userId);
+      coinsQuery = coinsQuery.where("address", "=", userId);
+    }
+
+    const countResult = await countQuery.executeTakeFirst();
+
+    const totalCount = parseInt(countResult?.count as string) || 0;
+    const totalPages = Math.ceil(totalCount / limit);
+
+    // Get paginated coins with bonding curve IDs
+    const coins = await coinsQuery.execute();
 
     // For each coin, calculate market data if it has a bonding curve
     const enrichedCoins = await Promise.all(
@@ -110,7 +120,7 @@ router.get("/coins", async (req: any, res: any) => {
           const marketData = await getMarketData(
             coin.id,
             coin.bondingCurveId,
-            price,
+            price
           );
           return { ...coin, ...marketData };
         }
@@ -123,7 +133,7 @@ router.get("/coins", async (req: any, res: any) => {
           marketCap: "0",
           holders: 0,
         };
-      }),
+      })
     );
 
     return res.status(200).json({

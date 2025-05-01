@@ -8,7 +8,7 @@ const router = Router();
 const commentSchema = z.object({
   content: z.string().min(1),
   postId: z.coerce.bigint(),
-  userId: z.coerce.bigint(),
+  userId: z.coerce.string(),
 });
 
 // POST /comments - Create a new comment

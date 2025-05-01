@@ -335,7 +335,6 @@ export interface Cursors {
 export interface Images {
   imageName: string;
   imagePath: string;
-  postId: Generated<Int8>;
 }
 
 export interface Likes {

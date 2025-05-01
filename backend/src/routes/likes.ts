@@ -6,7 +6,7 @@ const router = Router();
 
 const likeSchema = z.object({
   postId: z.coerce.bigint(),
-  userId: z.coerce.bigint(),
+  userId: z.coerce.string(),
   isLike: z.boolean(),
 });
 

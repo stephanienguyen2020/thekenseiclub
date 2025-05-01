@@ -34,6 +34,8 @@ export default function EnhancedPostInput({
 }: EnhancedPostInputProps) {
   const [content, setContent] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [isTokenDropdownOpen, setIsTokenDropdownOpen] = useState(false);
   const [selectedToken, setSelectedToken] = useState<Token | null>(
     preselectedToken
@@ -58,14 +60,42 @@ export default function EnhancedPostInput({
       token.symbol.toLowerCase().includes(tokenSearchQuery.toLowerCase())
   );
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Show preview immediately for better UX
       const reader = new FileReader();
       reader.onload = (e) => {
         setSelectedImage(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+
+      // Upload the file to the API
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("type", "post");
+        formData.append("userId", currentAccount?.address || "");
+
+        const response = await api.post("/images", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        if (
+          response.data &&
+          response.data.image &&
+          response.data.image.gatewayUrl
+        ) {
+          setUploadedImageUrl(response.data.image.gatewayUrl);
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -73,8 +103,8 @@ export default function EnhancedPostInput({
     if (!content.trim() && !selectedImage) return;
 
     try {
-      // Prepare media URLs array if there's a selected image
-      const mediaUrls = selectedImage ? [selectedImage] : [];
+      // Use the uploaded image URL if available, otherwise empty array
+      const mediaUrls = uploadedImageUrl ? [uploadedImageUrl] : [];
 
       // Prepare API payload
       const postData = {
@@ -92,6 +122,7 @@ export default function EnhancedPostInput({
       // Reset form
       setContent("");
       setSelectedImage(null);
+      setUploadedImageUrl(null);
       if (!preselectedToken) {
         setSelectedToken(null);
       }

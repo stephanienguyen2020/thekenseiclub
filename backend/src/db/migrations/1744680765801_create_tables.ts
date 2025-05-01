@@ -84,9 +84,6 @@ export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable("images")
     .addColumn("image_name", "varchar", (col) => col.notNull())
-    .addColumn("post_id", "bigserial", (col) =>
-      col.references("posts.id").notNull()
-    )
     .addColumn("image_path", "varchar", (col) => col.notNull())
     .execute();
 

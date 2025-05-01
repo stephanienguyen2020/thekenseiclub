@@ -1,69 +1,10 @@
 # Social Feed API Documentation
 
-This document describes the Social Feed APIs for the Feed Backend service. These APIs enable social media functionality including user management, posts, comments, likes, and image uploads.
+The Social Feed API provides endpoints for managing posts, comments, and likes in the social network aspect of the application.
 
-## User API
+## Posts Endpoints
 
-### Create User
-
-```
-POST /users
-```
-
-#### Request Body
-
-The request body should be a JSON object with the following properties:
-
-```json
-{
-  "username": "johndoe",
-  "sui_address": "0x1234...",
-  "profile_picture_url": "https://example.com/profile.jpg"
-}
-```
-
-#### Request Fields
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| username | string | Yes | The username of the user |
-| sui_address | string | Yes | The Sui blockchain address of the user |
-| profile_picture_url | string | Yes | URL to the user's profile picture |
-
-#### Response
-
-##### Success Response (201 Created)
-
-```json
-{
-  "id": 1,
-  "username": "johndoe",
-  "sui_address": "0x1234...",
-  "profile_picture_url": "https://example.com/profile.jpg"
-}
-```
-
-##### Error Responses
-
-###### 400 Bad Request
-
-```json
-{
-  "message": "Missing required fields. Username, sui_address, and profile_picture_url are required."
-}
-```
-
-###### 500 Internal Server Error
-
-```json
-{
-  "message": "Internal server error"
-}
-```
-
-## Posts API
-
-### Create Post
+### Create a New Post
 
 ```
 POST /posts
@@ -71,52 +12,53 @@ POST /posts
 
 #### Request Body
 
-The request body should be a JSON object with the following properties:
-
 ```json
 {
-  "content": "This is my first post!",
-  "user_id": 1,
-  "media_urls": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"],
-  "coin_id": "0x1234..."
+  "content": "Hello world, this is my first post!",
+  "userId": "0x1234...",
+  "mediaUrls": ["https://example.com/image.jpg"],
+  "coinId": "0xabcd..."
 }
 ```
 
 #### Request Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| content | string | Yes | The content of the post |
-| user_id | number | Yes | The ID of the user creating the post |
-| media_urls | array | No | Array of URLs to media associated with the post |
-| coin_id | string | No | The ID of the coin to attach to the post |
+| Field     | Type             | Required | Description                                   |
+| --------- | ---------------- | -------- | --------------------------------------------- |
+| content   | string           | Yes      | The text content of the post                  |
+| userId    | string           | Yes      | The SUI address of the user creating the post |
+| mediaUrls | array of strings | No       | URLs of media attached to the post            |
+| coinId    | string           | No       | ID of the coin being referenced in the post   |
 
-#### Response
+#### Success Response
 
-##### Success Response (201 Created)
-
-```json
-{
-  "id": 1,
-  "content": "This is my first post!",
-  "user_id": 1,
-  "media_urls": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"],
-  "coin_id": "0x1234...",
-  "created_at": "2023-06-01T12:00:00.000Z"
-}
-```
-
-##### Error Responses
-
-###### 400 Bad Request
+The API returns a 201 Created status code with the created post:
 
 ```json
 {
-  "message": "Missing required fields"
+  "id": "1",
+  "content": "Hello world, this is my first post!",
+  "userId": "0x1234...",
+  "mediaUrls": ["https://example.com/image.jpg"],
+  "coinId": "0xabcd...",
+  "createdAt": "2025-05-01T12:34:56.789Z"
 }
 ```
 
-###### 500 Internal Server Error
+#### Error Responses
+
+```json
+{
+  "error": {
+    "formErrors": [],
+    "fieldErrors": {
+      "content": ["String must contain at least 1 character(s)"]
+    }
+  }
+}
+```
+
+Or:
 
 ```json
 {
@@ -124,7 +66,9 @@ The request body should be a JSON object with the following properties:
 }
 ```
 
-### List Posts
+### Get Posts (with Pagination)
+
+Retrieves a list of posts with information about the author, likes, and comments.
 
 ```
 GET /posts
@@ -132,48 +76,43 @@ GET /posts
 
 #### Query Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| page | number | No | Page number for pagination (default: 1) |
-| limit | number | No | Number of posts per page (default: 10) |
+| Parameter | Type    | Required | Description                            |
+| --------- | ------- | -------- | -------------------------------------- |
+| page      | integer | No       | Page number (default: 1)               |
+| limit     | integer | No       | Number of items per page (default: 10) |
+| coinId    | string  | No       | Filter posts by coin ID                |
 
-#### Response
-
-##### Success Response (200 OK)
+#### Success Response
 
 ```json
 {
   "data": [
     {
-      "id": 1,
-      "content": "This is my first post!",
-      "media_urls": ["https://example.com/image1.jpg"],
-      "created_at": "2023-06-01T12:00:00.000Z",
-      "coin_id": "0x1234...",
-      "user_id": 1,
-      "username": "johndoe",
-      "profile_picture_url": "https://example.com/profile.jpg",
-      "coin_name": "Example Coin",
-      "coin_symbol": "EXC",
-      "coin_image_url": "https://example.com/coin.jpg",
-      "likes_count": "5",
-      "comments_count": "3"
-    },
-    {
-      "id": 2,
-      "content": "Another post",
-      "media_urls": null,
-      "created_at": "2023-06-02T12:00:00.000Z",
-      "coin_id": null,
-      "user_id": 2,
-      "username": "janedoe",
-      "profile_picture_url": "https://example.com/profile2.jpg",
-      "coin_name": null,
-      "coin_symbol": null,
-      "coin_image_url": null,
-      "likes_count": "0",
-      "comments_count": "0"
+      "id": "1",
+      "user": {
+        "id": "0x1234...",
+        "name": "John Doe",
+        "handle": "johndoe",
+        "avatar": "https://example.com/avatar.jpg"
+      },
+      "token": {
+        "id": "0xabcd...",
+        "name": "My Coin",
+        "symbol": "MC",
+        "logo": "https://example.com/coin-logo.png"
+      },
+      "content": "Hello world, this is my first post!",
+      "image": "https://example.com/image.jpg",
+      "timestamp": "2025-05-01T12:34:56.789Z",
+      "likes": 5,
+      "comments": 2,
+      "boosts": 0,
+      "signalScore": 0,
+      "isLiked": false,
+      "isBoosted": false,
+      "views": 0
     }
+    // Additional posts...
   ],
   "pagination": {
     "total": 25,
@@ -184,9 +123,7 @@ GET /posts
 }
 ```
 
-##### Error Responses
-
-###### 500 Internal Server Error
+#### Error Response
 
 ```json
 {
@@ -194,9 +131,46 @@ GET /posts
 }
 ```
 
-## Comments API
+### Check if Post is Liked by User
 
-### Create Comment
+```
+GET /posts/isLiked
+```
+
+#### Query Parameters
+
+| Parameter | Type   | Required | Description                 |
+| --------- | ------ | -------- | --------------------------- |
+| postId    | string | Yes      | The ID of the post          |
+| userId    | string | Yes      | The SUI address of the user |
+
+#### Success Response
+
+```json
+{
+  "isLiked": true
+}
+```
+
+#### Error Responses
+
+```json
+{
+  "message": "postId and userId are required"
+}
+```
+
+Or:
+
+```json
+{
+  "message": "Internal server error"
+}
+```
+
+## Comments Endpoints
+
+### Create a Comment
 
 ```
 POST /comments
@@ -204,165 +178,78 @@ POST /comments
 
 #### Request Body
 
-The request body should be a JSON object with the following properties:
-
 ```json
 {
   "content": "Great post!",
-  "post_id": 1,
-  "user_id": 2
+  "postId": "1",
+  "userId": "0x1234..."
 }
 ```
 
 #### Request Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| content | string | Yes | The content of the comment |
-| post_id | number | Yes | The ID of the post being commented on |
-| user_id | number | Yes | The ID of the user creating the comment |
+| Field   | Type   | Required | Description                                      |
+| ------- | ------ | -------- | ------------------------------------------------ |
+| content | string | Yes      | The text content of the comment                  |
+| postId  | string | Yes      | The ID of the post being commented on            |
+| userId  | string | Yes      | The SUI address of the user creating the comment |
 
-#### Response
-
-##### Success Response (201 Created)
+#### Success Response
 
 ```json
 {
-  "comment": {
-    "id": 1,
-    "content": "Great post!",
-    "post_id": 1,
-    "user_id": 2,
-    "created_at": "2023-06-01T12:30:00.000Z"
-  },
-  "total_comments": 1
-}
-```
-
-##### Error Responses
-
-###### 400 Bad Request
-
-```json
-{
-  "error": {
-    "fieldErrors": {
-      "content": ["String must contain at least 1 character(s)"],
-      "post_id": ["Required"],
-      "user_id": ["Required"]
-    }
-  }
-}
-```
-
-###### 500 Internal Server Error
-
-```json
-{
-  "error": "Internal Server Error"
+  "id": "1",
+  "postId": "1",
+  "userId": "0x1234...",
+  "content": "Great post!",
+  "createdAt": "2025-05-01T12:34:56.789Z"
 }
 ```
 
 ### Get Comments for a Post
 
 ```
-GET /comments/post/:postId
+GET /comments
 ```
-
-#### URL Parameters
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| postId | string | Yes | The ID of the post to get comments for |
 
 #### Query Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| page | number | No | Page number for pagination (default: 1) |
-| limit | number | No | Number of comments per page (default: 10) |
+| Parameter | Type    | Required | Description                            |
+| --------- | ------- | -------- | -------------------------------------- |
+| postId    | string  | Yes      | The ID of the post to get comments for |
+| page      | integer | No       | Page number (default: 1)               |
+| limit     | integer | No       | Number of items per page (default: 10) |
 
-#### Response
-
-##### Success Response (200 OK)
+#### Success Response
 
 ```json
 {
   "data": [
     {
-      "id": 1,
+      "id": "1",
+      "user": {
+        "id": "0x1234...",
+        "name": "John Doe",
+        "handle": "johndoe",
+        "avatar": "https://example.com/avatar.jpg"
+      },
       "content": "Great post!",
-      "created_at": "2023-06-01T12:30:00.000Z",
-      "post_id": 1,
-      "user_id": 2,
-      "username": "janedoe",
-      "profile_picture_url": "https://example.com/profile2.jpg"
-    },
-    {
-      "id": 2,
-      "content": "I agree!",
-      "created_at": "2023-06-01T12:45:00.000Z",
-      "post_id": 1,
-      "user_id": 3,
-      "username": "bobsmith",
-      "profile_picture_url": "https://example.com/profile3.jpg"
+      "timestamp": "2025-05-01T12:34:56.789Z"
     }
+    // Additional comments...
   ],
   "pagination": {
-    "total": 5,
+    "total": 15,
     "page": 1,
     "limit": 10,
-    "pages": 1
+    "pages": 2
   }
 }
 ```
 
-##### Error Responses
+## Likes Endpoints
 
-###### 500 Internal Server Error
-
-```json
-{
-  "message": "Internal server error"
-}
-```
-
-### Get Comment Count for a Post
-
-```
-GET /comments/count/:postId
-```
-
-#### URL Parameters
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| postId | string | Yes | The ID of the post to get comment count for |
-
-#### Response
-
-##### Success Response (200 OK)
-
-```json
-{
-  "post_id": "1",
-  "total_comments": 5
-}
-```
-
-##### Error Responses
-
-###### 500 Internal Server Error
-
-```json
-{
-  "message": "Internal server error"
-}
-```
-
-## Likes API
-
-### Like/Unlike Post
+### Like a Post
 
 ```
 POST /likes
@@ -370,125 +257,55 @@ POST /likes
 
 #### Request Body
 
-The request body should be a JSON object with the following properties:
-
 ```json
 {
-  "post_id": 1,
-  "user_id": 2,
-  "is_like": true
+  "postId": "1",
+  "userId": "0x1234..."
 }
 ```
 
 #### Request Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| post_id | number | Yes | The ID of the post being liked/unliked |
-| user_id | number | Yes | The ID of the user liking/unliking the post |
-| is_like | boolean | Yes | `true` to like, `false` to unlike |
+| Field  | Type   | Required | Description                                 |
+| ------ | ------ | -------- | ------------------------------------------- |
+| postId | string | Yes      | The ID of the post to like                  |
+| userId | string | Yes      | The SUI address of the user liking the post |
 
-#### Response
-
-##### Success Response for Like (201 Created)
+#### Success Response
 
 ```json
 {
-  "like": {
-    "id": 1,
-    "post_id": 1,
-    "user_id": 2,
-    "created_at": "2023-06-01T12:45:00.000Z"
-  },
-  "total_likes": 1
+  "id": "1",
+  "postId": "1",
+  "userId": "0x1234...",
+  "createdAt": "2025-05-01T12:34:56.789Z"
 }
 ```
 
-##### Success Response for Unlike (200 OK)
+### Unlike a Post
+
+```
+DELETE /likes
+```
+
+#### Query Parameters
+
+| Parameter | Type   | Required | Description                  |
+| --------- | ------ | -------- | ---------------------------- |
+| postId    | string | Yes      | The ID of the post to unlike |
+| userId    | string | Yes      | The SUI address of the user  |
+
+#### Success Response
 
 ```json
 {
-  "message": "Like removed",
-  "total_likes": 0
+  "message": "Like removed successfully"
 }
 ```
 
-##### Error Responses
+## Image Endpoints
 
-###### 400 Bad Request
-
-```json
-{
-  "error": {
-    "fieldErrors": {
-      "post_id": ["Required"],
-      "user_id": ["Required"],
-      "is_like": ["Required"]
-    }
-  }
-}
-```
-
-###### 404 Not Found (when trying to unlike a non-existent like)
-
-```json
-{
-  "error": "Like not found"
-}
-```
-
-###### 409 Conflict (when trying to like a post already liked)
-
-```json
-{
-  "error": "Already liked"
-}
-```
-
-###### 500 Internal Server Error
-
-```json
-{
-  "error": "Internal Server Error"
-}
-```
-
-### Get Likes for a Post
-
-```
-GET /likes/post/:postId
-```
-
-#### URL Parameters
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| postId | string | Yes | The ID of the post to get likes for |
-
-#### Response
-
-##### Success Response (200 OK)
-
-```json
-{
-  "post_id": "1",
-  "total_likes": 5
-}
-```
-
-##### Error Responses
-
-###### 500 Internal Server Error
-
-```json
-{
-  "message": "Internal server error"
-}
-```
-
-## Image API
-
-### Upload Image
+### Upload an Image
 
 ```
 POST /images
@@ -496,52 +313,25 @@ POST /images
 
 #### Request Body
 
-The request should be a multipart/form-data with the following fields:
+This endpoint accepts multipart/form-data with the following fields:
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| file | file | Yes | The image file to upload (JPG, JPEG, or PNG, max 5MB) |
-| postId | string | Yes | The ID of the post to associate the image with |
+| Field  | Type   | Required | Description                                                          |
+| ------ | ------ | -------- | -------------------------------------------------------------------- |
+| file   | File   | Yes      | The image file to upload (JPG, JPEG, PNG)                            |
+| type   | string | No       | Type of the image ('post', 'profile', or 'coin', defaults to 'post') |
+| userId | string | No       | The SUI address of the user uploading the image                      |
 
-#### Response
-
-##### Success Response (201 Created)
+#### Success Response
 
 ```json
 {
   "message": "Image uploaded successfully",
   "image": {
-    "imageName": "1-example.jpg",
-    "postId": "1",
-    "imagePath": "/path/to/uploads/1-example.jpg"
+    "imageName": "filename.jpg",
+    "imagePath": "https://gateway.pinata.cloud/ipfs/QmHash...",
+    "cid": "QmHash...",
+    "gatewayUrl": "https://gateway.pinata.cloud/ipfs/QmHash..."
   }
-}
-```
-
-##### Error Responses
-
-###### 400 Bad Request
-
-```json
-{
-  "error": "No file uploaded or file type not supported"
-}
-```
-
-or
-
-```json
-{
-  "error": "Missing required parameter: postId"
-}
-```
-
-###### 500 Internal Server Error
-
-```json
-{
-  "error": "Failed to upload image",
-  "details": "Error message details"
 }
 ```
 
@@ -551,130 +341,21 @@ or
 GET /images/:imageName
 ```
 
-#### URL Parameters
+This endpoint redirects to the image URL.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| imageName | string | Yes | The name of the image to retrieve |
+### Get Image Info
 
-#### Response
+```
+GET /images/info/:imageName
+```
 
-##### Success Response (200 OK)
-
-The image file with the appropriate content type.
-
-##### Error Responses
-
-###### 404 Not Found
+#### Success Response
 
 ```json
 {
-  "error": "Image not found"
+  "image": {
+    "imageName": "filename.jpg",
+    "imagePath": "https://gateway.pinata.cloud/ipfs/QmHash..."
+  }
 }
-```
-
-or
-
-```json
-{
-  "error": "Image file not found on server"
-}
-```
-
-###### 500 Internal Server Error
-
-```json
-{
-  "error": "Failed to retrieve image",
-  "details": "Error message details"
-}
-```
-
-## Example Requests
-
-### Create User
-
-```bash
-curl -X POST "http://localhost:3000/users" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "johndoe",
-    "sui_address": "0x1234...",
-    "profile_picture_url": "https://example.com/profile.jpg"
-  }'
-```
-
-### Create Post
-
-```bash
-curl -X POST "http://localhost:3000/posts" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "content": "This is my first post!",
-    "user_id": 1,
-    "media_urls": ["https://example.com/image1.jpg"],
-    "coin_id": "0x1234..."
-  }'
-```
-
-### List Posts
-
-```bash
-curl -X GET "http://localhost:3000/posts?page=1&limit=10"
-```
-
-### Create Comment
-
-```bash
-curl -X POST "http://localhost:3000/comments" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "content": "Great post!",
-    "post_id": 1,
-    "user_id": 2
-  }'
-```
-
-### Get Comments for a Post
-
-```bash
-curl -X GET "http://localhost:3000/comments/post/1?page=1&limit=10"
-```
-
-### Get Comment Count for a Post
-
-```bash
-curl -X GET "http://localhost:3000/comments/count/1"
-```
-
-### Like Post
-
-```bash
-curl -X POST "http://localhost:3000/likes" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "post_id": 1,
-    "user_id": 2,
-    "is_like": true
-  }'
-```
-
-### Get Likes for a Post
-
-```bash
-curl -X GET "http://localhost:3000/likes/post/1"
-```
-
-### Upload Image
-
-```bash
-curl -X POST "http://localhost:3000/images" \
-  -F "file=@/path/to/local/image.jpg" \
-  -F "postId=1"
-```
-
-### Get Image
-
-```bash
-curl -X GET "http://localhost:3000/images/1-example.jpg" -o downloaded_image.jpg
 ```
