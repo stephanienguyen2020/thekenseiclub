@@ -25,10 +25,13 @@ router.post("/coin", async (req: any, res: any) => {
 
     const suiClient = getClient(ACTIVE_NETWORK);
     const rs = await CoinSDK.deployNewCoin({ ...req.body, client: suiClient });
-
+    console.log("Coin deployed successfully:", rs);
     return res.status(200).json({
       message: "Coin deployed successfully",
       network: ACTIVE_NETWORK,
+      coin: {
+        id: rs.coinMetadata,
+      },
     });
   } catch (error) {
     console.error("Error deploying coin:", error);

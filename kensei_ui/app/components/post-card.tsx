@@ -1,89 +1,103 @@
-"use client"
+"use client";
 
-import {useEffect, useState} from "react"
-import Image from "next/image"
-import Link from "next/link"
-import {Heart, MessageSquare, Repeat, MoreHorizontal, Clock, Eye, Bookmark, Share2} from "lucide-react"
-import {motion} from "framer-motion"
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Heart,
+  MessageSquare,
+  Repeat,
+  MoreHorizontal,
+  Clock,
+  Eye,
+  Bookmark,
+  Share2,
+} from "lucide-react";
+import { motion } from "framer-motion";
 import api from "@/lib/api";
 
 interface PostCardProps {
   post: {
-    id: string
+    id: string;
     user: {
-      id: string
-      name: string
-      handle: string
-      avatar: string
-    }
+      id: string;
+      name: string;
+      handle: string;
+      avatar: string;
+    };
     token?: {
-      id: string
-      name: string
-      symbol: string
-      logo: string
-    }
-    content: string
-    image?: string
-    timestamp: string
-    likes: number
-    boosts: number
-    comments: number
-    signalScore: number
-    isLiked?: boolean
-    isBoosted?: boolean
-    views?: number
-  }
+      id: string;
+      name: string;
+      symbol: string;
+      logo: string;
+    };
+    content: string;
+    image?: string;
+    timestamp: string;
+    likes: number;
+    boosts: number;
+    comments: number;
+    signalScore: number;
+    isLiked?: boolean;
+    isBoosted?: boolean;
+    views?: number;
+  };
 }
 
-export default function PostCard({post}: PostCardProps) {
-  const [isLiked, setIsLiked] = useState(false)
-  const [isBoosted, setIsBoosted] = useState(post.isBoosted || false)
-  const [isBookmarked, setIsBookmarked] = useState(false)
-  const [likes, setLikes] = useState(post.likes)
-  const [boosts, setBoosts] = useState(post.boosts)
-  const views = post.views || Math.floor(Math.random() * 10000) + 1000
+export default function PostCard({ post }: PostCardProps) {
+  const [isLiked, setIsLiked] = useState(false);
+  const [isBoosted, setIsBoosted] = useState(post.isBoosted || false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [likes, setLikes] = useState(post.likes);
+  const [boosts, setBoosts] = useState(post.boosts);
+  const views = post.views || Math.floor(Math.random() * 10000) + 1000;
 
-  // useEffect(() => {
-  //   const fetchIsLiked = async () => {
-  //     const rs = await api.get("/posts/isLiked", {
-  //       params: {
-  //         postId: post.id,
-  //         userId: post.user.id
-  //       }
-  //     })
-  //     setIsLiked(rs.data.isLiked)
-  //   }
-  //   fetchIsLiked()
-  // })
+  useEffect(() => {
+    const fetchIsLiked = async () => {
+      const rs = await api.get("/posts/isLiked", {
+        params: {
+          postId: post.id,
+          userId: post.user.id,
+        },
+      });
+      setIsLiked(rs.data.isLiked);
+    };
+    fetchIsLiked();
+  });
 
   const handleLike = () => {
-    if (isLiked) {
-      setLikes(likes - 1)
-    } else {
-      setLikes(likes + 1)
-    }
-    setIsLiked(!isLiked)
-  }
+    const likePost = async () => {
+      await api.post("/likes", {
+        postId: post.id,
+        userId: post.user.id,
+        isLike: !isLiked,
+      });
+
+      setLikes(isLiked ? likes - 1 : likes + 1);
+      setIsLiked(!isLiked);
+    };
+    likePost();
+  };
 
   const handleBoost = () => {
     if (isBoosted) {
-      setBoosts(boosts - 1)
+      setBoosts(boosts - 1);
     } else {
-      setBoosts(boosts + 1)
+      setBoosts(boosts + 1);
     }
-    setIsBoosted(!isBoosted)
-  }
+    setIsBoosted(!isBoosted);
+  };
 
   const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked)
-  }
+    setIsBookmarked(!isBookmarked);
+  };
 
   return (
     <motion.div
       className="bg-white rounded-3xl p-6 mb-4 border-2 border-black"
-      initial={{opacity: 0, y: 20}}
-      animate={{opacity: 1, y: 0}}
-      transition={{duration: 0.3}}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
     >
       <div className="flex justify-between">
         <div className="flex gap-3">
@@ -101,7 +115,7 @@ export default function PostCard({post}: PostCardProps) {
               <h3 className="font-bold">{post.user.name}</h3>
               <span className="text-gray-500 text-sm">@{post.user.handle}</span>
               <span className="text-gray-400 text-sm flex items-center gap-1">
-                <Clock size={12}/>
+                <Clock size={12} />
                 {post.timestamp}
               </span>
             </div>
@@ -111,7 +125,12 @@ export default function PostCard({post}: PostCardProps) {
                 className="inline-flex items-center gap-1 bg-[#0046F4] text-white px-2 py-0.5 rounded-full text-xs mt-1"
               >
                 <div className="w-3 h-3 rounded-full overflow-hidden">
-                  <Image src={post.token.logo || "/placeholder.svg"} alt={post.token.name} width={12} height={12}/>
+                  <Image
+                    src={post.token.logo || "/placeholder.svg"}
+                    alt={post.token.name}
+                    width={12}
+                    height={12}
+                  />
                 </div>
                 ${post.token.symbol}
               </Link>
@@ -119,7 +138,7 @@ export default function PostCard({post}: PostCardProps) {
           </div>
         </div>
         <button className="text-gray-500 hover:bg-gray-100 rounded-full p-1">
-          <MoreHorizontal size={20}/>
+          <MoreHorizontal size={20} />
         </button>
       </div>
 
@@ -146,7 +165,10 @@ export default function PostCard({post}: PostCardProps) {
             }`}
             onClick={handleLike}
           >
-            <Heart size={18} className={isLiked ? "fill-blue-600 text-blue-600" : ""}/>
+            <Heart
+              size={18}
+              className={isLiked ? "fill-blue-600 text-blue-600" : ""}
+            />
             <span>{likes}</span>
           </button>
           <button
@@ -155,38 +177,48 @@ export default function PostCard({post}: PostCardProps) {
             }`}
             onClick={handleBoost}
           >
-            <Repeat size={18} className={isBoosted ? "fill-green-600 text-green-600" : ""}/>
+            <Repeat
+              size={18}
+              className={isBoosted ? "fill-green-600 text-green-600" : ""}
+            />
             <span>{boosts}</span>
           </button>
-          <Link href={`/post/${post.id}`} className="flex items-center gap-1 px-3 py-1 rounded-full hover:bg-gray-100">
-            <MessageSquare size={18}/>
+          <Link
+            href={`/post/${post.id}`}
+            className="flex items-center gap-1 px-3 py-1 rounded-full hover:bg-gray-100"
+          >
+            <MessageSquare size={18} />
             <span>{post.comments}</span>
           </Link>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1 text-gray-500 text-sm">
-            <Eye size={16}/>
+            <Eye size={16} />
             <span>{views.toLocaleString()}</span>
           </div>
 
           <button
-            className={`text-gray-500 hover:bg-gray-100 rounded-full p-1 ${isBookmarked ? "text-blue-600" : ""}`}
+            className={`text-gray-500 hover:bg-gray-100 rounded-full p-1 ${
+              isBookmarked ? "text-blue-600" : ""
+            }`}
             onClick={handleBookmark}
           >
-            <Bookmark size={18} className={isBookmarked ? "fill-blue-600" : ""}/>
+            <Bookmark
+              size={18}
+              className={isBookmarked ? "fill-blue-600" : ""}
+            />
           </button>
 
           <button className="text-gray-500 hover:bg-gray-100 rounded-full p-1">
-            <Share2 size={18}/>
+            <Share2 size={18} />
           </button>
 
-          <div
-            className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#c0ff00] text-black font-medium border border-black">
+          <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#c0ff00] text-black font-medium border border-black">
             <span>Signal: {post.signalScore}</span>
           </div>
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

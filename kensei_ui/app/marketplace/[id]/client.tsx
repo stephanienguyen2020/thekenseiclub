@@ -47,7 +47,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
     twitter: "",
     telegram: "",
     proposals: 0,
-    bondingCurveId: ""
+    bondingCurveId: "",
   });
   const [loading, setLoading] = useState(true);
 
@@ -226,7 +226,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
   // Filter proposals based on selected filter
   const filteredProposals = proposals.filter(
     (proposal) =>
-      governanceFilter === "all" || proposal.status === governanceFilter,
+      governanceFilter === "all" || proposal.status === governanceFilter
   );
 
   if (loading) {
@@ -389,13 +389,19 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
             Governance
           </button>
           <button
-            className={`px-4 py-2 rounded-full ${activeTab === "feed" ? "bg-[#0039C6] text-white" : "bg-gray-100"}`}
+            className={`px-4 py-2 rounded-full ${
+              activeTab === "feed" ? "bg-[#0039C6] text-white" : "bg-gray-100"
+            }`}
             onClick={() => setActiveTab("feed")}
           >
             Token Feed
           </button>
           <button
-            className={`px-4 py-2 rounded-full ${activeTab === "trading" ? "bg-[#0039C6] text-white" : "bg-gray-100"}`}
+            className={`px-4 py-2 rounded-full ${
+              activeTab === "trading"
+                ? "bg-[#0039C6] text-white"
+                : "bg-gray-100"
+            }`}
             onClick={() => setActiveTab("trading")}
           >
             Trade
@@ -491,10 +497,10 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
                     {governanceFilter === "active"
                       ? "There are no active proposals at the moment."
                       : governanceFilter === "closed"
-                        ? "No proposals have been closed yet."
-                        : governanceFilter === "upcoming"
-                          ? "There are no upcoming proposals scheduled."
-                          : "No proposals have been created yet."}
+                      ? "No proposals have been closed yet."
+                      : governanceFilter === "upcoming"
+                      ? "There are no upcoming proposals scheduled."
+                      : "No proposals have been created yet."}
                   </p>
                   <Link
                     href={`/marketplace/${id}/create-proposal`}
@@ -522,6 +528,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
               currentPrice={coin.price}
               change24h={coin.change24h}
               bondingCurveId={coin.bondingCurveId}
+              tokenId={coin.id}
             />
           )}
         </div>

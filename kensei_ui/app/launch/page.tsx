@@ -1,7 +1,9 @@
 "use client";
-
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
+import Image from "next/image";
+import { Upload, Sparkles } from "lucide-react";
 import Navbar from "@/components/navbar";
+import axios, { AxiosResponse } from "axios";
 import api from "@/lib/api";
 import { CoinResponse } from "@/app/launch/types";
 import { useRouter } from "next/navigation";
@@ -12,29 +14,63 @@ import InputMethodSelector, {
 import AIInputForm from "./components/ai-input-form";
 import ManualInputForm from "./components/manual-input-form";
 
+type LaunchMethod = "auto" | "manual";
+
 export default function LaunchTokenPage() {
   const router = useRouter();
   const currentAccount = useCurrentAccount();
   const [launchMethod, setLaunchMethod] = useState<LaunchMethod>("auto");
+  const [description, setDescription] = useState("");
   const [tokenName, setTokenName] = useState("");
   const [tokenSymbol, setTokenSymbol] = useState("");
   const [tokenDescription, setTokenDescription] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isCreatingToken, setIsCreatingToken] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const currentAccount = useCurrentAccount();
 
-  const handleImageUpload = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      // Upload the file to the API
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("type", "post");
+        formData.append("userId", currentAccount?.address || "");
+
+        const response = await api.post("/images", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        if (
+          response.data &&
+          response.data.image &&
+          response.data.image.gatewayUrl
+        ) {
+          setUploadedImageUrl(response.data.image.gatewayUrl);
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+      } finally {
+        setIsUploading(false);
+      }
+    }
   };
-
   const handleImageClear = () => {
     setImagePreview(null);
   };
-
   const handleGenerateImage = () => {
     setIsGeneratingImage(true);
     // Simulate AI image generation
@@ -44,6 +80,18 @@ export default function LaunchTokenPage() {
     }, 1500);
   };
 
+  const handleCreateToken = async () => {
+    setIsCreatingToken(true);
+    const result: AxiosResponse<CoinResponse> = await api.post("/coin", {
+      name: tokenName,
+      symbol: tokenSymbol,
+      description: tokenDescription,
+      iconUrl: uploadedImageUrl,
+      address: currentAccount?.address || "",
+    });
+    console.log("result: ", result);
+    window.location.href = `/marketplace/${result?.data.coin.id}`;
+  };
   const handleCreateTokenAuto = async (description: string) => {
     setIsCreatingToken(true);
     try {
