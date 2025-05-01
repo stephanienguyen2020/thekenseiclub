@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 
 import { useState, useRef } from "react";
 import Image from "next/image";
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import api from "@/lib/api";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 
 interface Token {
   id: string;
@@ -33,54 +34,103 @@ export default function EnhancedPostInput({
 }: EnhancedPostInputProps) {
   const [content, setContent] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [isTokenDropdownOpen, setIsTokenDropdownOpen] = useState(false);
   const [selectedToken, setSelectedToken] = useState<Token | null>(
-    preselectedToken,
+    preselectedToken
   );
   const [tokenSearchQuery, setTokenSearchQuery] = useState("");
   const [tokens, settokens] = useState<Token[]>([]);
+  const currentAccount = useCurrentAccount();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchAllTokens = async () => {
       const res = await api.get("/allCoins");
       settokens(res.data.data);
-    }
-    fetchAllTokens()
+    };
+    fetchAllTokens();
   }, []);
 
   const filteredTokens = tokens.filter(
     (token) =>
       token.name.toLowerCase().includes(tokenSearchQuery.toLowerCase()) ||
-      token.symbol.toLowerCase().includes(tokenSearchQuery.toLowerCase()),
+      token.symbol.toLowerCase().includes(tokenSearchQuery.toLowerCase())
   );
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Show preview immediately for better UX
       const reader = new FileReader();
       reader.onload = (e) => {
         setSelectedImage(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+
+      // Upload the file to the API
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("type", "post");
+        formData.append("userId", currentAccount?.address || "");
+
+        const response = await api.post("/images", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        if (
+          response.data &&
+          response.data.image &&
+          response.data.image.gatewayUrl
+        ) {
+          setUploadedImageUrl(response.data.image.gatewayUrl);
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!content.trim() && !selectedImage) return;
 
-    // Here you would handle the post submission
-    console.log({
-      content,
-      image: selectedImage,
-      token: selectedToken,
-    });
+    try {
+      // Use the uploaded image URL if available, otherwise empty array
+      const mediaUrls = uploadedImageUrl ? [uploadedImageUrl] : [];
 
-    // Reset form
-    setContent("");
-    setSelectedImage(null);
-    if (!preselectedToken) {
-      setSelectedToken(null);
+      // Prepare API payload
+      const postData = {
+        content,
+        userId: currentAccount?.address,
+        mediaUrls,
+        coinId: selectedToken?.id,
+      };
+
+      // Send post to backend
+      const response = await api.post("/posts", postData);
+
+      console.log("Post created successfully:", response.data);
+
+      // Reset form
+      setContent("");
+      setSelectedImage(null);
+      setUploadedImageUrl(null);
+      if (!preselectedToken) {
+        setSelectedToken(null);
+      }
+
+      // You could add a success notification here
+    } catch (error) {
+      console.error("Failed to create post:", error);
+      // You could add an error notification here
     }
   };
 

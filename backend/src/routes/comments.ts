@@ -8,7 +8,7 @@ const router = Router();
 const commentSchema = z.object({
   content: z.string().min(1),
   postId: z.coerce.bigint(),
-  userId: z.coerce.bigint(),
+  userId: z.coerce.string(),
 });
 
 // POST /comments - Create a new comment
@@ -61,13 +61,13 @@ router.get("/comments/post/:postId", async (req: any, res: any) => {
     // Get comments with user info
     const comments = await db
       .selectFrom("comments as c")
-      .leftJoin("users as u", "c.userId", "u.id")
+      .leftJoin("users as u", "c.userId", "u.suiAddress")
       .select([
         "c.id",
         "c.content",
         "c.createdAt",
         "c.postId",
-        "u.id as userId",
+        "u.suiAddress as userId",
         "u.username",
         "u.profilePictureUrl",
       ])

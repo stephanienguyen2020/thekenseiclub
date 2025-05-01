@@ -22,6 +22,7 @@ import {
 import { SuiWalletButton } from "./SuiWalletButton";
 import { formatAddress } from "@mysten/sui/utils";
 import { useRouter } from "next/navigation";
+import api from "@/lib/api";
 
 interface NavbarProps {
   isAuthenticated?: boolean;
@@ -36,6 +37,24 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
   const { mutate: connect } = useConnectWallet();
   const wallets = useWallets();
 
+  useEffect(() => {
+    const checkAndCreateUser = async () => {
+      try {
+        if (!currentAccount) return;
+        const response = await api.post("/users", {
+          username: `${currentAccount?.address}`,
+          suiAddress: currentAccount?.address,
+          profilePictureUrl: "/placeholder-user.jpg",
+        });
+        console.log("User registration response:", response.data);
+      } catch (apiError) {
+        console.error("Failed to register user with backend:", apiError);
+      }
+    };
+
+    checkAndCreateUser();
+  }, [currentAccount]);
+
   const handleConnect = async () => {
     try {
       const availableWallet = wallets[0];
@@ -47,11 +66,11 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
     }
   };
 
-  useEffect(() => {
-    if (currentAccount) {
-      router.push("/dashboard");
-    }
-  }, [currentAccount, router]);
+  // useEffect(() => {
+  //   if (currentAccount) {
+  //     router.push("/dashboard");
+  //   }
+  // }, [currentAccount, router]);
 
   return (
     <nav className="flex items-center justify-between p-6">

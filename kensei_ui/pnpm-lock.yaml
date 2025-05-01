@@ -24,8 +24,8 @@ importers:
         specifier: ^1.29.0
         version: 1.29.0(typescript@5.8.3)
       '@mysten/wallet-standard':
-        specifier: ^0.10.0
-        version: 0.10.3(typescript@5.8.3)
+        specifier: ^0.14.8
+        version: 0.14.8(typescript@5.8.3)
       '@radix-ui/react-accordion':
         specifier: 1.2.2
         version: 1.2.2(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -592,9 +592,6 @@ packages:
     resolution: {integrity: sha512-z10PF9JV6SbjFq+/rYabM+8CVlMokgl8RFGvieSGNTmrkQanfHn+15XBrhG3BgUfvmTeSeyShfOHpG0i9zEdcg==}
     deprecated: Motion One for Vue is deprecated. Use Oku Motion instead https://oku-ui.com/motion
 
-  '@mysten/bcs@0.11.1':
-    resolution: {integrity: sha512-xP85isNSYUCHd3O/g+TmZYmg4wK6cU8q/n/MebkIGP4CYVJZz2wU/G24xIZ3wI+0iTop4dfgA5kYrg/DQKCUzA==}
-
   '@mysten/bcs@1.6.0':
     resolution: {integrity: sha512-ydDRYdIkIFCpHCcPvAkMC91fVwumjzbTgjqds0KsphDQI3jUlH3jFG5lfYNTmV6V3pkhOiRk1fupLBcsQsiszg==}
 
@@ -607,20 +604,12 @@ packages:
   '@mysten/slush-wallet@0.1.1':
     resolution: {integrity: sha512-xYmgX3jQFXVS1QbucZ2YpybQBn+b59YDdm2fIr91KOgWYhzlhuDuI7103Oa90AAJ1WQj9AgzjlDOmiPybQQ/uw==}
 
-  '@mysten/sui.js@0.50.1':
-    resolution: {integrity: sha512-AY0wb4n6PMTRsDGygzrrTHUK/m5KwKZ4aQcN9cayiwsq2iIhfjGo7uuqMA7Y5UiqvLCoF+z7Ig14Q5qejQ/S/w==}
-    engines: {node: '>=16'}
-    deprecated: This package has been renamed to @mysten/sui, please update to use the renamed package.
-
   '@mysten/sui@1.29.0':
     resolution: {integrity: sha512-0rOGYy97DZaD+TocjKOgqPalPh/IZnbMYVI1ncAKYGR59SMeunuk7RCWL6rGA8hN//JBor4nVkXpId6FlbhEeA==}
     engines: {node: '>=18'}
 
   '@mysten/utils@0.0.0':
     resolution: {integrity: sha512-KRI57Qow3E7TGqczimazwGf7+fwukdOi+6a31igSCzz0kPjAXbyK1a1gXaxeLMF8xEZ07ouW3RnsWt+EaUuHUw==}
-
-  '@mysten/wallet-standard@0.10.3':
-    resolution: {integrity: sha512-StEMbJ7YkdjxoScmOJJjt9JaNgoRLD3FgU4LGFrKFtMXOhPu1Z4WF3qgfYBr+C3UgDh+JNiDIfN9TiGeM/Ahpw==}
 
   '@mysten/wallet-standard@0.14.8':
     resolution: {integrity: sha512-4rKwEF81GqPADboqT18zdKu1tCn02pUJO2yaJme/xWo1Ry4U6xdh2zEe3WxLJjmd7o3yJ7auqKmNTjr0ts69rg==}
@@ -1676,9 +1665,6 @@ packages:
   '@socket.io/component-emitter@3.1.2':
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
 
-  '@suchipi/femver@1.0.0':
-    resolution: {integrity: sha512-bprE8+K5V+DPX7q2e2K57ImqNBdfGHDIWaGI5xHxZoxbKOuQZn4wzPiUxOAHnsUr3w3xHrWXwN7gnG/iIuEMIg==}
-
   '@swc/counter@0.1.3':
     resolution: {integrity: sha512-e2BR4lsJkkRlKZ/qCHPw9ZaSxc0MVUd7gtbtaB7aMvHeJVYe8sOB8DBZkP2DtISHGSku9sCK6T6cnY0CtXrOCQ==}
 
@@ -1796,10 +1782,6 @@ packages:
 
   '@wallet-standard/base@1.1.0':
     resolution: {integrity: sha512-DJDQhjKmSNVLKWItoKThJS+CsJQjR9AOBOirBVT1F9YpRyC9oYHE+ZnSf8y8bxUphtKqdQMPVQ2mHohYdRvDVQ==}
-    engines: {node: '>=16'}
-
-  '@wallet-standard/core@1.0.3':
-    resolution: {integrity: sha512-Jb33IIjC1wM1HoKkYD7xQ6d6PZ8EmMZvyc8R7dFgX66n/xkvksVTW04g9yLvQXrLFbcIjHrCxW6TXMhvpsAAzg==}
     engines: {node: '>=16'}
 
   '@wallet-standard/core@1.1.0':
@@ -1983,17 +1965,11 @@ packages:
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
-  base-x@4.0.1:
-    resolution: {integrity: sha512-uAZ8x6r6S3aUM9rbHGVOIsR15U/ZSc82b3ymnCPsT45Gk1DDvhDPdIgB5MrhirZWt+5K0EEPQH985kNqZgNPFw==}
-
   base-x@5.0.1:
     resolution: {integrity: sha512-M7uio8Zt++eg3jPj+rHMfCC+IuygQHHCOU+IYsVtik6FWjuYpVt/+MRKcgsAMHh8mMFAwnB+Bs+mTrFiXjMzKg==}
 
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
-
-  bech32@2.0.0:
-    resolution: {integrity: sha512-LcknSilhIGatDAsY1ak2I8VtGaHNhgMSYVxFrGLXv+xLHytaKZKcaUJJUE7qmBr7h33o5YQwP55pMI0xmkpJwg==}
 
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
@@ -2045,9 +2021,6 @@ packages:
     resolution: {integrity: sha512-KDi1Ny1gSePi1vm0q4oxSF8b4DR44GF4BbmS2YdhPLOEqd8pDviZOGH/GsmRwoWJ2+5Lr085X7naowMwKHDG1A==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
-
-  bs58@5.0.0:
-    resolution: {integrity: sha512-r+ihvQJvahgYT50JD05dyJNKlmmSlMoOGwn1lCcEzanPglg7TxYjioQUYehQ9mAR/+hOSd2jRc/Z2y5UxBymvQ==}
 
   bs58@6.0.0:
     resolution: {integrity: sha512-PD0wEnEYg6ijszw/u8s+iI3H17cTymlrwkKhDhPZq+Sokl3AU4htyBFTjAeNAlCCmg0f53g6ih3jATyCKftTfw==}
@@ -3585,9 +3558,6 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
-  tweetnacl@1.0.3:
-    resolution: {integrity: sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==}
-
   typedarray-to-buffer@1.0.4:
     resolution: {integrity: sha512-vjMKrfSoUDN8/Vnqitw2FmstOfuJ73G6CrSEKnf11A6RmasVxHqfeBcnTb6RsL4pTMuV5Zsv9IiHRphMZyckUw==}
 
@@ -4443,10 +4413,6 @@ snapshots:
       '@motionone/dom': 10.18.0
       tslib: 2.8.1
 
-  '@mysten/bcs@0.11.1':
-    dependencies:
-      bs58: 5.0.0
-
   '@mysten/bcs@1.6.0':
     dependencies:
       '@scure/base': 1.2.4
@@ -4490,25 +4456,6 @@ snapshots:
       - '@gql.tada/vue-support'
       - typescript
 
-  '@mysten/sui.js@0.50.1(typescript@5.8.3)':
-    dependencies:
-      '@graphql-typed-document-node/core': 3.2.0(graphql@16.11.0)
-      '@mysten/bcs': 0.11.1
-      '@noble/curves': 1.9.0
-      '@noble/hashes': 1.8.0
-      '@scure/bip32': 1.6.2
-      '@scure/bip39': 1.5.4
-      '@suchipi/femver': 1.0.0
-      bech32: 2.0.0
-      gql.tada: 1.8.10(graphql@16.11.0)(typescript@5.8.3)
-      graphql: 16.11.0
-      superstruct: 1.0.4
-      tweetnacl: 1.0.3
-    transitivePeerDependencies:
-      - '@gql.tada/svelte-support'
-      - '@gql.tada/vue-support'
-      - typescript
-
   '@mysten/sui@1.29.0(typescript@5.8.3)':
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.11.0)
@@ -4531,15 +4478,6 @@ snapshots:
   '@mysten/utils@0.0.0':
     dependencies:
       '@scure/base': 1.2.4
-
-  '@mysten/wallet-standard@0.10.3(typescript@5.8.3)':
-    dependencies:
-      '@mysten/sui.js': 0.50.1(typescript@5.8.3)
-      '@wallet-standard/core': 1.0.3
-    transitivePeerDependencies:
-      - '@gql.tada/svelte-support'
-      - '@gql.tada/vue-support'
-      - typescript
 
   '@mysten/wallet-standard@0.14.8(typescript@5.8.3)':
     dependencies:
@@ -5624,8 +5562,6 @@ snapshots:
 
   '@socket.io/component-emitter@3.1.2': {}
 
-  '@suchipi/femver@1.0.0': {}
-
   '@swc/counter@0.1.3': {}
 
   '@swc/helpers@0.5.15':
@@ -5796,13 +5732,6 @@ snapshots:
       '@wallet-standard/base': 1.1.0
 
   '@wallet-standard/base@1.1.0': {}
-
-  '@wallet-standard/core@1.0.3':
-    dependencies:
-      '@wallet-standard/app': 1.1.0
-      '@wallet-standard/base': 1.1.0
-      '@wallet-standard/features': 1.1.0
-      '@wallet-standard/wallet': 1.1.0
 
   '@wallet-standard/core@1.1.0':
     dependencies:
@@ -6261,13 +6190,9 @@ snapshots:
 
   balanced-match@1.0.2: {}
 
-  base-x@4.0.1: {}
-
   base-x@5.0.1: {}
 
   base64-js@1.5.1: {}
-
-  bech32@2.0.0: {}
 
   binary-extensions@2.3.0: {}
 
@@ -6344,10 +6269,6 @@ snapshots:
       electron-to-chromium: 1.5.141
       node-releases: 2.0.19
       update-browserslist-db: 1.1.3(browserslist@4.24.4)
-
-  bs58@5.0.0:
-    dependencies:
-      base-x: 4.0.1
 
   bs58@6.0.0:
     dependencies:
@@ -8008,8 +7929,6 @@ snapshots:
   tslib@2.7.0: {}
 
   tslib@2.8.1: {}
-
-  tweetnacl@1.0.3: {}
 
   typedarray-to-buffer@1.0.4: {}
 
