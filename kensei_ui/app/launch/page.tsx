@@ -1,20 +1,18 @@
 "use client";
-import { useState, type ChangeEvent } from "react";
+import {useState, type ChangeEvent} from "react";
 import Image from "next/image";
-import { Upload, Sparkles } from "lucide-react";
+import {Upload, Sparkles} from "lucide-react";
 import Navbar from "@/components/navbar";
-import axios, { AxiosResponse } from "axios";
+import axios, {AxiosResponse} from "axios";
 import api from "@/lib/api";
-import { CoinResponse } from "@/app/launch/types";
-import { useRouter } from "next/navigation";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import {CoinResponse} from "@/app/launch/types";
+import {useRouter} from "next/navigation";
+import {useCurrentAccount} from "@mysten/dapp-kit";
 import InputMethodSelector, {
   LaunchMethod,
 } from "./components/input-method-selector";
 import AIInputForm from "./components/ai-input-form";
 import ManualInputForm from "./components/manual-input-form";
-
-type LaunchMethod = "auto" | "manual";
 
 export default function LaunchTokenPage() {
   const router = useRouter();
@@ -30,42 +28,38 @@ export default function LaunchTokenPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
-  const currentAccount = useCurrentAccount();
 
-  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      // Upload the file to the API
-      setIsUploading(true);
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("type", "post");
-        formData.append("userId", currentAccount?.address || "");
+  const handleImageUpload = async (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    // Upload the file to the API
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", "post");
+      formData.append("userId", currentAccount?.address || "");
 
-        const response = await api.post("/images", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+      const response = await api.post("/images", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-        if (
-          response.data &&
-          response.data.image &&
-          response.data.image.gatewayUrl
-        ) {
-          setUploadedImageUrl(response.data.image.gatewayUrl);
-        }
-      } catch (error) {
-        console.error("Error uploading image:", error);
-      } finally {
-        setIsUploading(false);
+      if (
+        response.data &&
+        response.data.image &&
+        response.data.image.gatewayUrl
+      ) {
+        setUploadedImageUrl(response.data.image.gatewayUrl);
       }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+    } finally {
+      setIsUploading(false);
     }
   };
   const handleImageClear = () => {
@@ -97,7 +91,7 @@ export default function LaunchTokenPage() {
     try {
       // Here you would typically call an AI service to generate token details
       // For now, we'll create a simple token based on the description
-      const { data: result }: { data: CoinResponse } = await api.post("/coin", {
+      const {data: result}: { data: CoinResponse } = await api.post("/coin", {
         name: "AI Generated Token",
         symbol: "AGT",
         description: description,
@@ -116,7 +110,7 @@ export default function LaunchTokenPage() {
   const handleCreateTokenManual = async () => {
     setIsCreatingToken(true);
     try {
-      const { data: result }: { data: CoinResponse } = await api.post("/coin", {
+      const {data: result}: { data: CoinResponse } = await api.post("/coin", {
         name: tokenName,
         symbol: tokenSymbol,
         description: tokenDescription,
@@ -135,7 +129,7 @@ export default function LaunchTokenPage() {
     <div className="min-h-screen bg-[#0039C6]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header with authenticated navbar */}
-        <Navbar isAuthenticated={!!currentAccount} />
+        <Navbar isAuthenticated={!!currentAccount}/>
 
         <div className="bg-white rounded-3xl p-8 mt-8 max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-8 text-center">

@@ -47,7 +47,7 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
     const checkAndCreateUser = async () => {
       try {
         if (!currentAccount) return;
-        const response = await api.post("/api/users", {
+        const response = await api.post("/users", {
           username: `${currentAccount?.address}`,
           suiAddress: currentAccount?.address,
           profilePictureUrl: "/placeholder-user.jpg",
