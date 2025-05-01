@@ -1,17 +1,25 @@
-"use client"
+"use client";
 
-import { ArrowDown, ArrowUp, FileText, MessageSquare, Plus, Twitter, Wallet } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import { useState } from "react"
+import {
+  ArrowDown,
+  ArrowUp,
+  FileText,
+  MessageSquare,
+  Plus,
+  Twitter,
+  Wallet,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 
 export default function DashboardPage() {
-  const [timeframe, setTimeframe] = useState("1W")
+  const [timeframe, setTimeframe] = useState("1W");
 
   // Mock data for portfolio overview
-  const portfolioValue = 78425.03
-  const portfolioChange = 12.5
-  const portfolioChangeAmount = 8725.03
+  const portfolioValue = 78425.03;
+  const portfolioChange = 12.5;
+  const portfolioChangeAmount = 8725.03;
 
   // Mock data for stats
   const stats = [
@@ -39,7 +47,7 @@ export default function DashboardPage() {
       icon: MessageSquare,
       color: "bg-[#c0ff00]",
     },
-  ]
+  ];
 
   // Mock data for top holdings
   const topHoldings = [
@@ -67,7 +75,7 @@ export default function DashboardPage() {
       change: 85.7,
       holdings: "1000.00",
     },
-  ]
+  ];
 
   // Mock data for recent proposals
   const recentProposals = [
@@ -87,17 +95,12 @@ export default function DashboardPage() {
       tokenLogo: "/alert-shiba.png",
       endDate: "2025-04-01",
     },
-  ]
+  ];
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-black text-white">Dashboard</h1>
-        <div className="flex gap-2">
-          <button className="bg-[#c0ff00] text-black px-5 py-2 rounded-xl font-bold border-4 border-black">
-            Launch a Token
-          </button>
-        </div>
       </div>
 
       {/* Portfolio Overview */}
@@ -123,11 +126,25 @@ export default function DashboardPage() {
           <div className="flex-1">
             <div className="mb-2">
               <div className="text-gray-500 text-sm">Total Value</div>
-              <div className="text-4xl font-black text-black">${portfolioValue.toLocaleString()}</div>
-              <div className={`flex items-center ${portfolioChange >= 0 ? "text-green-500" : "text-red-500"}`}>
-                {portfolioChange >= 0 ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
-                <span className="font-bold">{Math.abs(portfolioChange).toFixed(2)}%</span>
-                <span className="ml-1">(${Math.abs(portfolioChangeAmount).toLocaleString()})</span>
+              <div className="text-4xl font-black text-black">
+                ${portfolioValue.toLocaleString()}
+              </div>
+              <div
+                className={`flex items-center ${
+                  portfolioChange >= 0 ? "text-green-500" : "text-red-500"
+                }`}
+              >
+                {portfolioChange >= 0 ? (
+                  <ArrowUp size={16} />
+                ) : (
+                  <ArrowDown size={16} />
+                )}
+                <span className="font-bold">
+                  {Math.abs(portfolioChange).toFixed(2)}%
+                </span>
+                <span className="ml-1">
+                  (${Math.abs(portfolioChangeAmount).toLocaleString()})
+                </span>
               </div>
             </div>
 
@@ -170,33 +187,6 @@ export default function DashboardPage() {
                 </Link>
               </div>
             </div>
-
-            <div className="bg-[#0046F4] rounded-xl p-4 border-4 border-black">
-              <div className="text-white text-sm mb-2">Wallet</div>
-              <div className="bg-white rounded-lg p-3 border-2 border-black">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-[#c0ff00] flex items-center justify-center border-2 border-black">
-                    <div className="relative w-6 h-6 overflow-hidden">
-                      <Image
-                        src="/pixel-cool-cat.png"
-                        alt="Profile"
-                        width={24}
-                        height={24}
-                        className="rounded-full"
-                        onError={(e) => {
-                          // Fallback to a default icon if image fails to load
-                          e.currentTarget.src =
-                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'/%3E%3Ccircle cx='9' cy='9' r='2'/%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21'/%3E%3C/svg%3E"
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm">0x1a2b...3c4d</div>
-                    </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -204,14 +194,21 @@ export default function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {stats.map((stat, index) => (
-          <div key={index} className="bg-white rounded-xl p-4 border-4 border-black">
+          <div
+            key={index}
+            className="bg-white rounded-xl p-4 border-4 border-black"
+          >
             <div className="flex items-center gap-3">
-              <div className={`${stat.color} p-3 rounded-xl border-2 border-black`}>
+              <div
+                className={`${stat.color} p-3 rounded-xl border-2 border-black`}
+              >
                 <stat.icon size={24} className="text-black" />
               </div>
               <div>
                 <div className="text-gray-500 text-sm">{stat.title}</div>
-                <div className="text-2xl font-black text-black">{stat.value}</div>
+                <div className="text-2xl font-black text-black">
+                  {stat.value}
+                </div>
               </div>
             </div>
           </div>
@@ -249,19 +246,27 @@ export default function DashboardPage() {
                         onError={(e) => {
                           // Fallback to a default icon if image fails to load
                           e.currentTarget.src =
-                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E"
+                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E";
                         }}
                       />
                     </div>
                   </div>
                   <div>
                     <div className="font-bold text-black">{holding.name}</div>
-                    <div className="text-gray-500 text-sm">{holding.symbol}</div>
+                    <div className="text-gray-500 text-sm">
+                      {holding.symbol}
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-black">${holding.value.toLocaleString()}</div>
-                  <div className={`text-sm ${holding.change >= 0 ? "text-green-500" : "text-red-500"}`}>
+                  <div className="font-bold text-black">
+                    ${holding.value.toLocaleString()}
+                  </div>
+                  <div
+                    className={`text-sm ${
+                      holding.change >= 0 ? "text-green-500" : "text-red-500"
+                    }`}
+                  >
                     {holding.change >= 0 ? "+" : ""}
                     {holding.change}%
                   </div>
@@ -285,7 +290,10 @@ export default function DashboardPage() {
 
           <div className="space-y-4">
             {recentProposals.map((proposal, index) => (
-              <div key={index} className="p-3 bg-gray-100 rounded-xl border-2 border-black">
+              <div
+                key={index}
+                className="p-3 bg-gray-100 rounded-xl border-2 border-black"
+              >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-black">
@@ -299,7 +307,7 @@ export default function DashboardPage() {
                           onError={(e) => {
                             // Fallback to a default icon if image fails to load
                             e.currentTarget.src =
-                              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E"
+                              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E";
                           }}
                         />
                       </div>
@@ -310,19 +318,24 @@ export default function DashboardPage() {
                         proposal.status === "active"
                           ? "bg-[#c0ff00] text-black"
                           : proposal.status === "closed"
-                            ? "bg-red-500 text-white"
-                            : "bg-blue-200 text-blue-800"
+                          ? "bg-red-500 text-white"
+                          : "bg-blue-200 text-blue-800"
                       }`}
                     >
-                      {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
+                      {proposal.status.charAt(0).toUpperCase() +
+                        proposal.status.slice(1)}
                     </div>
                   </div>
-                  <div className="text-gray-500 text-xs">Ends: {proposal.endDate}</div>
+                  <div className="text-gray-500 text-xs">
+                    Ends: {proposal.endDate}
+                  </div>
                 </div>
                 <div className="font-medium text-black">{proposal.title}</div>
                 <div className="mt-2">
                   <Link
-                    href={`/marketplace/${proposal.token.toLowerCase()}/proposal/${proposal.id}`}
+                    href={`/marketplace/${proposal.token.toLowerCase()}/proposal/${
+                      proposal.id
+                    }`}
                     className="text-[#0039C6] text-sm font-bold hover:underline"
                   >
                     View Details →
@@ -334,5 +347,5 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -10,6 +10,7 @@ import {
   Wallet,
   Network,
   LogOut,
+  Bot,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -22,6 +23,8 @@ import {
 import { SuiWalletButton } from "./SuiWalletButton";
 import { formatAddress } from "@mysten/sui/utils";
 import { useRouter } from "next/navigation";
+import { type } from "os";
+import { size } from "viem";
 import api from "@/lib/api";
 
 interface NavbarProps {
@@ -33,7 +36,7 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNetworkOpen, setIsNetworkOpen] = useState(false);
   const currentAccount = useCurrentAccount();
-  const { mutate: disconnect } = useDisconnectWallet();
+  const { mutate: disconnectWallet } = useDisconnectWallet();
   const { mutate: connect } = useConnectWallet();
   const wallets = useWallets();
 
@@ -231,7 +234,7 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
                         </div>
                       </Link>
                       <button
-                        onClick={() => disconnect()}
+                        onClick={() => disconnectWallet()}
                         className="w-full text-left px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
                       >
                         <div className="flex items-center gap-2">

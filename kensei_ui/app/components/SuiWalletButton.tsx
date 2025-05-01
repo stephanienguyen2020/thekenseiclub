@@ -21,7 +21,7 @@ import { useState } from "react";
 
 export function SuiWalletButton() {
   const currentAccount = useCurrentAccount();
-  const { mutate: disconnect } = useDisconnectWallet();
+  const { mutate: disconnectWallet } = useDisconnectWallet();
   const { client } = useSuiClientContext();
   const wallets = useWallets();
   const { mutate: connect } = useConnectWallet();
@@ -83,7 +83,7 @@ export function SuiWalletButton() {
           </span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onSelect={() => disconnect()}
+          onSelect={() => disconnectWallet()}
           className="flex items-center gap-2"
         >
           <LogOut size={16} />
