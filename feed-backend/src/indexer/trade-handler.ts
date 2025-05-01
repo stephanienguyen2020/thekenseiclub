@@ -2,6 +2,7 @@
 import { db } from "../db/database";
 import { BondingCurve, RawPrices } from "../db/kysely-types/postgres";
 import { SuiEvent } from "@mysten/sui/client";
+import { getClient } from "../utils";
 
 // Define interfaces for the parsed JSON data
 interface BondingCurveCreatedEventPayload {
@@ -23,7 +24,7 @@ interface TradeEventPayload {
 
 // Type guard for BondingCurveCreatedEventPayload
 function isBondingCurveCreatedEventPayload(
-  payload: unknown,
+  payload: unknown
 ): payload is BondingCurveCreatedEventPayload {
   const p = payload as BondingCurveCreatedEventPayload;
   return (
@@ -52,7 +53,7 @@ function isTradeEventPayload(payload: unknown): payload is TradeEventPayload {
 
 export const handleBondingCurveEvent = async (
   events: SuiEvent[],
-  type: string,
+  type: string
 ): Promise<void> => {
   for (const event of events) {
     console.log("Handling bonding curve event", events);
@@ -63,7 +64,7 @@ export const handleBondingCurveEvent = async (
       if (!isBondingCurveCreatedEventPayload(event.parsedJson)) {
         console.error(
           "Invalid BondingCurveCreatedEvent payload:",
-          event.parsedJson,
+          event.parsedJson
         );
         continue;
       }
@@ -76,6 +77,29 @@ export const handleBondingCurveEvent = async (
         coinMetadata: payload.coin_metadata,
         migrationTarget: payload.migration_target,
       };
+
+      const client = getClient();
+
+      const coinMetadata = await client.getObject({
+        id: payload.coin_metadata,
+        options: {
+          showType: true,
+          showContent: true,
+        },
+      });
+      console.log("coinMetadata", JSON.stringify(coinMetadata));
+      await db
+        .insertInto("coins")
+        .values({
+          id: payload.coin_metadata,
+          name: coinMetadata.data?.content?.fields?.name,
+          symbol: coinMetadata.data?.content?.fields?.symbol,
+          description: coinMetadata.data?.content?.fields?.description,
+          logo: coinMetadata.data?.content?.fields?.icon_url,
+          address: event.sender,
+          createdAt: new Date(),
+        })
+        .execute();
 
       await db.insertInto("bondingCurve").values(bondingCurveData).execute();
       continue;

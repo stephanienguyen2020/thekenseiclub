@@ -26,6 +26,6 @@ export const ACTIVE_NETWORK: Network = (() => {
  * @param network The network to connect to
  * @returns A configured SuiClient instance
  */
-export const getClient = (network: Network): SuiClient => {
-  return new SuiClient({ url: getFullnodeUrl(network) });
+export const getClient = (network?: Network): SuiClient => {
+  return new SuiClient({ url: getFullnodeUrl(network ?? ACTIVE_NETWORK) });
 };
