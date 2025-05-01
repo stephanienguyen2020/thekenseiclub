@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import { CamelCasePlugin, Kysely, PostgresDialect } from "kysely";
 import { DB } from "./kysely-types/postgres";
+import "dotenv/config";
 
 // Get database configuration from environment variables with fallbacks
 const dbHost = process.env.DB_HOST || "localhost";

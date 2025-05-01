@@ -12,8 +12,8 @@ importers:
         specifier: ^1.27.1
         version: 1.28.2(typescript@5.8.3)
       coin-sdk:
-        specifier: ^1.0.10
-        version: 1.0.10(graphql@16.10.0)(typescript@5.8.3)
+        specifier: ^1.0.11
+        version: 1.0.11(graphql@16.10.0)(typescript@5.8.3)
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -383,8 +383,8 @@ packages:
     resolution: {integrity: sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==}
     engines: {node: '>=0.8'}
 
-  coin-sdk@1.0.10:
-    resolution: {integrity: sha512-sEyKc7DOyiwXOOrhbYuAy+TfnzqgP/jLiiM1ph1XGWdXqNy9Noq32Ar44oIzYsJBU7o+3oPN1ZqbtZQOBPcgEQ==}
+  coin-sdk@1.0.11:
+    resolution: {integrity: sha512-ZRr/ljQ/0iY4H75FAnMfXm4Cz/CKKh0d7TtJdfjQb1eC87DJoYOCcjuJrJKWG2YOs4nfur3iTu1o4Ja86N1ZFw==}
 
   color-convert@1.9.3:
     resolution: {integrity: sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg==}
@@ -1865,11 +1865,12 @@ snapshots:
 
   clone@2.1.2: {}
 
-  coin-sdk@1.0.10(graphql@16.10.0)(typescript@5.8.3):
+  coin-sdk@1.0.11(graphql@16.10.0)(typescript@5.8.3):
     dependencies:
       '@flowx-finance/sdk': 1.2.2-3(graphql@16.10.0)(typescript@5.8.3)
       '@mysten/sui': 1.28.2(typescript@5.8.3)
       axios: 1.8.4
+      dotenv: 16.5.0
     transitivePeerDependencies:
       - '@gql.tada/svelte-support'
       - '@gql.tada/vue-support'
