@@ -11,6 +11,7 @@ import likesRouter from "./routes/likes";
 import daoRouter from "./routes/dao";
 import cors from "cors"
 import { connectMongoDB } from './db/mongodb';
+import { scheduledTasks } from './scheduledTasks';
 // import './indexer/cron';
 
 // Get port from environment variable or use default
@@ -43,6 +44,9 @@ app.use(express.json());
 
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, '../public')));
+
+// Initialize scheduled tasks
+scheduledTasks.start();
 
 // Root endpoint
 app.get('/', (req, res) => {
