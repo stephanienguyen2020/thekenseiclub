@@ -2,25 +2,22 @@
 
 import { WalletProvider } from "@mysten/dapp-kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SuiClientProvider, createNetworkConfig } from "@mysten/dapp-kit";
-import { getFullnodeUrl } from "@mysten/sui/client";
+import { SuiClientProvider } from "@mysten/dapp-kit";
 import { useState } from "react";
 
-const { networkConfig } = createNetworkConfig({
-  mainnet: { url: getFullnodeUrl("mainnet") },
-  testnet: { url: getFullnodeUrl("testnet") },
-  devnet: { url: getFullnodeUrl("devnet") },
-});
+const networks = {
+  mainnet: { url: "https://fullnode.mainnet.sui.io:443" },
+  testnet: { url: "https://fullnode.testnet.sui.io:443" },
+  devnet: { url: "https://fullnode.devnet.sui.io:443" },
+};
 
 export function ClientProviders({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
-        <WalletProvider autoConnect={false} preferredWallets={["Sui Wallet"]}>
-          {children}
-        </WalletProvider>
+      <SuiClientProvider networks={networks} defaultNetwork="testnet">
+        <WalletProvider autoConnect={false}>{children}</WalletProvider>
       </SuiClientProvider>
     </QueryClientProvider>
   );

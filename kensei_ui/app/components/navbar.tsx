@@ -22,7 +22,7 @@ import {
 } from "@mysten/dapp-kit";
 import { SuiWalletButton } from "./SuiWalletButton";
 import { formatAddress } from "@mysten/sui/utils";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import api from "@/lib/api";
 import { type } from "os";
 import { size } from "viem";
@@ -35,6 +35,7 @@ interface NavbarProps {
 
 export default function Navbar({ isAuthenticated = false }: NavbarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNetworkOpen, setIsNetworkOpen] = useState(false);
   const currentAccount = useCurrentAccount();
@@ -72,10 +73,11 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
   };
 
   useEffect(() => {
-    if (currentAccount) {
+    // Only redirect to dashboard if we're on the home page
+    if (currentAccount && pathname === "/") {
       router.push("/dashboard");
     }
-  }, [currentAccount, router]);
+  }, [currentAccount, router, pathname]);
 
   return (
     <nav className="flex items-center justify-between p-6">
