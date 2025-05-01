@@ -1,6 +1,16 @@
 "use client";
 
-import { Bell, ChevronDown, Globe, Search, Settings, User } from "lucide-react";
+import {
+  Bell,
+  ChevronDown,
+  Globe,
+  Search,
+  Settings,
+  User,
+  Wallet,
+  Network,
+  LogOut,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -10,6 +20,7 @@ import {
   useWallets,
 } from "@mysten/dapp-kit";
 import { SuiWalletButton } from "./SuiWalletButton";
+import { formatAddress } from "@mysten/sui/utils";
 
 interface NavbarProps {
   isAuthenticated?: boolean;
@@ -133,17 +144,23 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
                     <>
                       <div className="px-4 py-2">
                         <div className="flex flex-col gap-1">
-                          <span className="text-sm font-medium">Address</span>
+                          <div className="flex items-center gap-2">
+                            <Wallet size={16} className="text-gray-600" />
+                            <span className="text-sm font-medium">Address</span>
+                          </div>
                           <span className="text-xs text-gray-600">
-                            {currentAccount.address}
+                            {formatAddress(currentAccount.address)}
                           </span>
                         </div>
                       </div>
                       <div className="px-4 py-2">
                         <div className="flex flex-col gap-1">
-                          <span className="text-sm font-medium">
-                            SUI Network
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <Globe size={16} className="text-gray-600" />
+                            <span className="text-sm font-medium">
+                              SUI Network
+                            </span>
+                          </div>
                         </div>
                       </div>
                       <Link
@@ -160,7 +177,10 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
                         onClick={() => disconnect()}
                         className="w-full text-left px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
                       >
-                        Disconnect
+                        <div className="flex items-center gap-2">
+                          <LogOut size={16} />
+                          <span>Disconnect</span>
+                        </div>
                       </button>
                     </>
                   ) : (
