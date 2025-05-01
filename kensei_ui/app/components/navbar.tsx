@@ -87,12 +87,42 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
           Community Feed
         </Link>
         {currentAccount && (
-          <Link
-            href="/dashboard"
-            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
-          >
-            My Dashboard
-          </Link>
+          <div className="relative group">
+            <Link
+              href="/dashboard"
+              className="inline-block bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
+            >
+              My Dashboard
+            </Link>
+            {/* Buffer div positioned absolutely to not affect button size */}
+            <div className="absolute inset-x-0 h-2 bottom-0 translate-y-full" />
+            <div className="hidden group-hover:block absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[180px] border-2 border-black">
+              <Link
+                href="/dashboard/wallet"
+                className="block px-4 py-2 text-base hover:bg-[#0046F4] hover:text-white rounded-lg"
+              >
+                My Wallet
+              </Link>
+              <Link
+                href="/dashboard/proposals"
+                className="block px-4 py-2 text-base hover:bg-[#0046F4] hover:text-white rounded-lg"
+              >
+                My Proposals
+              </Link>
+              <Link
+                href="/dashboard/tweets"
+                className="block px-4 py-2 text-base hover:bg-[#0046F4] hover:text-white rounded-lg"
+              >
+                My Tweets
+              </Link>
+              <Link
+                href="/dashboard/chatbot"
+                className="block px-4 py-2 text-base hover:bg-[#0046F4] hover:text-white rounded-lg"
+              >
+                Chat Bot
+              </Link>
+            </div>
+          </div>
         )}
       </div>
 
