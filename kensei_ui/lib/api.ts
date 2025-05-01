@@ -1,15 +1,18 @@
-import axios from 'axios';
+import axios from "axios";
 
 // Get environment variables
-const baseURL = process.env.NEXT_PUBLIC_API_URL ||
-    `http://${process.env.BE_HOST || 'localhost'}:${process.env.BE_PORT || '3001'}`;
+const baseURL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  `http://${process.env.BE_HOST || "localhost"}:${
+    process.env.BE_PORT || "3000"
+  }`;
 console.log("API URL: ", baseURL);
 // Create axios instance with default config
 const api = axios.create({
-    baseURL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
+  baseURL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 export default api;
