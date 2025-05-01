@@ -89,7 +89,7 @@ export function TokenForm({
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-400/90 hover:to-blue-500/90 text-primary-foreground"
+          className="w-full bg-[#0039C6] text-primary-foreground"
         >
           {isLoading ? (
             <>

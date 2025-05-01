@@ -394,7 +394,7 @@ export function TokenFormSection({
           }}
           disabled={isLoading}
           size="lg"
-          className="w-[calc(100%-1rem)] bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-400/90 hover:to-blue-500/90 text-primary-foreground"
+          className="w-[calc(100%-1rem)] bg-[#0039C6] text-primary-foreground"
         >
           {isLoading ? (
             <>
