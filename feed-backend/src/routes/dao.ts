@@ -1,0 +1,63 @@
+import { Router } from "express";
+import { daoService } from '../services/daoService';
+
+const router = Router();
+
+// Create a new proposal
+router.post('/proposals', async (req: any, res: any) => {
+    try {
+        const proposal = await daoService.createProposal(req.body);
+        res.status(201).json(proposal);
+    } catch (error) {
+        res.status(400).json({ error: 'Failed to create proposal' });
+    }
+});
+
+// Get all proposals
+router.get('/proposals', async (req: any, res: any) => {
+    try {
+        const proposals = await daoService.getAllProposals();
+        res.json(proposals);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch proposals' });
+    }
+});
+
+// Get a specific proposal
+router.get('/proposals/:id', async (req: any, res: any) => {
+    try {
+        const proposal = await daoService.getProposal(req.params.id);
+        if (!proposal) {
+            return res.status(404).json({ error: 'Proposal not found' });
+        }
+        res.json(proposal);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch proposal' });
+    }
+});
+
+// Submit a vote
+router.post('/votes', async (req: any, res: any) => {
+    try {
+        const vote = await daoService.submitVote(req.body);
+        res.status(201).json(vote);
+    } catch (error) {
+        if (error instanceof Error) {
+            res.status(400).json({ error: error.message });
+        } else {
+            res.status(400).json({ error: 'Failed to submit vote' });
+        }
+    }
+});
+
+// Get votes for a proposal
+router.get('/proposals/:id/votes', async (req: any, res: any) => {
+    try {
+        const votes = await daoService.getProposalVotes(req.params.id);
+        res.json(votes);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch votes' });
+    }
+});
+
+export default router; 

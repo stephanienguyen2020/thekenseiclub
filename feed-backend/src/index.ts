@@ -8,7 +8,9 @@ import postRouter from "./routes/posts";
 import userRouter from "./routes/user";
 import commentRouter from "./routes/comments";
 import likesRouter from "./routes/likes";
+import daoRouter from "./routes/dao";
 import cors from "cors"
+import { connectMongoDB } from './db/mongodb';
 // import './indexer/cron';
 
 // Get port from environment variable or use default
@@ -32,6 +34,9 @@ app.use(cors(corsOptions));
 
 // Setup blockchain event listeners
 setupListeners();
+
+// Connect to MongoDB
+connectMongoDB();
 
 // Middleware
 app.use(express.json());
@@ -57,6 +62,7 @@ app.use(postRouter);
 app.use(commentRouter);
 app.use(likesRouter);
 app.use(userRouter);
+app.use('/api', daoRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
