@@ -27,6 +27,8 @@ import api from "@/lib/api";
 import { type } from "os";
 import { size } from "viem";
 
+console.log("API Base URL:", process.env.NEXT_PUBLIC_API_URL);
+
 interface NavbarProps {
   isAuthenticated?: boolean;
 }
@@ -44,7 +46,7 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
     const checkAndCreateUser = async () => {
       try {
         if (!currentAccount) return;
-        const response = await api.post("/users", {
+        const response = await api.post("/api/users", {
           username: `${currentAccount?.address}`,
           suiAddress: currentAccount?.address,
           profilePictureUrl: "/placeholder-user.jpg",
@@ -69,11 +71,11 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
     }
   };
 
-  // useEffect(() => {
-  //   if (currentAccount) {
-  //     router.push("/dashboard");
-  //   }
-  // }, [currentAccount, router]);
+  useEffect(() => {
+    if (currentAccount) {
+      router.push("/dashboard");
+    }
+  }, [currentAccount, router]);
 
   return (
     <nav className="flex items-center justify-between p-6">
