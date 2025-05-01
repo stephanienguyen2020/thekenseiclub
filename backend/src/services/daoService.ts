@@ -19,6 +19,11 @@ export class DaoService {
         return await Proposal.find().sort({ createdAt: -1 });
     }
 
+    // Get proposals by token address
+    async getProposalsByToken(tokenAddress: string): Promise<IProposal[]> {
+        return await Proposal.find({ tokenAddress }).sort({ createdAt: -1 });
+    }
+
     // Get a specific proposal
     async getProposal(id: string): Promise<IProposal | null> {
         return await Proposal.findById(id);

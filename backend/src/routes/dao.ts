@@ -9,7 +9,7 @@ router.post('/proposals', async (req: any, res: any) => {
         const proposal = await daoService.createProposal(req.body);
         res.status(201).json(proposal);
     } catch (error) {
-        res.status(400).json({ error: 'Failed to create proposal' });
+        res.status(400).json({ error: 'Failed to create proposal' , details: error });
     }
 });
 
@@ -19,7 +19,17 @@ router.get('/proposals', async (req: any, res: any) => {
         const proposals = await daoService.getAllProposals();
         res.json(proposals);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch proposals' });
+        res.status(500).json({ error: 'Failed to fetch proposals' , details: error });
+    }
+});
+
+// Get proposals by token address
+router.get('/proposals/token/:tokenAddress', async (req: any, res: any) => {
+    try {
+        const proposals = await daoService.getProposalsByToken(req.params.tokenAddress);
+        res.json(proposals);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch proposals by token', details: error });
     }
 });
 
@@ -29,7 +39,7 @@ router.get('/proposals/wallet/:wallet', async (req: any, res: any) => {
         const proposals = await daoService.getProposalsByWallet(req.params.wallet);
         res.json(proposals);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch proposals by wallet' });
+        res.status(500).json({ error: 'Failed to fetch proposals by wallet' , details: error });
     }
 });
 
@@ -42,7 +52,7 @@ router.get('/proposals/:id', async (req: any, res: any) => {
         }
         res.json(proposal);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch proposal' });
+        res.status(500).json({ error: 'Failed to fetch proposal' , details: error });
     }
 });
 
@@ -55,7 +65,7 @@ router.post('/votes', async (req: any, res: any) => {
         if (error instanceof Error) {
             res.status(400).json({ error: error.message });
         } else {
-            res.status(400).json({ error: 'Failed to submit vote' });
+            res.status(400).json({ error: 'Failed to submit vote' , details: error });
         }
     }
 });
@@ -66,7 +76,7 @@ router.get('/proposals/:id/votes', async (req: any, res: any) => {
         const votes = await daoService.getProposalVotes(req.params.id);
         res.json(votes);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch votes' });
+        res.status(500).json({ error: 'Failed to fetch votes' , details: error });
     }
 });
 

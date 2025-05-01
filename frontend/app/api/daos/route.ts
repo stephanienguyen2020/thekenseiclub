@@ -3,23 +3,53 @@ import { NextResponse } from 'next/server';
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
 // Create a new proposal
-export async function POST(req: Request) {
+export async function POST(request: Request) {
     try {
-        const body = await req.json();
+        const body = await request.json();
+        const { 
+            title, 
+            description, 
+            options, 
+            createdBy, 
+            tokenAddress, 
+            startDate, 
+            endDate, 
+            ipfsHash, 
+            contentHash 
+        } = body;
+
+        if (!title || !description || !options || !createdBy || !tokenAddress || 
+            !startDate || !endDate || !ipfsHash || !contentHash) {
+            return NextResponse.json(
+                { error: 'Missing required fields' },
+                { status: 400 }
+            );
+        }
+
         const response = await fetch(`${BACKEND_URL}/api/proposals`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(body),
+            body: JSON.stringify({
+                title,
+                description,
+                options,
+                createdBy,
+                tokenAddress,
+                startDate,
+                endDate,
+                ipfsHash,
+                contentHash
+            }),
         });
-
+        console.log(response);
         if (!response.ok) {
             throw new Error('Failed to create proposal');
         }
 
         const data = await response.json();
-        return NextResponse.json(data);
+        return NextResponse.json({ data });
     } catch (error) {
         return NextResponse.json(
             { error: 'Failed to create proposal' },

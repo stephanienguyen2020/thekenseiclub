@@ -5,6 +5,7 @@ export interface IProposal extends Document {
     description: string;
     options: string[];
     createdBy: string;
+    tokenAddress: string;
     createdAt: Date;
     startDate: Date;
     endDate: Date;
@@ -21,6 +22,7 @@ const ProposalSchema: Schema = new Schema({
     description: { type: String, required: true },
     options: { type: [String], required: true },
     createdBy: { type: String, required: true },
+    tokenAddress: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
     startDate: { 
         type: Date, 
