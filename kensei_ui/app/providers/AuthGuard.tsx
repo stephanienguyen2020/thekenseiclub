@@ -37,6 +37,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
   const currentAccount = useCurrentAccount();
   const [showAuthRequired, setShowAuthRequired] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     // Check if the current route requires authentication
@@ -44,14 +45,25 @@ export function AuthGuard({ children }: AuthGuardProps) {
       (route) => pathname === route || pathname.startsWith(`${route}/`)
     );
 
-    // If the route requires auth and user is not authenticated, show auth required component
-    if (requiresAuth && !currentAccount) {
+    // Get stored wallet address
+    const storedWalletAddress = localStorage.getItem("walletAddress");
+
+    // If route requires auth and there's no current account or stored wallet
+    if (requiresAuth && !currentAccount && !storedWalletAddress) {
       console.log("Access denied: Authentication required");
       setShowAuthRequired(true);
     } else {
       setShowAuthRequired(false);
     }
-  }, [pathname, currentAccount, router]);
+
+    // Set initializing to false after checking
+    setIsInitializing(false);
+  }, [pathname, currentAccount]);
+
+  // Show nothing while initializing to prevent flash of content
+  if (isInitializing) {
+    return null;
+  }
 
   // If authentication is required but user is not authenticated, show auth required component
   if (showAuthRequired) {

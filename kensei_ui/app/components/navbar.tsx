@@ -42,6 +42,39 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
   const { mutate: disconnectWallet } = useDisconnectWallet();
   const { mutate: connect } = useConnectWallet();
   const wallets = useWallets();
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  useEffect(() => {
+    // Only redirect to dashboard if we're on the home page
+    if (currentAccount && pathname === "/") {
+      router.push("/dashboard");
+    }
+  }, [currentAccount, router, pathname]);
+
+  useEffect(() => {
+    // Check if we have a stored wallet state
+    const storedAddress = localStorage.getItem("walletAddress");
+    const attemptReconnect = async () => {
+      try {
+        if (storedAddress && wallets[0] && !currentAccount) {
+          await connect({ wallet: wallets[0] });
+        }
+      } catch (error) {
+        console.error("Failed to reconnect wallet:", error);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    attemptReconnect();
+  }, [connect, currentAccount, wallets]);
+
+  useEffect(() => {
+    // Store wallet address when connected
+    if (currentAccount?.address) {
+      localStorage.setItem("walletAddress", currentAccount.address);
+    }
+  }, [currentAccount]);
 
   useEffect(() => {
     const checkAndCreateUser = async () => {
@@ -72,12 +105,15 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
     }
   };
 
-  useEffect(() => {
-    // Only redirect to dashboard if we're on the home page
-    if (currentAccount && pathname === "/") {
-      router.push("/dashboard");
-    }
-  }, [currentAccount, router, pathname]);
+  const handleDisconnect = () => {
+    disconnectWallet();
+    localStorage.removeItem("walletAddress");
+  };
+
+  // Don't show anything while initializing to prevent flash
+  if (isInitializing) {
+    return null;
+  }
 
   return (
     <nav className="flex items-center justify-between p-6">
@@ -238,7 +274,7 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
                         </div>
                       </Link>
                       <button
-                        onClick={() => disconnectWallet()}
+                        onClick={() => handleDisconnect()}
                         className="w-full text-left px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
                       >
                         <div className="flex items-center gap-2">
