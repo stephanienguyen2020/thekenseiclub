@@ -26,26 +26,14 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
         </Link>
       </div>
 
-      {/* Center Nav Links - Only show when not authenticated */}
-      {!isAuthenticated && (
+      {/* Center Nav Links - Show these only when not authenticated */}
+      {!currentAccount && (
         <div className="hidden md:flex items-center gap-6 mx-auto">
           <Link
             href="/about"
             className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
           >
             About Kensei
-          </Link>
-          <Link
-            href="/marketplace"
-            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
-          >
-            Marketplace
-          </Link>
-          <Link
-            href="/feed"
-            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
-          >
-            Community Feed
           </Link>
           <Link
             href="/docs"
@@ -56,48 +44,29 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
         </div>
       )}
 
-      {/* Left Nav Links - Only show when authenticated */}
-      {currentAccount && (
-        <div className="flex items-center gap-6">
-          {/* My Dashboard Dropdown - Modified for hover */}
-          <div className="relative group">
-            <Link
-              href="/dashboard"
-              className="inline-block bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
-            >
-              My Dashboard
-            </Link>
-            {/* Buffer div positioned absolutely to not affect button size */}
-            <div className="absolute inset-x-0 h-2 bottom-0 translate-y-full" />
-            <div className="hidden group-hover:block absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[180px] border-2 border-black">
-              <Link
-                href="/dashboard/wallet"
-                className="block px-4 py-2 text-base hover:bg-[#0046F4] hover:text-white rounded-lg"
-              >
-                My Wallet
-              </Link>
-              <Link
-                href="/dashboard/proposals"
-                className="block px-4 py-2 text-base hover:bg-[#0046F4] hover:text-white rounded-lg"
-              >
-                My Proposals
-              </Link>
-              <Link
-                href="/dashboard/tweets"
-                className="block px-4 py-2 text-base hover:bg-[#0046F4] hover:text-white rounded-lg"
-              >
-                My Tweets
-              </Link>
-              <Link
-                href="/dashboard/chatbot"
-                className="block px-4 py-2 text-base hover:bg-[#0046F4] hover:text-white rounded-lg"
-              >
-                Chat Bot
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Center Nav Links - Always show these */}
+      <div className="hidden md:flex items-center gap-6 mx-auto">
+        <Link
+          href="/marketplace"
+          className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
+        >
+          Marketplace
+        </Link>
+        <Link
+          href="/feed"
+          className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
+        >
+          Community Feed
+        </Link>
+        {currentAccount && (
+          <Link
+            href="/dashboard"
+            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
+          >
+            My Dashboard
+          </Link>
+        )}
+      </div>
 
       {/* Right Side */}
       <div className="flex items-center gap-4">
@@ -124,29 +93,6 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
             >
               Launch a Token
             </Link>
-
-            {/* Network Selector */}
-            <div className="relative">
-              <button
-                onClick={() => setIsNetworkOpen(!isNetworkOpen)}
-                className="bg-[#0046F4] text-white px-4 py-2 rounded-full hover:bg-opacity-90 transition-colors flex items-center gap-2"
-              >
-                <Globe size={16} />
-                <span>Network</span>
-                <ChevronDown size={16} />
-              </button>
-              {isNetworkOpen && (
-                <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[180px] border-2 border-black">
-                  {/* We'll keep only SUI networks for now */}
-                  <button className="w-full text-left px-4 py-2 text-base rounded-lg bg-[#c0ff00] text-black">
-                    SUI Mainnet
-                  </button>
-                  <button className="w-full text-left px-4 py-2 text-base rounded-lg text-black hover:bg-[#0046F4] hover:text-white">
-                    SUI Testnet
-                  </button>
-                </div>
-              )}
-            </div>
 
             {/* Notifications */}
             <button className="bg-[#0046F4] text-white p-2 rounded-full hover:bg-opacity-90 transition-colors relative">
