@@ -12,7 +12,7 @@ import {
   LogOut,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useCurrentAccount,
   useDisconnectWallet,
@@ -21,12 +21,14 @@ import {
 } from "@mysten/dapp-kit";
 import { SuiWalletButton } from "./SuiWalletButton";
 import { formatAddress } from "@mysten/sui/utils";
+import { useRouter } from "next/navigation";
 
 interface NavbarProps {
   isAuthenticated?: boolean;
 }
 
 export default function Navbar({ isAuthenticated = false }: NavbarProps) {
+  const router = useRouter();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNetworkOpen, setIsNetworkOpen] = useState(false);
   const currentAccount = useCurrentAccount();
@@ -44,6 +46,12 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
       console.error("Failed to connect wallet:", error);
     }
   };
+
+  useEffect(() => {
+    if (currentAccount) {
+      router.push("/dashboard");
+    }
+  }, [currentAccount, router]);
 
   return (
     <nav className="flex items-center justify-between p-6">
