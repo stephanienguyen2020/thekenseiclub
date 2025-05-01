@@ -3,7 +3,12 @@
 import { Bell, ChevronDown, Globe, Search, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import {
+  useCurrentAccount,
+  useDisconnectWallet,
+  useConnectWallet,
+  useWallets,
+} from "@mysten/dapp-kit";
 import { SuiWalletButton } from "./SuiWalletButton";
 
 interface NavbarProps {
@@ -14,6 +19,20 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNetworkOpen, setIsNetworkOpen] = useState(false);
   const currentAccount = useCurrentAccount();
+  const { mutate: disconnect } = useDisconnectWallet();
+  const { mutate: connect } = useConnectWallet();
+  const wallets = useWallets();
+
+  const handleConnect = async () => {
+    try {
+      const availableWallet = wallets[0];
+      if (availableWallet) {
+        await connect({ wallet: availableWallet });
+      }
+    } catch (error) {
+      console.error("Failed to connect wallet:", error);
+    }
+  };
 
   return (
     <nav className="flex items-center justify-between p-6">
@@ -112,13 +131,38 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
               </button>
               {isProfileOpen && (
                 <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[220px] border-2 border-black">
-                  <div className="px-4 py-2 border-b border-gray-200">
-                    <p className="font-bold text-black">
-                      {currentAccount.address.slice(0, 6)}...
-                      {currentAccount.address.slice(-4)}
-                    </p>
-                  </div>
-
+                  {currentAccount ? (
+                    <>
+                      <div className="px-4 py-2">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-sm font-medium">Address</span>
+                          <span className="text-xs text-gray-600">
+                            {currentAccount.address}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="px-4 py-2">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-sm font-medium">
+                            SUI Network
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => disconnect()}
+                        className="w-full text-left px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
+                      >
+                        Disconnect
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={handleConnect}
+                      className="w-full text-left px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
+                    >
+                      Connect Wallet
+                    </button>
+                  )}
                   <Link
                     href="/dashboard/settings"
                     className="block px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
@@ -129,8 +173,6 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
                       <span>Settings</span>
                     </div>
                   </Link>
-
-                  <SuiWalletButton />
                 </div>
               )}
             </div>
