@@ -54,14 +54,14 @@ export default function MarketplacePage() {
     setWatchlist((prev) =>
       prev.includes(coinId)
         ? prev.filter((id) => id !== coinId)
-        : [...prev, coinId],
+        : [...prev, coinId]
     );
   };
 
   const filteredCoins = coins.filter(
     (coin: Coin) =>
       coin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      coin.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
+      coin.symbol.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const sortedCoins = [...filteredCoins].sort((a, b) => {
@@ -81,7 +81,7 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen bg-[#0039C6]">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-8xl mx-auto px-4 py-8">
         {/* Header with authenticated navbar */}
         <Navbar isAuthenticated={true} />
 
@@ -137,14 +137,22 @@ export default function MarketplacePage() {
               </button>
               <div className="flex border-2 border-gray-200 rounded-full overflow-hidden">
                 <button
-                  className={`p-2 ${viewMode === "table" ? "bg-[#0039C6] text-white" : "bg-white"}`}
+                  className={`p-2 ${
+                    viewMode === "table"
+                      ? "bg-[#0039C6] text-white"
+                      : "bg-white"
+                  }`}
                   onClick={() => setViewMode("table")}
                   aria-label="Table view"
                 >
                   <List size={16} />
                 </button>
                 <button
-                  className={`p-2 ${viewMode === "cards" ? "bg-[#0039C6] text-white" : "bg-white"}`}
+                  className={`p-2 ${
+                    viewMode === "cards"
+                      ? "bg-[#0039C6] text-white"
+                      : "bg-white"
+                  }`}
                   onClick={() => setViewMode("cards")}
                   aria-label="Card view"
                 >

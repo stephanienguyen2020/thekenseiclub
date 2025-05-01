@@ -1,23 +1,21 @@
-import type { Metadata } from 'next'
-import './globals.css'
-import { Providers } from './providers'
+"use client";
 
-export const metadata: Metadata = {
-  title: 'Kensei',
-  description: 'Kensei',
-  generator: 'Kensei',
-}
+import "./globals.css";
+import { Providers } from "./providers";
+import { ClientProviders } from "./client-providers";
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <Providers>{children}</Providers>
+        <ClientProviders>
+          <Providers>{children}</Providers>
+        </ClientProviders>
       </body>
     </html>
-  )
+  );
 }

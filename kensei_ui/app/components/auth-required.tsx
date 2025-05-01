@@ -2,11 +2,10 @@
 
 import { ArrowLeft, Lock, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useWallet } from "../providers/WalletProvider";
+import { ConnectButton } from "@mysten/dapp-kit";
 
 export function AuthRequired() {
   const router = useRouter();
-  const { connect } = useWallet();
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-[#0039C6]">
@@ -18,22 +17,18 @@ export function AuthRequired() {
                 <Lock className="h-6 w-6 text-black" />
               </div>
             </div>
-            
+
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold text-black">Authentication Required</h2>
+              <h2 className="text-2xl font-bold text-black">
+                Authentication Required
+              </h2>
               <p className="text-gray-600">
                 Please connect your wallet to access this page
               </p>
             </div>
 
             <div className="flex justify-center">
-              <button
-                onClick={() => connect()}
-                className="bg-[#c0ff00] text-black px-6 py-3 rounded-full font-medium hover:bg-opacity-90 transition-colors border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center space-x-2"
-              >
-                <Wallet className="h-5 w-5" />
-                <span>Connect Wallet</span>
-              </button>
+              <ConnectButton />
             </div>
 
             <div className="text-center text-sm text-gray-600">
@@ -55,4 +50,4 @@ export function AuthRequired() {
       </div>
     </div>
   );
-} 
+}
