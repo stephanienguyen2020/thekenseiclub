@@ -23,9 +23,9 @@ import {
 import { SuiWalletButton } from "./SuiWalletButton";
 import { formatAddress } from "@mysten/sui/utils";
 import { useRouter } from "next/navigation";
+import api from "@/lib/api";
 import { type } from "os";
 import { size } from "viem";
-import api from "@/lib/api";
 
 interface NavbarProps {
   isAuthenticated?: boolean;
