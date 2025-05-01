@@ -31,13 +31,13 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
         <div className="hidden md:flex items-center gap-6 mx-auto">
           <Link
             href="/about"
-            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-sm hover:bg-opacity-90 transition-colors"
+            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
           >
             About Kensei
           </Link>
           <Link
             href="/marketplace"
-            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-sm hover:bg-opacity-90 transition-colors"
+            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
           >
             Marketplace
           </Link>
