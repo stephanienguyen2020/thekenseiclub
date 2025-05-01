@@ -230,6 +230,96 @@ GET /allCoins
 }
 ```
 
+### Get Holding Coins for a Wallet Address
+
+This endpoint retrieves all coins held by a specified wallet address on the Sui blockchain with pagination.
+
+```
+GET /holding-coins/:walletAddress
+```
+
+#### Path Parameters
+
+| Parameter     | Type   | Required | Description                 |
+| ------------- | ------ | -------- | --------------------------- |
+| walletAddress | string | Yes      | The wallet address to query |
+
+#### Query Parameters
+
+| Parameter | Type    | Required | Description                            |
+| --------- | ------- | -------- | -------------------------------------- |
+| page      | integer | No       | Page number (default: 1)               |
+| limit     | integer | No       | Number of items per page (default: 10) |
+
+#### Success Response
+
+```json
+{
+  "data": [
+    {
+      "id": "0x1234...",
+      "coinType": "0x2::sui::SUI",
+      "symbol": "SUI",
+      "name": "Sui",
+      "balance": 10.5,
+      "description": "Native token of the Sui blockchain",
+      "logo": "https://example.com/sui-logo.png",
+      "address": "0x1234...",
+      "createdAt": "2025-05-01T12:34:56.789Z",
+      "suiPrice": 1,
+      "price": 2.5,
+      "change24h": 0.5,
+      "volume24h": "1000000",
+      "marketCap": "50000000",
+      "holders": 1000
+    },
+    {
+      "id": "0xabcd...",
+      "coinType": "0x765d83f28b477831a2b61bc475770b8288a67902::mycoin::COIN",
+      "symbol": "MYCOIN",
+      "name": "My Coin",
+      "balance": 100,
+      "description": "A custom coin for demonstration purposes",
+      "logo": "https://example.com/icon.png",
+      "address": "0xabcd...",
+      "createdAt": "2025-05-01T12:34:56.789Z",
+      "suiPrice": 0.001,
+      "price": 0.02,
+      "change24h": 2.5,
+      "volume24h": "10000",
+      "marketCap": "100000",
+      "holders": 50
+    }
+    // Additional coins...
+  ],
+  "pagination": {
+    "total": 25,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 3
+  }
+}
+```
+
+#### Error Responses
+
+##### 400 Bad Request
+
+```json
+{
+  "error": "Wallet address is required"
+}
+```
+
+##### 500 Internal Server Error
+
+```json
+{
+  "error": "Failed to fetch holding coins",
+  "details": "Error message details"
+}
+```
+
 ## Example Request
 
 ```bash
