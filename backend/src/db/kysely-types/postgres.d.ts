@@ -323,7 +323,7 @@ export interface Comments {
   createdAt: Timestamp;
   id: Generated<Int8>;
   postId: Int8;
-  userId: Int8;
+  userId: string;
 }
 
 export interface Cursors {
@@ -342,7 +342,7 @@ export interface Likes {
   createdAt: Timestamp;
   id: Generated<Int8>;
   postId: Int8;
-  userId: Int8;
+  userId: string;
 }
 
 export interface Posts {
@@ -351,7 +351,7 @@ export interface Posts {
   createdAt: Timestamp;
   id: Generated<Int8>;
   mediaUrls: string[] | null;
-  userId: Int8;
+  userId: string;
 }
 
 export interface RawPrices {
@@ -528,7 +528,6 @@ export interface TimescaledbInformationJobStats {
 }
 
 export interface Users {
-  id: Generated<Int8>;
   profilePictureUrl: string;
   suiAddress: string;
   username: string;

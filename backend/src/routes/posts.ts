@@ -7,7 +7,7 @@ const router = express.Router();
 // Validate input data for post creation
 const postSchema = z.object({
   content: z.string().min(1),
-  userId: z.coerce.bigint(),
+  userId: z.coerce.string(),
   mediaUrls: z.array(z.string()).optional(),
   coinId: z.string().optional(),
 });
@@ -22,6 +22,7 @@ router.post("/posts", async (req: any, res: any) => {
     }
 
     const { content, userId, mediaUrls, coinId } = parsed.data;
+    console.log("Parsed data:", parsed.data);
 
     // Insert post
     const result = await db
@@ -54,7 +55,7 @@ router.get("/posts", async (req: any, res: any) => {
     // Build query for posts with user info, like counts, and comment counts
     let postsQuery = db
       .selectFrom("posts as p")
-      .leftJoin("users as u", "p.userId", "u.id")
+      .leftJoin("users as u", "p.userId", "u.suiAddress")
       .leftJoin("coins as c", "p.coinId", "c.id")
       .select([
         "p.id",
@@ -62,7 +63,7 @@ router.get("/posts", async (req: any, res: any) => {
         "p.mediaUrls",
         "p.createdAt",
         "p.coinId",
-        "u.id as userId",
+        "u.suiAddress as userId",
         "u.username",
         "u.profilePictureUrl",
         "c.name as coinName",
@@ -106,22 +107,27 @@ router.get("/posts", async (req: any, res: any) => {
     const totalCount = await totalCountQuery.executeTakeFirst();
 
     // Transform the data to match the required format
-    const transformedPosts = posts.map(post => ({
+    const transformedPosts = posts.map((post) => ({
       id: post.id.toString(),
       user: {
         id: post.userId,
         name: post.username,
         handle: post.username, // Using username as handle since there's no separate handle field
-        avatar: post.profilePictureUrl
+        avatar: post.profilePictureUrl,
       },
-      token: post.coinId ? {
-        id: post.coinId,
-        name: post.coinName,
-        symbol: post.coinSymbol,
-        logo: post.coinImageUrl
-      } : undefined,
+      token: post.coinId
+        ? {
+            id: post.coinId,
+            name: post.coinName,
+            symbol: post.coinSymbol,
+            logo: post.coinImageUrl,
+          }
+        : undefined,
       content: post.content,
-      image: post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls[0] : undefined,
+      image:
+        post.mediaUrls && post.mediaUrls.length > 0
+          ? post.mediaUrls[0]
+          : undefined,
       timestamp: post.createdAt.toISOString(),
       likes: Number(post.likesCount || 0),
       comments: Number(post.commentsCount || 0),
@@ -130,7 +136,7 @@ router.get("/posts", async (req: any, res: any) => {
       signalScore: 0,
       isLiked: false,
       isBoosted: false,
-      views: 0
+      views: 0,
     }));
 
     return res.status(200).json({
@@ -155,7 +161,9 @@ router.get("/posts/isLiked", async (req: any, res: any) => {
     const userId = req.query.userId;
 
     if (!postId || !userId) {
-      return res.status(400).json({ message: "postId and userId are required" });
+      return res
+        .status(400)
+        .json({ message: "postId and userId are required" });
     }
 
     // Convert to bigint for database query
@@ -170,7 +178,7 @@ router.get("/posts/isLiked", async (req: any, res: any) => {
       .executeTakeFirst();
 
     return res.status(200).json({
-      isLiked: !!like
+      isLiked: !!like,
     });
   } catch (error) {
     console.error("Error checking like status:", error);

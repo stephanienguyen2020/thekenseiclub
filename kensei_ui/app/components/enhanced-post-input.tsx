@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 
 import { useState, useRef } from "react";
 import Image from "next/image";
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import api from "@/lib/api";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 
 interface Token {
   id: string;
@@ -35,24 +36,26 @@ export default function EnhancedPostInput({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isTokenDropdownOpen, setIsTokenDropdownOpen] = useState(false);
   const [selectedToken, setSelectedToken] = useState<Token | null>(
-    preselectedToken,
+    preselectedToken
   );
   const [tokenSearchQuery, setTokenSearchQuery] = useState("");
   const [tokens, settokens] = useState<Token[]>([]);
+  const currentAccount = useCurrentAccount();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchAllTokens = async () => {
       const res = await api.get("/allCoins");
       settokens(res.data.data);
-    }
-    fetchAllTokens()
+    };
+    fetchAllTokens();
   }, []);
 
   const filteredTokens = tokens.filter(
     (token) =>
       token.name.toLowerCase().includes(tokenSearchQuery.toLowerCase()) ||
-      token.symbol.toLowerCase().includes(tokenSearchQuery.toLowerCase()),
+      token.symbol.toLowerCase().includes(tokenSearchQuery.toLowerCase())
   );
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,21 +69,37 @@ export default function EnhancedPostInput({
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!content.trim() && !selectedImage) return;
 
-    // Here you would handle the post submission
-    console.log({
-      content,
-      image: selectedImage,
-      token: selectedToken,
-    });
+    try {
+      // Prepare media URLs array if there's a selected image
+      const mediaUrls = selectedImage ? [selectedImage] : [];
 
-    // Reset form
-    setContent("");
-    setSelectedImage(null);
-    if (!preselectedToken) {
-      setSelectedToken(null);
+      // Prepare API payload
+      const postData = {
+        content,
+        userId: currentAccount?.address,
+        mediaUrls,
+        coinId: selectedToken?.id,
+      };
+
+      // Send post to backend
+      const response = await api.post("/posts", postData);
+
+      console.log("Post created successfully:", response.data);
+
+      // Reset form
+      setContent("");
+      setSelectedImage(null);
+      if (!preselectedToken) {
+        setSelectedToken(null);
+      }
+
+      // You could add a success notification here
+    } catch (error) {
+      console.error("Failed to create post:", error);
+      // You could add an error notification here
     }
   };
 

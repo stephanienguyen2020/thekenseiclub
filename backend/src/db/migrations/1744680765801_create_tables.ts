@@ -3,10 +3,10 @@ import { Kysely, sql } from "kysely";
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable("users")
-    .addColumn("id", "bigserial", (col) => col.primaryKey().notNull())
+    .addColumn("sui_address", "varchar", (col) => col.primaryKey().notNull())
     .addColumn("username", "varchar", (col) => col.notNull())
-    .addColumn("sui_address", "varchar", (col) => col.notNull())
     .addColumn("profile_picture_url", "text", (col) => col.notNull())
+    .addUniqueConstraint("username_unique", ["username"])
     .execute();
 
   await db.schema
@@ -19,7 +19,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("address", "varchar", (col) => col.notNull())
     .addColumn("created_at", "timestamp", (col) =>
       col.notNull().defaultTo(sql`now
-        ()`),
+        ()`)
     )
     .execute();
 
@@ -36,7 +36,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("issuer", "varchar", (col) => col.notNull())
     .addColumn("treasury_cap", "varchar", (col) => col.notNull())
     .addColumn("coin_metadata", "varchar", (col) =>
-      col.references("coins.id").notNull(),
+      col.references("coins.id").notNull()
     )
     .addColumn("migration_target", "varchar", (col) => col.notNull())
     .execute();
@@ -44,13 +44,13 @@ export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable("posts")
     .addColumn("id", "bigserial", (col) => col.primaryKey().notNull())
-    .addColumn("user_id", "bigint", (col) => col.notNull())
+    .addColumn("user_id", "varchar", (col) => col.notNull())
     .addColumn("coin_id", "varchar", (col) => col.references("coins.id"))
     .addColumn("content", "varchar", (col) => col.notNull())
     .addColumn(
       "media_urls",
       sql`text
-        []`,
+        []`
     )
     .addColumn("created_at", "timestamp", (col) => col.notNull())
     .execute();
@@ -58,11 +58,11 @@ export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable("comments")
     .addColumn("id", "bigserial", (col) => col.primaryKey().notNull())
-    .addColumn("user_id", "bigint", (col) =>
-      col.references("users.id").notNull(),
+    .addColumn("user_id", "varchar", (col) =>
+      col.references("users.sui_address").notNull()
     )
     .addColumn("post_id", "bigint", (col) =>
-      col.references("posts.id").notNull(),
+      col.references("posts.id").notNull()
     )
     .addColumn("content", "varchar", (col) => col.notNull())
     .addColumn("created_at", "timestamp", (col) => col.notNull())
@@ -71,11 +71,11 @@ export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable("likes")
     .addColumn("id", "bigserial", (col) => col.primaryKey().notNull())
-    .addColumn("user_id", "bigint", (col) =>
-      col.references("users.id").notNull(),
+    .addColumn("user_id", "varchar", (col) =>
+      col.references("users.sui_address").notNull()
     )
     .addColumn("post_id", "bigint", (col) =>
-      col.references("posts.id").notNull(),
+      col.references("posts.id").notNull()
     )
     .addColumn("created_at", "timestamp", (col) => col.notNull())
     .addUniqueConstraint("likes_unique", ["user_id", "post_id"])
@@ -85,7 +85,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .createTable("images")
     .addColumn("image_name", "varchar", (col) => col.notNull())
     .addColumn("post_id", "bigserial", (col) =>
-      col.references("posts.id").notNull(),
+      col.references("posts.id").notNull()
     )
     .addColumn("image_path", "varchar", (col) => col.notNull())
     .execute();
@@ -93,7 +93,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable("raw_prices")
     .addColumn("bonding_curve_id", "varchar", (col) =>
-      col.references("bonding_curve.id").notNull(),
+      col.references("bonding_curve.id").notNull()
     )
     .addColumn("timestamp", "timestamp", (col) => col.notNull())
     .addColumn("price", "float8", (col) => col.notNull())
@@ -104,11 +104,11 @@ export async function up(db: Kysely<any>): Promise<void> {
     .execute();
 
   await sql`SELECT create_hypertable('raw_prices', by_range('timestamp'));`.execute(
-    db,
+    db
   );
 
   await sql`CREATE INDEX ON raw_prices ("bonding_curve_id", "timestamp");`.execute(
-    db,
+    db
   );
 
   await sql`ALTER TABLE raw_prices SET (
@@ -118,7 +118,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   )`.execute(db);
 
   await sql`SELECT add_compression_policy('raw_prices', INTERVAL '5 seconds')`.execute(
-    db,
+    db
   );
 
   // await sql`CREATE MATERIALIZED VIEW secondly_prices_stats

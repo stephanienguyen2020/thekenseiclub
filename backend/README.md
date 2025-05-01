@@ -19,21 +19,21 @@ A backend service for blockchain data feeds, providing APIs for OHLCV (Open, Hig
 
 - Clone the repository
 - Install dependencies:
-   ```bash
-   npm install
-   ```
+  ```bash
+  npm install
+  ```
 - Create timeseries database:
-   ```bash
-   docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=password timescale/timescaledb-ha:pg17
-   ```
+  ```bash
+  docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=password timescale/timescaledb-ha:pg17
+  ```
 - Set up db migrations:
-   ```bash
-   npx kysely-ctl migrate up
-   ```
+  ```bash
+  npx kysely-ctl migrate up
+  ```
 - Start the development server:
-   ```bash
-   npm run dev
-   ```
+  ```bash
+  PORT=3001 NETWORK=devnet PACKAGE_ID=0x8193d051bd13fb4336ad595bbb78dac06fa64ff1c3c3c184483ced397c9d2116 pnpm run dev
+  ```
 
 ## Configuration
 
