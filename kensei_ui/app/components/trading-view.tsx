@@ -1,10 +1,16 @@
 "use client";
 
-import {useState, useEffect, useRef} from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import {ArrowUp, ArrowDown, RefreshCw, ChevronDown, Send} from "lucide-react";
-import CryptoChart, {CandleData} from "./CryptoChart";
+import { ArrowUp, ArrowDown, RefreshCw, ChevronDown, Send } from "lucide-react";
+import CryptoChart, { CandleData } from "./CryptoChart";
+import { BondingCurveSDK } from "coin-sdk/dist/src";
+import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
+
 import api from "@/lib/api";
+import { getClient, Network } from "coin-sdk/dist/src/utils/sui-utils";
+import { Transaction } from "@mysten/sui/transactions";
+import { useWallet } from "../providers/WalletProvider";
 
 interface TradingViewProps {
   tokenSymbol: string;
@@ -13,16 +19,18 @@ interface TradingViewProps {
   currentPrice: number;
   change24h: number;
   bondingCurveId: string;
+  tokenId: string;
 }
 
 export default function TradingView({
-                                      tokenSymbol,
-                                      tokenName,
-                                      tokenLogo,
-                                      currentPrice,
-                                      change24h,
-                                      bondingCurveId,
-                                    }: TradingViewProps) {
+  tokenSymbol,
+  tokenName,
+  tokenLogo,
+  currentPrice,
+  change24h,
+  bondingCurveId,
+  tokenId,
+}: TradingViewProps) {
   const [amount, setAmount] = useState("");
   const [activeTradeTab, setActiveTradeTab] = useState<
     "buy" | "sell" | "swap" | "assistant"
@@ -42,6 +50,23 @@ export default function TradingView({
   const [chartData, setChartData] = useState<CandleData[]>([]);
   const chartRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const client = useSuiClient();
+
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
+    execute: async ({ bytes, signature }) =>
+      await client.executeTransactionBlock({
+        transactionBlock: bytes,
+        signature,
+        options: {
+          // Raw effects are required so the effects can be reported back to the wallet
+          showRawEffects: true,
+          // Select additional data to return
+          showObjectChanges: true,
+        },
+      }),
+  });
+
+  const [digest, setDigest] = useState("");
 
   // Simulate chart loading
   useEffect(() => {
@@ -82,39 +107,39 @@ export default function TradingView({
     // Parse timeframe to determine interval duration
     let intervalMs = 0;
 
-    if (timeframe.includes('seconds')) {
+    if (timeframe.includes("seconds")) {
       // Seconds (e.g., "5 seconds")
-      const seconds = parseInt(timeframe.split(' ')[0]);
+      const seconds = parseInt(timeframe.split(" ")[0]);
       if (!isNaN(seconds)) {
         intervalMs = seconds * 1000;
       }
-    } else if (timeframe.includes('minutes')) {
+    } else if (timeframe.includes("minutes")) {
       // Minutes (e.g., "15 minutes")
-      const minutes = parseInt(timeframe.split(' ')[0]);
+      const minutes = parseInt(timeframe.split(" ")[0]);
       if (!isNaN(minutes)) {
         intervalMs = minutes * 60 * 1000;
       }
-    } else if (timeframe.includes('hour')) {
+    } else if (timeframe.includes("hour")) {
       // Hours (e.g., "1 hour" or "4 hours")
-      const hours = parseInt(timeframe.split(' ')[0]);
+      const hours = parseInt(timeframe.split(" ")[0]);
       if (!isNaN(hours)) {
         intervalMs = hours * 60 * 60 * 1000;
       }
-    } else if (timeframe.includes('day')) {
+    } else if (timeframe.includes("day")) {
       // Days (e.g., "1 day")
-      const days = parseInt(timeframe.split(' ')[0]);
+      const days = parseInt(timeframe.split(" ")[0]);
       if (!isNaN(days)) {
         intervalMs = days * 24 * 60 * 60 * 1000;
       }
-    } else if (timeframe.includes('week')) {
+    } else if (timeframe.includes("week")) {
       // Weeks (e.g., "1 week")
-      const weeks = parseInt(timeframe.split(' ')[0]);
+      const weeks = parseInt(timeframe.split(" ")[0]);
       if (!isNaN(weeks)) {
         intervalMs = weeks * 7 * 24 * 60 * 60 * 1000;
       }
-    } else if (timeframe.includes('month')) {
+    } else if (timeframe.includes("month")) {
       // Months (e.g., "1 month")
-      const months = parseInt(timeframe.split(' ')[0]);
+      const months = parseInt(timeframe.split(" ")[0]);
       if (!isNaN(months)) {
         // Approximate a month as 30 days
         intervalMs = months * 30 * 24 * 60 * 60 * 1000;
@@ -155,12 +180,58 @@ export default function TradingView({
     setAmount("");
   };
 
+  const handleBuy = async () => {
+    console.log("Buying", amount, tokenSymbol, tokenId);
+    const client = getClient((process.env.NETWORK || "devnet") as Network);
+    const coinMetadata = await client.getObject({
+      id: tokenId,
+      options: {
+        showType: true,
+        showContent: true,
+      },
+    });
+    const coinMetadataType = coinMetadata.data?.type || "";
+    const match = coinMetadataType.match(/CoinMetadata<(.+)>/);
+    const coinType = match ? match[1] : "";
+
+    console.log("coinMetadata", JSON.stringify(coinMetadata, null, 2));
+
+    const tx = new Transaction();
+
+    const [suiCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(amount)]);
+
+    tx.moveCall({
+      target: `0x8193d051bd13fb4336ad595bbb78dac06fa64ff1c3c3c184483ced397c9d2116::bonding_curve::buy`,
+      typeArguments: [coinType],
+      arguments: [
+        tx.object(bondingCurveId),
+        suiCoin,
+        tx.pure.u64(amount),
+        tx.pure.u64(0),
+      ],
+    });
+    console.log("packageId", process.env.PACKAGE_ID);
+
+    signAndExecuteTransaction(
+      {
+        transaction: tx,
+        chain: `sui:devnet`,
+      },
+      {
+        onSuccess: (result: any) => {
+          console.log("object changes", result.objectChanges);
+          setDigest(result.digest);
+        },
+      }
+    );
+  };
+
   // Handle chat message submission
   const handleSendMessage = () => {
     if (!chatMessage.trim()) return;
 
     // Add user message to chat
-    setChatHistory([...chatHistory, {role: "user", message: chatMessage}]);
+    setChatHistory([...chatHistory, { role: "user", message: chatMessage }]);
 
     // Clear input
     setChatMessage("");
@@ -191,7 +262,7 @@ export default function TradingView({
 
       setChatHistory((prev) => [
         ...prev,
-        {role: "bot", message: botResponse},
+        { role: "bot", message: botResponse },
       ]);
     }, 1000);
   };
@@ -228,9 +299,9 @@ export default function TradingView({
                 }`}
               >
                 {change24h >= 0 ? (
-                  <ArrowUp size={16}/>
+                  <ArrowUp size={16} />
                 ) : (
-                  <ArrowDown size={16}/>
+                  <ArrowDown size={16} />
                 )}
                 <span className="font-bold">
                   {Math.abs(change24h).toFixed(2)}%
@@ -244,7 +315,15 @@ export default function TradingView({
         {/* Chart Timeframe Selector */}
         <div className="bg-[#0039C6] rounded-xl border-4 border-black p-4">
           <div className="flex gap-2 overflow-x-auto">
-            {[["5s", "5 seconds"], ["15m", "15 minutes"], ["1H", "1 hour"], ["4H", "4 hours"], ["1D", "1 day"], ["1W", "1 week"], ["1M", "1 month"]].map((time) => (
+            {[
+              ["5s", "5 seconds"],
+              ["15m", "15 minutes"],
+              ["1H", "1 hour"],
+              ["4H", "4 hours"],
+              ["1D", "1 day"],
+              ["1W", "1 week"],
+              ["1M", "1 month"],
+            ].map((time) => (
               <button
                 key={time[0]}
                 className={`px-4 py-2 rounded-xl font-bold border-4 border-black ${
@@ -257,9 +336,8 @@ export default function TradingView({
                 {time[0]}
               </button>
             ))}
-            <button
-              className="ml-auto px-4 py-2 rounded-xl font-bold border-4 border-black bg-white text-black flex items-center gap-2">
-              <RefreshCw size={16}/>
+            <button className="ml-auto px-4 py-2 rounded-xl font-bold border-4 border-black bg-white text-black flex items-center gap-2">
+              <RefreshCw size={16} />
               <span>Refresh</span>
             </button>
           </div>
@@ -269,16 +347,14 @@ export default function TradingView({
         <div className="bg-white rounded-xl border-4 border-black p-4 h-[400px] relative">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className="w-12 h-12 border-4 border-t-[#c0ff00] border-r-[#c0ff00] border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+              <div className="w-12 h-12 border-4 border-t-[#c0ff00] border-r-[#c0ff00] border-b-transparent border-l-transparent rounded-full animate-spin"></div>
               <p className="ml-3 font-bold">Loading chart...</p>
             </div>
           ) : (
             <div ref={chartRef} className="w-full h-full">
               {/* This would be replaced with an actual trading chart library in a real implementation */}
-              <div
-                className="w-full h-full flex items-center justify-center bg-[#131722] text-white rounded-lg overflow-hidden">
-                <CryptoChart data={chartData}/>
+              <div className="w-full h-full flex items-center justify-center bg-[#131722] text-white rounded-lg overflow-hidden">
+                <CryptoChart data={chartData} />
               </div>
             </div>
           )}
@@ -369,10 +445,10 @@ export default function TradingView({
 
                 <button
                   className="w-full py-4 rounded-xl font-black text-xl border-4 border-black bg-[#c0ff00] text-black hover:bg-yellow-300 transition-colors hover:translate-y-[-5px]"
-                  onClick={handleTrade}
+                  onClick={handleBuy}
                   disabled={!amount}
                 >
-                  BUY {tokenSymbol}
+                  BUYYYY {tokenSymbol}
                 </button>
 
                 <div className="bg-yellow-100 p-3 rounded-xl border-2 border-black">
@@ -447,16 +523,15 @@ export default function TradingView({
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                     />
-                    <div
-                      className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
+                    <div className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
                       USD
-                      <ChevronDown size={16}/>
+                      <ChevronDown size={16} />
                     </div>
                   </div>
 
                   <div className="flex justify-center my-2">
                     <div className="bg-[#0039C6] p-2 rounded-full border-2 border-black">
-                      <RefreshCw size={20} className="text-white"/>
+                      <RefreshCw size={20} className="text-white" />
                     </div>
                   </div>
 
@@ -471,16 +546,15 @@ export default function TradingView({
                       value={
                         amount
                           ? (Number.parseFloat(amount) / currentPrice).toFixed(
-                            8
-                          )
+                              8
+                            )
                           : ""
                       }
                       readOnly
                     />
-                    <div
-                      className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
+                    <div className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
                       {tokenSymbol}
-                      <ChevronDown size={16}/>
+                      <ChevronDown size={16} />
                     </div>
                   </div>
                 </div>
@@ -551,7 +625,7 @@ export default function TradingView({
                       className="bg-purple-500 p-3 rounded-xl border-4 border-black"
                       onClick={handleSendMessage}
                     >
-                      <Send size={20} className="text-white"/>
+                      <Send size={20} className="text-white" />
                     </button>
                   </div>
                 </div>

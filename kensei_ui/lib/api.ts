@@ -4,9 +4,8 @@ import axios from "axios";
 const baseURL =
   process.env.NEXT_PUBLIC_API_URL ||
   `http://${process.env.BE_HOST || "localhost"}:${
-    process.env.BE_PORT || "3000"
+    process.env.BE_PORT || "3001"
   }`;
-console.log("API URL: ", baseURL);
 // Create axios instance with default config
 const api = axios.create({
   baseURL,

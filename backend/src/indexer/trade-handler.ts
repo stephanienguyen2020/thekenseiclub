@@ -87,7 +87,7 @@ export const handleBondingCurveEvent = async (
           showContent: true,
         },
       });
-      console.log("coinMetadata", JSON.stringify(coinMetadata));
+      console.log("coinMetadata", JSON.stringify(coinMetadata, null, 2));
       await db
         .insertInto("coins")
         .values({
