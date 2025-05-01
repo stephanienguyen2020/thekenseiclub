@@ -45,26 +45,24 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
         </Link>
       </div>
 
-      {/* Center Nav Links - Show these only when not authenticated */}
-      {!currentAccount && (
-        <div className="hidden md:flex items-center gap-6 mx-auto">
-          <Link
-            href="/about"
-            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
-          >
-            About Kensei
-          </Link>
-          <Link
-            href="/docs"
-            className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
-          >
-            Documentations
-          </Link>
-        </div>
-      )}
-
-      {/* Center Nav Links - Always show these */}
-      <div className="hidden md:flex items-center gap-6 mx-auto">
+      {/* Center Nav Links */}
+      <div className="hidden md:flex items-center gap-4">
+        {!currentAccount && (
+          <>
+            <Link
+              href="/about"
+              className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
+            >
+              About Kensei
+            </Link>
+            <Link
+              href="/docs"
+              className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
+            >
+              Documentations
+            </Link>
+          </>
+        )}
         <Link
           href="/marketplace"
           className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
@@ -148,6 +146,16 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
                           </span>
                         </div>
                       </div>
+                      <Link
+                        href="/dashboard/settings"
+                        className="block px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
+                        onClick={() => setIsProfileOpen(false)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Settings size={16} />
+                          <span>Settings</span>
+                        </div>
+                      </Link>
                       <button
                         onClick={() => disconnect()}
                         className="w-full text-left px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
@@ -156,23 +164,25 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
                       </button>
                     </>
                   ) : (
-                    <button
-                      onClick={handleConnect}
-                      className="w-full text-left px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
-                    >
-                      Connect Wallet
-                    </button>
+                    <>
+                      <button
+                        onClick={handleConnect}
+                        className="w-full text-left px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
+                      >
+                        Connect Wallet
+                      </button>
+                      <Link
+                        href="/dashboard/settings"
+                        className="block px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
+                        onClick={() => setIsProfileOpen(false)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Settings size={16} />
+                          <span>Settings</span>
+                        </div>
+                      </Link>
+                    </>
                   )}
-                  <Link
-                    href="/dashboard/settings"
-                    className="block px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
-                    onClick={() => setIsProfileOpen(false)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Settings size={16} />
-                      <span>Settings</span>
-                    </div>
-                  </Link>
                 </div>
               )}
             </div>
