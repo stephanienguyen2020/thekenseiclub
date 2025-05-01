@@ -23,6 +23,16 @@ router.get('/proposals', async (req: any, res: any) => {
     }
 });
 
+// Get proposals by wallet address
+router.get('/proposals/wallet/:wallet', async (req: any, res: any) => {
+    try {
+        const proposals = await daoService.getProposalsByWallet(req.params.wallet);
+        res.json(proposals);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch proposals by wallet' });
+    }
+});
+
 // Get a specific proposal
 router.get('/proposals/:id', async (req: any, res: any) => {
     try {

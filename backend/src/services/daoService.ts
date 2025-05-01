@@ -1,5 +1,6 @@
 import Proposal, { IProposal } from '../models/Proposal';
 import Vote, { IVote } from '../models/Vote';
+import { balanceService } from './balanceService';
 
 export class DaoService {
     // Create a new proposal
@@ -15,7 +16,7 @@ export class DaoService {
 
     // Get all proposals
     async getAllProposals(): Promise<IProposal[]> {
-        return await Proposal.find();
+        return await Proposal.find().sort({ createdAt: -1 });
     }
 
     // Get a specific proposal
@@ -71,6 +72,19 @@ export class DaoService {
         return await Vote.find({ proposalId });
     }
 
+    // Get all proposals by wallet address
+    async getProposalsByWallet(wallet: string): Promise<{
+        active: IProposal[];
+        closed: IProposal[];
+    }> {
+        const proposals = await Proposal.find({ createdBy: wallet }).sort({ createdAt: -1 });
+        
+        return {
+            active: proposals.filter(p => p.status === 'open'),
+            closed: proposals.filter(p => p.status === 'closed')
+        };
+    }
+
     // Close a proposal and determine the winning side
     async closeProposal(proposalId: string): Promise<IProposal> {
         const proposal = await Proposal.findById(proposalId);
@@ -85,17 +99,25 @@ export class DaoService {
         // Get all votes for this proposal
         const votes = await Vote.find({ proposalId });
         
-        // Count votes for each option
+        // Count weighted votes for each option
         const voteCounts: Record<string, number> = {};
         proposal.options.forEach(option => {
             voteCounts[option] = 0;
         });
 
-        votes.forEach(vote => {
-            voteCounts[vote.choice] = (voteCounts[vote.choice] || 0) + 1;
-        });
+        // Calculate weighted votes based on user's SUI balance
+        for (const vote of votes) {
+            try {
+                const userBalance = await balanceService.getSUIBalance(vote.wallet);
+                voteCounts[vote.choice] = (voteCounts[vote.choice] || 0) + userBalance;
+            } catch (error) {
+                console.error(`Error getting balance for wallet ${vote.wallet}:`, error);
+                // If we can't get the balance, count as 1 vote
+                voteCounts[vote.choice] = (voteCounts[vote.choice] || 0) + 1;
+            }
+        }
 
-        // Find the winning option (option with most votes)
+        // Find the winning option (option with most weighted votes)
         let winningOption = '';
         let maxVotes = 0;
         for (const [option, count] of Object.entries(voteCounts)) {

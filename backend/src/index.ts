@@ -9,6 +9,7 @@ import userRouter from "./routes/user";
 import commentRouter from "./routes/comments";
 import likesRouter from "./routes/likes";
 import daoRouter from "./routes/dao";
+import balanceRouter from "./routes/balance";
 import cors from "cors"
 import { connectMongoDB } from './db/mongodb';
 import { scheduledTasks } from './scheduledTasks';
@@ -67,6 +68,7 @@ app.use(commentRouter);
 app.use(likesRouter);
 app.use(userRouter);
 app.use('/api', daoRouter);
+app.use('/api', balanceRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

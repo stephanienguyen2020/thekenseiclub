@@ -12,7 +12,7 @@ export interface IProposal extends Document {
     contentHash: string;
     voteCount: number;
     votePoint: number;
-    status: 'open' | 'closed' | 'nominated';
+    status: 'open' | 'closed';
     winningOption?: string;
 }
 
@@ -46,7 +46,7 @@ const ProposalSchema: Schema = new Schema({
     contentHash: { type: String, required: true },
     voteCount: { type: Number, default: 0 },
     votePoint: { type: Number, default: 0 },
-    status: { type: String, enum: ['open', 'closed', 'nominated'], default: 'open' },
+    status: { type: String, enum: ['open', 'closed'], default: 'open' },
     winningOption: { type: String }
 });
 
