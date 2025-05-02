@@ -8,7 +8,7 @@ router.post("/users", async (req: any, res: any) => {
     const { username, suiAddress, profilePictureUrl } = req.body;
 
     // Validate required fields
-    if (!username || !suiAddress || !profilePictureUrl) {
+    if (!username || !suiAddress) {
       return res.status(400).json({
         message:
           "Missing required fields. Username, suiAddress, and profilePictureUrl are required.",
@@ -34,7 +34,9 @@ router.post("/users", async (req: any, res: any) => {
       .values({
         username,
         suiAddress,
-        profilePictureUrl,
+        profilePictureUrl:
+          profilePictureUrl ??
+          "https://teal-characteristic-echidna-176.mypinata.cloud/ipfs/bafybeigyz5u6d4crnmfsxnlelhadkmausippqr3ezpw5gcwi4yldlofc2a",
       })
       .returningAll()
       .executeTakeFirst();

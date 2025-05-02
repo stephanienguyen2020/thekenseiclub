@@ -1,102 +1,121 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { ArrowLeft, Calendar, Clock, HelpCircle, Plus, Trash2 } from "lucide-react"
-import Navbar from "@/components/navbar"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  HelpCircle,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import Navbar from "@/components/navbar";
+import { AxiosResponse } from "axios";
+import { Coin } from "../../types";
+import api from "@/lib/api";
+import { useParams } from "next/navigation";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 
 // Update the component to include the new features with neo-brutalism style without asymmetry
-export default function CreateProposalPage({ params }: { params: { id: string } }) {
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
-  const [options, setOptions] = useState(["Yes", "No"])
-  const [votingAmount, setVotingAmount] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [coin, setCoin] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+export default function CreateProposalPage() {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [options, setOptions] = useState(["Yes", "No"]);
+  const [votingAmount, setVotingAmount] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [coin, setCoin] = useState<any>({
+    id: "",
+    name: "",
+    symbol: "",
+    logo: "",
+    minVotingPower: 0,
+    treasury: 0,
+    website: "",
+    twitter: "",
+    telegram: "",
+    description: "",
+    whitepaper: "",
+    communityLinks: [],
+  });
+  const [loading, setLoading] = useState(false);
+  const currentAccount = useCurrentAccount();
+  const { id } = useParams();
 
   // Calculate minimum date (tomorrow)
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const minDate = tomorrow.toISOString().split("T")[0]
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const minDate = tomorrow.toISOString().split("T")[0];
 
   // Calculate maximum date (3 months from now)
-  const maxDate = new Date()
-  maxDate.setMonth(maxDate.getMonth() + 3)
-  const maxDateStr = maxDate.toISOString().split("T")[0]
+  const maxDate = new Date();
+  maxDate.setMonth(maxDate.getMonth() + 3);
+  const maxDateStr = maxDate.toISOString().split("T")[0];
+  console.log("Coin ID:", id);
 
-  // Mock data for the coin
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
+    console.log("Coin IDDD:", id);
+    const fetchData = async () => {
+      // setLoading(true);
+      // Fetch coin data
+      const coinResponse: AxiosResponse<Coin> = await api.get(`/coin/${id}`);
       setCoin({
-        id: params.id,
-        name:
-          params.id === "pepe"
-            ? "Pepe"
-            : params.id === "doge"
-              ? "Doge"
-              : params.id.charAt(0).toUpperCase() + params.id.slice(1),
-        symbol: params.id.toUpperCase(),
-        logo:
-          params.id === "pepe"
-            ? "/happy-frog-on-a-lilypad.png"
-            : params.id === "doge"
-              ? "/alert-shiba.png"
-              : params.id === "shib"
-                ? "/stylized-shiba-inu.png"
-                : params.id === "wojak"
-                  ? "/Distressed-Figure.png"
-                  : params.id === "moon"
-                    ? "/crescent-moon-silhouette.png"
-                    : params.id === "cat"
-                      ? "/playful-calico.png"
-                      : `/placeholder.svg?height=64&width=64&query=${params.id} logo`,
-        price: 0.00000123,
-        change24h: 12.5,
-        marketCap: 12500000,
-        holders: 5432,
-        treasury: 5000000,
-        minVotingPower: 10000,
-      })
-      setLoading(false)
-    }, 500)
-  }, [params.id])
+        ...coinResponse.data,
+        website: "https://example.com",
+        twitter: "https://twitter.com/example",
+        telegram: "https://t.me/example",
+      });
+    };
+
+    fetchData();
+  }, [id]);
 
   const handleAddOption = () => {
     // Remove the limit of 5 options
-    setOptions([...options, ""])
-  }
+    setOptions([...options, ""]);
+  };
 
   const handleOptionChange = (index: number, value: string) => {
-    const newOptions = [...options]
-    newOptions[index] = value
-    setOptions(newOptions)
-  }
+    const newOptions = [...options];
+    newOptions[index] = value;
+    setOptions(newOptions);
+  };
 
   const handleRemoveOption = (index: number) => {
     if (options.length > 2) {
-      const newOptions = [...options]
-      newOptions.splice(index, 1)
-      setOptions(newOptions)
+      const newOptions = [...options];
+      newOptions.splice(index, 1);
+      setOptions(newOptions);
     }
-  }
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const proposalData = await api.post(`/api/proposals`, {
+      title,
+      tokenAddress: coin.id,
+      description,
+      options,
+      createdBy: currentAccount?.address,
+      startDate,
+      endDate,
+      ipfsHash: "QmExampleHash",
+      contentHash: "0xExampleContentHash",
+    });
 
     // Simulate API call
     setTimeout(() => {
       // Redirect back to token page
-      window.location.href = `/marketplace/${params.id}`
-    }, 1500)
-  }
+      window.location.href = `/marketplace/${id}`;
+    }, 1500);
+  };
 
   if (loading) {
     return (
@@ -108,7 +127,7 @@ export default function CreateProposalPage({ params }: { params: { id: string } 
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -118,7 +137,7 @@ export default function CreateProposalPage({ params }: { params: { id: string } 
         <Navbar isAuthenticated={true} />
 
         <div className="flex items-center mb-8 mt-4">
-          <Link href={`/marketplace/${params.id}`} className="flex items-center gap-2">
+          <Link href={`/marketplace/${id}`} className="flex items-center gap-2">
             <div className="bg-[#c0ff00] p-2 rounded-full border-4 border-black">
               <ArrowLeft className="text-black" size={24} />
             </div>
@@ -140,9 +159,12 @@ export default function CreateProposalPage({ params }: { params: { id: string } 
               />
             </div>
             <div>
-              <h1 className="text-3xl font-black">Create Proposal for {coin.name}</h1>
+              <h1 className="text-3xl font-black">
+                Create Proposal for {coin.name}
+              </h1>
               <p className="text-black font-bold">
-                Create a governance proposal for the {coin.symbol} community to vote on
+                Create a governance proposal for the {coin.symbol} community to
+                vote on
               </p>
             </div>
           </div>
@@ -150,7 +172,10 @@ export default function CreateProposalPage({ params }: { params: { id: string } 
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Proposal Title */}
             <div>
-              <label htmlFor="title" className="block text-lg font-black text-black mb-2 uppercase">
+              <label
+                htmlFor="title"
+                className="block text-lg font-black text-black mb-2 uppercase"
+              >
                 Proposal Title
               </label>
               <input
@@ -166,7 +191,10 @@ export default function CreateProposalPage({ params }: { params: { id: string } 
 
             {/* Proposal Description */}
             <div>
-              <label htmlFor="description" className="block text-lg font-black text-black mb-2 uppercase">
+              <label
+                htmlFor="description"
+                className="block text-lg font-black text-black mb-2 uppercase"
+              >
                 Proposal Description
               </label>
               <textarea
@@ -183,7 +211,9 @@ export default function CreateProposalPage({ params }: { params: { id: string } 
             {/* Voting Options */}
             <div className="bg-[#0039C6] p-6 rounded-xl border-4 border-black">
               <div className="flex justify-between items-center mb-4">
-                <label className="block text-lg font-black text-white uppercase">Voting Options</label>
+                <label className="block text-lg font-black text-white uppercase">
+                  Voting Options
+                </label>
                 <button
                   type="button"
                   onClick={handleAddOption}
@@ -200,7 +230,9 @@ export default function CreateProposalPage({ params }: { params: { id: string } 
                       className="flex-1 rounded-xl border-4 border-black p-3 focus:outline-none focus:ring-4 focus:ring-[#c0ff00] text-lg font-bold bg-white"
                       placeholder={`Option ${index + 1}`}
                       value={option}
-                      onChange={(e) => handleOptionChange(index, e.target.value)}
+                      onChange={(e) =>
+                        handleOptionChange(index, e.target.value)
+                      }
                       required
                     />
                     {options.length > 2 && (
@@ -215,12 +247,17 @@ export default function CreateProposalPage({ params }: { params: { id: string } 
                   </div>
                 ))}
               </div>
-              <p className="text-sm text-white mt-3 font-bold">You need at least 2 voting options.</p>
+              <p className="text-sm text-white mt-3 font-bold">
+                You need at least 2 voting options.
+              </p>
             </div>
 
             {/* Voting Start Date */}
             <div>
-              <label htmlFor="start-date" className="block text-lg font-black text-black mb-2 uppercase">
+              <label
+                htmlFor="start-date"
+                className="block text-lg font-black text-black mb-2 uppercase"
+              >
                 Voting Start Date
               </label>
               <div className="flex items-center gap-3">
@@ -245,7 +282,10 @@ export default function CreateProposalPage({ params }: { params: { id: string } 
 
             {/* Voting End Date */}
             <div>
-              <label htmlFor="end-date" className="block text-lg font-black text-black mb-2 uppercase">
+              <label
+                htmlFor="end-date"
+                className="block text-lg font-black text-black mb-2 uppercase"
+              >
                 Voting End Date
               </label>
               <div className="flex items-center gap-3">
@@ -270,7 +310,10 @@ export default function CreateProposalPage({ params }: { params: { id: string } 
 
             {/* Voting Power Contribution */}
             <div className="bg-[#0039C6] p-6 rounded-xl border-4 border-black">
-              <label htmlFor="voting-amount" className="block text-lg font-black text-white mb-3 uppercase">
+              <label
+                htmlFor="voting-amount"
+                className="block text-lg font-black text-white mb-3 uppercase"
+              >
                 Your Voting Power Contribution
               </label>
               <div className="flex items-center gap-3">
@@ -289,7 +332,8 @@ export default function CreateProposalPage({ params }: { params: { id: string } 
                 </div>
               </div>
               <p className="text-sm text-white mt-3 font-bold">
-                Adding tokens increases your voting power. You can add up to your full balance.
+                Adding tokens increases your voting power. You can add up to
+                your full balance.
               </p>
             </div>
 
@@ -300,24 +344,30 @@ export default function CreateProposalPage({ params }: { params: { id: string } 
                   <HelpCircle size={24} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="font-black text-xl text-black uppercase mb-3">Proposal Requirements</h3>
+                  <h3 className="font-black text-xl text-black uppercase mb-3">
+                    Proposal Requirements
+                  </h3>
                   <ul className="space-y-3">
                     <li className="flex items-center gap-3 bg-white p-3 rounded-lg border-2 border-black">
                       <Clock size={20} className="text-[#0039C6]" />
                       <span className="font-bold">
-                        You must hold at least {coin.minVotingPower.toLocaleString()} {coin.symbol} tokens to create a
-                        proposal
+                        You must hold at least{" "}
+                        {/* {coin.minVotingPower.toLocaleString() || ""}{" "} */}
+                        {coin.symbol} tokens to create a proposal
                       </span>
                     </li>
                     <li className="flex items-center gap-3 bg-white p-3 rounded-lg border-2 border-black">
                       <Clock size={20} className="text-[#0039C6]" />
-                      <span className="font-bold">Proposals must be active for at least 24 hours</span>
+                      <span className="font-bold">
+                        Proposals must be active for at least 24 hours
+                      </span>
                     </li>
                     <li className="flex items-center gap-3 bg-white p-3 rounded-lg border-2 border-black">
                       <Clock size={20} className="text-[#0039C6]" />
                       <span className="font-bold">
-                        Treasury proposals can allocate up to 10% of the treasury (
-                        {(coin.treasury / 1000000).toFixed(1)}M {coin.symbol})
+                        Treasury proposals can allocate up to 10% of the
+                        treasury ({(coin.treasury / 1000000).toFixed(1)}M{" "}
+                        {coin.symbol})
                       </span>
                     </li>
                   </ul>
@@ -330,7 +380,13 @@ export default function CreateProposalPage({ params }: { params: { id: string } 
               <button
                 type="submit"
                 className="bg-[#c0ff00] text-black px-8 py-4 rounded-xl font-black text-xl border-4 border-black hover:bg-yellow-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:translate-y-[-5px] transition-transform"
-                disabled={isSubmitting || !title || !description || !startDate || !endDate}
+                disabled={
+                  isSubmitting ||
+                  !title ||
+                  !description ||
+                  !startDate ||
+                  !endDate
+                }
               >
                 {isSubmitting ? "CREATING PROPOSAL..." : "CREATE PROPOSAL 🚀"}
               </button>
@@ -339,5 +395,5 @@ export default function CreateProposalPage({ params }: { params: { id: string } 
         </div>
       </div>
     </div>
-  )
+  );
 }
