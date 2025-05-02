@@ -23,7 +23,7 @@ interface OHLCVData {
  * @param {Response} res - Express response object
  * @returns {Response} JSON array of OHLCV data points or error message
  */
-router.get("/ohlcv", (req: any, res: any) => {
+router.get("/ohlcv", async (req: any, res: any) => {
   try {
     const bondingCurveId = req.query.bonding_curve_id;
     const resolution = req.query.resolution || "15 minutes";
@@ -47,14 +47,7 @@ router.get("/ohlcv", (req: any, res: any) => {
     }
 
     // Use parameterized query with Kysely's sql tag to prevent SQL injection
-    sql<OHLCVData>`
-            WITH bounds AS (
-                SELECT
-                    ${sql`${from}::timestamp`} AS from_ts,
-                    ${sql`${to}::timestamp`} AS to_ts
-                FROM raw_prices
-                WHERE "bonding_curve_id" = ${bondingCurveId}
-            )
+    const query = sql<OHLCVData>`
             SELECT
                 time_bucket(${resolution}, "timestamp") AS time,
                 "bonding_curve_id",
@@ -62,16 +55,37 @@ router.get("/ohlcv", (req: any, res: any) => {
                 FIRST(price, timestamp) AS open,
                 LAST(price, timestamp) AS close,
                 MIN(price) AS low
-            FROM raw_prices, bounds
+            FROM raw_prices
             WHERE "bonding_curve_id" = ${bondingCurveId}
-                AND "timestamp" >= bounds.from_ts
-                AND "timestamp" <= bounds.to_ts
+                AND "timestamp" >= ${from}::timestamp
+                AND "timestamp" <= ${to}::timestamp
             GROUP BY time, "bonding_curve_id"
-            ORDER BY time DESC
-        `
+            ORDER BY time ASC
+        `;
+
+    let previousOHLC = await db
+      .selectFrom("rawPrices")
+      .select("price")
+      .where("bondingCurveId", "=", bondingCurveId)
+      .where("timestamp", "<", from)
+      .orderBy("timestamp", "desc")
+      .executeTakeFirst();
+
+    query
       .execute(db)
       .then((result) => {
-        res.json(result);
+        const ohlcs = result.rows;
+
+        if (!ohlcs || ohlcs.length === 0) {
+          return res.status(200).json([]);
+        }
+
+        let previousClose = ohlcs[0].open;
+        if (previousOHLC) {
+          previousClose = previousOHLC.price.toString();
+        }
+
+        return res.status(200).json(transformOHLC(ohlcs, previousClose));
       })
       .catch((error) => {
         console.error("Error executing query:", error);
@@ -85,5 +99,24 @@ router.get("/ohlcv", (req: any, res: any) => {
     });
   }
 });
+
+function transformOHLC(
+  ohlcs: OHLCVData[],
+  prevClose: string,
+  nextOpen?: string
+) {
+  ohlcs[0].open = prevClose.toString();
+  for (let i = 1; i < ohlcs.length; i++) {
+    ohlcs[i].open = ohlcs[i - 1].close;
+  }
+
+  return ohlcs.map((ohlc) => ({
+    ...ohlc,
+    high: parseFloat(ohlc.high),
+    open: parseFloat(ohlc.open),
+    close: parseFloat(ohlc.close),
+    low: parseFloat(ohlc.low),
+  }));
+}
 
 export default router;
