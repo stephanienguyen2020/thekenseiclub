@@ -15,6 +15,7 @@ interface Token {
   balance: number;
   minRequired: number;
 }
+import api from "@/lib/api";
 
 export default function CreateProposalSelectToken() {
   const router = useRouter()
@@ -34,22 +35,19 @@ export default function CreateProposalSelectToken() {
           setLoading(false)
           return
         }
-        const response = await fetch(`/api/coins?address=${currentAccount.address}`)
+        const response = await api.get(
+          `/holding-coins/${currentAccount?.address}`
+        );
         console.log("Tokens response:", response)
-        if (!response.ok) {
-          if (response.status === 404) {
-            setHasTokens(false)
-            setTokens([])
-            setError(null)
-          } else {
-            throw new Error('Failed to fetch tokens')
-          }
+        const data = response.data.data;
+        if (data.length > 0) {
+          setHasTokens(true)
         } else {
-          const data = await response.json()
-          setTokens(data.data || [])
-          setHasTokens((data.data || []).length > 0)
-          setError(null)
+          setHasTokens(false)
         }
+        setTokens(data)
+        setError(null)
+        console.log("Holdings data:", data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred')
       } finally {
@@ -65,7 +63,7 @@ export default function CreateProposalSelectToken() {
     const query = searchQuery.toLowerCase()
     return token.name.toLowerCase().includes(query) || token.symbol.toLowerCase().includes(query)
   })
-
+  console.log("filteredTokens", filteredTokens)
   const handleContinue = () => {
     if (selectedToken) {
       router.push(`/marketplace/${selectedToken}/create-proposal`)
@@ -217,7 +215,7 @@ export default function CreateProposalSelectToken() {
                   <div className="flex justify-between">
                     <span className="text-gray-500">Min Required:</span>
                     <span className="font-bold">
-                      {token.minRequired.toLocaleString()} {token.symbol}
+                      {/* {token.minRequired.toLocaleString()} {token.symbol} */}
                     </span>
                   </div>
                 </div>
