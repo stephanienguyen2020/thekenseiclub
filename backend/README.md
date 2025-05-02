@@ -1,13 +1,18 @@
 # Feed Backend
 
-A backend service for blockchain data feeds, providing APIs for OHLCV (Open, High, Low, Close, Volume) data and coin deployment on the Sui blockchain.
+A backend service for blockchain data feeds, providing APIs for OHLCV (Open, High, Low, Close, Volume) data, coin deployment, and social media functionality on the Sui blockchain.
 
 ## Features
 
 - OHLCV API for retrieving price data with customizable time intervals
-- Coin API for deploying new coins on the Sui blockchain
+- Coin API for deploying new coins on the Sui blockchain and retrieving coin information
+- Social Feed API for posts, comments, and likes for a blockchain-based social network
+- Image upload and retrieval for posts and user profiles
+- User management and authentication
+- DAO functionality for community governance
 - Event indexer for tracking blockchain events
 - PostgreSQL database integration using Kysely ORM
+- MongoDB integration for additional data storage
 
 ## Prerequisites
 
