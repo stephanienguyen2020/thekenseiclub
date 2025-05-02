@@ -78,8 +78,6 @@ router.get("/coins", async (req: any, res: any) => {
       .offset(offset);
     console.log("coinsQuery");
     if (userId) {
-      console.log("coinsQuery???", userId);
-
       countQuery = countQuery.where("address", "=", userId);
       coinsQuery = coinsQuery.where("address", "=", userId);
     }
@@ -93,7 +91,7 @@ router.get("/coins", async (req: any, res: any) => {
     const coins = await coinsQuery.execute();
 
     // For each coin, calculate market data if it has a bonding curve
-    const enrichedCoins = await Promise.all(
+    let enrichedCoins = await Promise.all(
       coins.map(async (coin) => {
         if (coin.bondingCurveId) {
           const price = await getCurrentPrice(coin.bondingCurveId);
@@ -114,6 +112,10 @@ router.get("/coins", async (req: any, res: any) => {
           holders: 0,
         };
       })
+    );
+
+    enrichedCoins = enrichedCoins.filter(
+      (coin) => coin.price && coin.price > 0 && coin.price !== Infinity
     );
 
     return res.status(200).json({

@@ -36,9 +36,31 @@ export class BalanceService {
         owner: walletAddress,
       });
 
-      // Process coin data
+      console.log("All coins:", allCoins);
+
+      // Group coins by coin type
+      const coinsByType = new Map();
+
+      // First pass: group coins by type and accumulate balances
+      allCoins.data.forEach((coin) => {
+        if (coinsByType.has(coin.coinType)) {
+          // Add to existing balance
+          const existingCoin = coinsByType.get(coin.coinType);
+          existingCoin.balance = (
+            BigInt(existingCoin.balance) + BigInt(coin.balance)
+          ).toString();
+        } else {
+          // First time seeing this coin type
+          coinsByType.set(coin.coinType, {
+            ...coin,
+            balance: coin.balance,
+          });
+        }
+      });
+
+      // Process distinct coin data
       const coinBalances = await Promise.all(
-        allCoins.data.map(async (coin) => {
+        Array.from(coinsByType.values()).map(async (coin) => {
           const coinTypeArray = coin.coinType.split("::");
           const symbol =
             coinTypeArray.length > 2 ? coinTypeArray[2] : coin.coinType;
@@ -56,7 +78,7 @@ export class BalanceService {
                 ? Number(MIST_PER_SUI)
                 : Math.pow(10, 9)),
             address: coin.coinObjectId,
-            createdAt: new Date(), // We don't have this from the API, so use current date
+            createdAt: new Date(),
           };
         })
       );
