@@ -1,13 +1,13 @@
 "use client";
-import {useState, type ChangeEvent} from "react";
+import { useState, type ChangeEvent } from "react";
 import Image from "next/image";
-import {Upload, Sparkles} from "lucide-react";
+import { Upload, Sparkles } from "lucide-react";
 import Navbar from "@/components/navbar";
-import axios, {AxiosResponse} from "axios";
+import axios, { AxiosResponse } from "axios";
 import api from "@/lib/api";
-import {CoinResponse} from "@/app/launch/types";
-import {useRouter} from "next/navigation";
-import {useCurrentAccount} from "@mysten/dapp-kit";
+import { CoinResponse } from "@/app/launch/types";
+import { useRouter } from "next/navigation";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 import InputMethodSelector, {
   LaunchMethod,
 } from "./components/input-method-selector";
@@ -91,8 +91,8 @@ export default function LaunchTokenPage() {
     try {
       // Here you would typically call an AI service to generate token details
       // For now, we'll create a simple token based on the description
-      const {data: result}: { data: CoinResponse } = await api.post("/coin", {
-        name: "AI Generated Token",
+      const { data: result }: { data: CoinResponse } = await api.post("/coin", {
+        name: "AIGeneratedToken",
         symbol: "AGT",
         description: description,
         iconUrl: "/blockchain-bulldog.png", // Default image for AI-generated tokens
@@ -110,15 +110,17 @@ export default function LaunchTokenPage() {
   const handleCreateTokenManual = async () => {
     setIsCreatingToken(true);
     try {
-      const {data: result}: { data: CoinResponse } = await api.post("/coin", {
+      const { data: result }: { data: CoinResponse } = await api.post("/coin", {
         name: tokenName,
         symbol: tokenSymbol,
         description: tokenDescription,
         iconUrl: imagePreview,
         address: currentAccount?.address || "",
       });
-      console.log("result: ", result);
-      router.push(`/marketplace/${result.coin.id}`);
+      const timer = setTimeout(() => {
+        router.push(`/marketplace/${result.coin.id}`);
+      }, 2000);
+      return () => clearTimeout(timer);
     } catch (error) {
       console.error("Error creating token:", error);
       setIsCreatingToken(false);
@@ -129,7 +131,7 @@ export default function LaunchTokenPage() {
     <div className="min-h-screen bg-[#0039C6]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header with authenticated navbar */}
-        <Navbar isAuthenticated={!!currentAccount}/>
+        <Navbar isAuthenticated={!!currentAccount} />
 
         <div className="bg-white rounded-3xl p-8 mt-8 max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-8 text-center">

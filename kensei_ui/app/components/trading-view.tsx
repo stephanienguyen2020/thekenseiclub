@@ -4,13 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { ArrowUp, ArrowDown, RefreshCw, ChevronDown, Send } from "lucide-react";
 import CryptoChart, { CandleData } from "./CryptoChart";
-import { BondingCurveSDK } from "coin-sdk/dist/src";
-import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
-
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+  useSuiClient,
+} from "@mysten/dapp-kit";
 import api from "@/lib/api";
 import { getClient, Network } from "coin-sdk/dist/src/utils/sui-utils";
-import { Transaction } from "@mysten/sui/transactions";
-import { useWallet } from "../providers/WalletProvider";
+import BondingCurveSDK from "coin-sdk/dist/src/bonding_curve";
 
 interface TradingViewProps {
   tokenSymbol: string;
@@ -20,6 +21,7 @@ interface TradingViewProps {
   change24h: number;
   bondingCurveId: string;
   tokenId: string;
+  suiPrice: number;
 }
 
 export default function TradingView({
@@ -30,6 +32,7 @@ export default function TradingView({
   change24h,
   bondingCurveId,
   tokenId,
+  suiPrice,
 }: TradingViewProps) {
   const [amount, setAmount] = useState("");
   const [activeTradeTab, setActiveTradeTab] = useState<
@@ -48,6 +51,7 @@ export default function TradingView({
     },
   ]);
   const [chartData, setChartData] = useState<CandleData[]>([]);
+  const currentAccount = useCurrentAccount();
   const chartRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const client = useSuiClient();
@@ -193,24 +197,62 @@ export default function TradingView({
     const coinMetadataType = coinMetadata.data?.type || "";
     const match = coinMetadataType.match(/CoinMetadata<(.+)>/);
     const coinType = match ? match[1] : "";
-
-    console.log("coinMetadata", JSON.stringify(coinMetadata, null, 2));
-
-    const tx = new Transaction();
-
-    const [suiCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(amount)]);
-
-    tx.moveCall({
-      target: `0x8193d051bd13fb4336ad595bbb78dac06fa64ff1c3c3c184483ced397c9d2116::bonding_curve::buy`,
-      typeArguments: [coinType],
-      arguments: [
-        tx.object(bondingCurveId),
-        suiCoin,
-        tx.pure.u64(amount),
-        tx.pure.u64(0),
-      ],
+    const packageId =
+      process.env.PACKAGE_ID ||
+      "0x8193d051bd13fb4336ad595bbb78dac06fa64ff1c3c3c184483ced397c9d2116";
+    const bondingCurveSdk = new BondingCurveSDK(
+      bondingCurveId,
+      client,
+      packageId
+    );
+    const tx = bondingCurveSdk.buildBuyTransaction({
+      amount: Number.parseFloat(amount) * 1000000000,
+      minTokenRequired: 0,
+      type: coinType,
+      address: currentAccount?.address || "",
     });
-    console.log("packageId", process.env.PACKAGE_ID);
+
+    signAndExecuteTransaction(
+      {
+        transaction: tx,
+        chain: `sui:devnet`,
+      },
+      {
+        onSuccess: (result: any) => {
+          console.log("object changes", result.objectChanges);
+          setDigest(result.digest);
+        },
+      }
+    );
+  };
+
+  const handleSell = async () => {
+    const client = getClient((process.env.NETWORK || "devnet") as Network);
+    const coinMetadata = await client.getObject({
+      id: tokenId,
+      options: {
+        showType: true,
+        showContent: true,
+      },
+    });
+    const coinMetadataType = coinMetadata.data?.type || "";
+    const match = coinMetadataType.match(/CoinMetadata<(.+)>/);
+    const coinType = match ? match[1] : "";
+    const packageId =
+      process.env.PACKAGE_ID ||
+      "0x8193d051bd13fb4336ad595bbb78dac06fa64ff1c3c3c184483ced397c9d2116";
+    const bondingCurveSdk = new BondingCurveSDK(
+      bondingCurveId,
+      client,
+      packageId
+    );
+    const tx = await bondingCurveSdk.buildSellTransaction({
+      amount: Number.parseFloat(amount) * 1000000000,
+      minSuiRequired: 0,
+      type: coinType,
+      address: currentAccount?.address || "",
+      network: (process.env.NETWORK || "devnet") as Network,
+    });
 
     signAndExecuteTransaction(
       {
@@ -426,19 +468,18 @@ export default function TradingView({
                       onChange={(e) => setAmount(e.target.value)}
                     />
                     <div className="bg-gray-100 px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold">
-                      {tokenSymbol}
+                      {"SUI"}
                     </div>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-bold mb-2 uppercase">
-                    Total (USD)
+                    Total {tokenSymbol}
                   </label>
                   <div className="bg-gray-100 p-3 rounded-xl border-4 border-black font-bold">
-                    $
                     {amount
-                      ? (Number.parseFloat(amount) * currentPrice).toFixed(2)
+                      ? (Number.parseFloat(amount) / suiPrice).toFixed(2)
                       : "0.00"}
                   </div>
                 </div>
@@ -448,7 +489,7 @@ export default function TradingView({
                   onClick={handleBuy}
                   disabled={!amount}
                 >
-                  BUYYYY {tokenSymbol}
+                  BUY {tokenSymbol}
                 </button>
 
                 <div className="bg-yellow-100 p-3 rounded-xl border-2 border-black">
@@ -482,19 +523,18 @@ export default function TradingView({
 
                 <div>
                   <label className="block text-sm font-bold mb-2 uppercase">
-                    Total (USD)
+                    Total (SUI)
                   </label>
                   <div className="bg-gray-100 p-3 rounded-xl border-4 border-black font-bold">
-                    $
                     {amount
-                      ? (Number.parseFloat(amount) * currentPrice).toFixed(2)
+                      ? (Number.parseFloat(amount) * suiPrice).toFixed(2)
                       : "0.00"}
                   </div>
                 </div>
 
                 <button
                   className="w-full py-4 rounded-xl font-black text-xl border-4 border-black bg-red-500 text-white hover:bg-red-600 transition-colors hover:translate-y-[-5px]"
-                  onClick={handleTrade}
+                  onClick={handleSell}
                   disabled={!amount}
                 >
                   SELL {tokenSymbol}

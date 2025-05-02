@@ -45,7 +45,6 @@ router.get("/ohlcv", (req: any, res: any) => {
     if (!to) {
       return res.status(400).json({ error: "Missing required parameter: to" });
     }
-    console.log("/ohlcv");
 
     // Use parameterized query with Kysely's sql tag to prevent SQL injection
     sql<OHLCVData>`
