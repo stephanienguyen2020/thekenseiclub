@@ -50,7 +50,7 @@ router.get("/coins", async (req: any, res: any) => {
   try {
     // Default pagination values
     const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const limit = parseInt(req.query.limit as string) || 100;
     const offset = (page - 1) * limit;
     const userId = req.query.userId;
 
@@ -237,7 +237,7 @@ router.get("/holding-coins/:walletAddress", async (req: any, res: any) => {
     const { walletAddress } = req.params;
     // Default pagination values
     const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const limit = parseInt(req.query.limit as string) || 100;
     const offset = (page - 1) * limit;
 
     if (!walletAddress) {

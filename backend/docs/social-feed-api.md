@@ -81,6 +81,7 @@ GET /posts
 | page      | integer | No       | Page number (default: 1)               |
 | limit     | integer | No       | Number of items per page (default: 10) |
 | coinId    | string  | No       | Filter posts by coin ID                |
+| userId    | string  | No       | Filter posts by user ID                |
 
 #### Success Response
 

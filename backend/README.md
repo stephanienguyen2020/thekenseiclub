@@ -1,13 +1,18 @@
 # Feed Backend
 
-A backend service for blockchain data feeds, providing APIs for OHLCV (Open, High, Low, Close, Volume) data and coin deployment on the Sui blockchain.
+A backend service for blockchain data feeds, providing APIs for OHLCV (Open, High, Low, Close, Volume) data, coin deployment, and social media functionality on the Sui blockchain.
 
 ## Features
 
 - OHLCV API for retrieving price data with customizable time intervals
-- Coin API for deploying new coins on the Sui blockchain
+- Coin API for deploying new coins on the Sui blockchain and retrieving coin information
+- Social Feed API for posts, comments, and likes for a blockchain-based social network
+- Image upload and retrieval for posts and user profiles
+- User management and authentication
+- DAO functionality for community governance
 - Event indexer for tracking blockchain events
 - PostgreSQL database integration using Kysely ORM
+- MongoDB integration for additional data storage
 
 ## Prerequisites
 
@@ -25,6 +30,16 @@ A backend service for blockchain data feeds, providing APIs for OHLCV (Open, Hig
 - Create timeseries database:
   ```bash
   docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=password timescale/timescaledb-ha:pg17
+  ```
+- Create mongodb database:
+  ```bash
+  docker run -d \
+  --name mongodb \
+  -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=root \
+  -e MONGO_INITDB_ROOT_PASSWORD=example \
+  -v mongodb_data:/data/db \
+  mongo:6.0
   ```
 - Set up db migrations:
   ```bash
