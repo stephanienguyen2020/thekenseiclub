@@ -16,12 +16,16 @@ interface ProposalCardProps {
   id: string
   title: string
   description: string
-  status: "active" | "closed" | "upcoming"
+  status: "open" | "closed" | "upcoming"
   endDate: string
   tokenSymbol: string
   tokenLogo: string
   options: VoteOption[]
   tokenId: string
+  onVote?: (choice: string) => Promise<void>
+  userVote?: string
+  winningOption?: string
+  isVoting?: boolean
 }
 
 export default function ProposalCard({
@@ -34,13 +38,17 @@ export default function ProposalCard({
   tokenLogo,
   options,
   tokenId,
+  onVote,
+  userVote,
+  winningOption,
+  isVoting
 }: ProposalCardProps) {
-  const [selectedOption, setSelectedOption] = useState<number | null>(
-    options.findIndex((option) => option.isSelected) !== -1 ? options.findIndex((option) => option.isSelected) : null,
-  )
   const [showAllOptions, setShowAllOptions] = useState(false)
+  const [selectedOption, setSelectedOption] = useState<number | null>(
+    userVote ? options.findIndex(opt => opt.label === userVote) : null
+  )
 
-  const isVotable = status === "active"
+  const isVotable = status === "open"
   const truncatedDescription = description.length > 200 ? `${description.substring(0, 200)}...` : description
   const hasMoreThanTwoOptions = options.length > 2
 
@@ -54,9 +62,28 @@ export default function ProposalCard({
       ? sortedOptions.slice(0, 2)
       : sortedOptions
 
-  const handleVoteSelect = (index: number) => {
-    if (status !== "active") return
-    setSelectedOption(index)
+  const handleVoteSelect = async (index: number) => {
+    if (status !== "open" || userVote || isVoting) return;
+    setSelectedOption(index);
+    if (onVote) {
+      await onVote(options[index].label);
+    }
+  }
+
+  const getOptionStyle = (option: VoteOption, isSelected: boolean) => {
+    if (winningOption === option.label) {
+      return "bg-green-500 bg-opacity-10 border-2 border-green-500 text-green-500"
+    }
+    if (userVote === option.label) {
+      return "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4] text-[#0046F4]"
+    }
+    if (isSelected) {
+      return "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4] text-[#0046F4]"
+    }
+    if (status === "open" && !userVote) {
+      return "bg-gray-50 border-2 border-gray-200 hover:bg-gray-100 hover:border-[#0046F4] hover:text-[#0046F4] transition-all duration-200"
+    }
+    return "bg-gray-50 border-2 border-gray-200"
   }
 
   return (
@@ -77,7 +104,7 @@ export default function ProposalCard({
         </div>
         <div
           className={`px-3 py-1 rounded-full text-xs font-bold border-2 border-black ${
-            status === "active"
+            status === "open"
               ? "bg-[#c0ff00] text-black"
               : status === "closed"
                 ? "bg-red-500 text-white"
@@ -98,36 +125,41 @@ export default function ProposalCard({
       {/* Voting Options */}
       <div className="px-4 pb-4 space-y-3">
         {displayedOptions.map((option, index) => {
-          // Find the original index of this option in the unsorted array
-          const originalIndex = options.findIndex((o) => o.label === option.label)
-          const isSelected = selectedOption === originalIndex
+          const isSelected = selectedOption === index
+          const isUserVote = userVote === option.label
+          const isWinning = winningOption === option.label
+          const optionStyle = getOptionStyle(option, isSelected)
+          const isInteractive = status === "open" && !userVote && !isWinning
 
           return (
             <div
               key={index}
-              className={`p-4 rounded-xl cursor-pointer ${
-                isSelected
-                  ? "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4]"
-                  : "bg-gray-50 border-2 border-gray-200"
-              }`}
-              onClick={() => handleVoteSelect(originalIndex)}
+              className={`p-4 rounded-xl cursor-pointer transition-all duration-200 ${optionStyle} ${
+                isInteractive ? 'hover:scale-[1.02] hover:shadow-md' : ''
+              } ${isVoting ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={() => handleVoteSelect(index)}
             >
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  {isSelected && (
-                    <div className="w-5 h-5 rounded-full bg-[#0046F4] flex items-center justify-center">
+                  {(isSelected || isUserVote || isWinning) && (
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                      isWinning ? 'bg-green-500' : 'bg-[#0046F4]'
+                    }`}>
                       <Check className="text-white" size={14} />
                     </div>
                   )}
-                  <span className={`font-medium ${isSelected ? "text-[#0046F4]" : ""}`}>{option.label}</span>
+                  {isInteractive && !isSelected && !isUserVote && !isWinning && (
+                    <div className="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-[#0046F4] transition-colors duration-200" />
+                  )}
+                  <span className="font-medium">{option.label}</span>
                 </div>
                 <div className="text-right">
-                  <span className={`text-lg font-bold ${isSelected ? "text-[#0046F4]" : ""}`}>
+                  <span className="text-lg font-bold">
                     {option.percentage.toFixed(2)}%
                   </span>
                 </div>
               </div>
-              <div className="mt-1 text-sm text-gray-600">{(option.votes / 1000000).toFixed(3)}M votes</div>
+              <div className="mt-1 text-sm text-gray-600">{option.votes.toLocaleString()} votes</div>
             </div>
           )
         })}

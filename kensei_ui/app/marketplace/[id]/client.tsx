@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Coin } from "@/app/marketplace/types";
 import { AxiosResponse } from "axios";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 
 type ProposalStatus = "active" | "closed" | "upcoming";
 
@@ -25,7 +26,12 @@ interface Proposal {
   votePoint: number;
   createdAt: string;
   winningOption: string;
-  options: string[];
+  options: {
+    option: string;
+    votes: number;
+    points: number;
+    _id: string;
+  }[];
 }
 
 export default function TokenDetailPageClient({ id }: { id: string }) {
@@ -53,6 +59,9 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userVotes, setUserVotes] = useState<Record<string, string>>({});
+  const [votingProposals, setVotingProposals] = useState<Set<string>>(new Set());
+  const currentAccount = useCurrentAccount();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -63,6 +72,75 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const fetchUserVotes = async (proposalId: string) => {
+    if (!currentAccount?.address) return null;
+    try {
+      const response = await fetch(`http://localhost:3000/api/daos/votes/user/${proposalId}/${currentAccount.address}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error('Failed to fetch user vote');
+      }
+      const data = await response.json();
+      return data.choice;
+    } catch (error) {
+      console.error('Error fetching user vote:', error);
+      return null;
+    }
+  };
+
+  const handleVote = async (proposalId: string, choice: string) => {
+    if (!currentAccount?.address) {
+      setError('Please connect your wallet to vote');
+      return;
+    }
+
+    try {
+      setVotingProposals(prev => new Set(prev).add(proposalId));
+      const signature = "0x" + Math.random().toString(16).substring(2, 66); // Mock signature for now
+
+      const response = await fetch('http://localhost:3000/api/daos/votes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          wallet: currentAccount.address,
+          proposalId,
+          choice,
+          signature
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit vote');
+      }
+
+      setUserVotes(prev => ({
+        ...prev,
+        [proposalId]: choice
+      }));
+
+      // Refresh proposals to get updated vote counts
+      const proposalsResponse = await fetch(`http://localhost:3000/api/daos/token/${id}`);
+      if (!proposalsResponse.ok) {
+        throw new Error('Failed to fetch proposals');
+      }
+      const proposalsData = await proposalsResponse.json();
+      setProposals(proposalsData.data || []);
+    } catch (error) {
+      console.error('Error submitting vote:', error);
+      setError('Failed to submit vote. Please try again.');
+    } finally {
+      setVotingProposals(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(proposalId);
+        return newSet;
+      });
+    }
   };
 
   useEffect(() => {
@@ -85,6 +163,19 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
         }
         const proposalsData = await proposalsResponse.json();
         setProposals(proposalsData.data || []);
+
+        // Fetch user votes for each proposal
+        if (currentAccount?.address) {
+          const votes: Record<string, string> = {};
+          for (const proposal of proposalsData.data) {
+            const vote = await fetchUserVotes(proposal._id);
+            if (vote) {
+              votes[proposal._id] = vote;
+            }
+          }
+          setUserVotes(votes);
+        }
+
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -94,7 +185,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
     };
 
     fetchData();
-  }, [id]);
+  }, [id, currentAccount?.address]);
 
   // Filter proposals based on selected filter
   const filteredProposals = proposals.filter(
@@ -366,12 +457,16 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
                       tokenSymbol={coin.symbol}
                       tokenLogo={coin.logo}
                       options={proposal.options.map(option => ({
-                        label: option,
-                        votes: proposal.voteCount,
-                        percentage: proposal.voteCount > 0 ? (proposal.votePoint / proposal.voteCount) * 100 : 0,
-                        isSelected: option === proposal.winningOption
+                        label: option.option,
+                        votes: option.points,
+                        percentage: proposal.voteCount > 0 ? (option.points / proposal.votePoint) * 100 : 0,
+                        isSelected: option.option === proposal.winningOption || option.option === userVotes[proposal._id]
                       }))}
                       tokenId={id}
+                      onVote={(choice) => handleVote(proposal._id, choice)}
+                      userVote={userVotes[proposal._id]}
+                      winningOption={proposal.winningOption}
+                      isVoting={votingProposals.has(proposal._id)}
                     />
                   ))}
                 </div>
