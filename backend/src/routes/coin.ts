@@ -1,9 +1,10 @@
 import express from "express";
-import { CoinSDK } from "coin-sdk/dist/src";
+import { BondingCurveSDK, CoinSDK } from "coin-sdk/dist/src";
 import { ACTIVE_NETWORK, getClient } from "../utils";
 import { db } from "../db/database";
 import { getCurrentPrice, getMarketData } from "../services/marketDataService";
 import { balanceService } from "../services/balanceService";
+import { getActiveAddress } from "coin-sdk/dist/src/utils/sui-utils";
 
 const router = express.Router();
 
@@ -346,6 +347,50 @@ router.get("/holding-coins/:walletAddress", async (req: any, res: any) => {
     console.error("Error fetching holding coins:", error);
     return res.status(500).json({
       error: "Failed to fetch holding coins",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
+router.get("/migrate", async (req: any, res: any) => {
+  try {
+    const { bondingCurveId, packageId } = req.query;
+    const client = getClient(ACTIVE_NETWORK);
+    const bondingCurve: any = await client.getObject({
+      id: bondingCurveId,
+      options: {
+        showType: true,
+        showContent: true,
+        showDisplay: true,
+        showOwner: true,
+        showPreviousTransaction: true,
+      },
+    });
+    const bondingCurveData = bondingCurve.data?.content.fields;
+
+    if (
+      bondingCurveData.token_balance <= bondingCurveData.target_supply_threshold
+    ) {
+      const bondingCurveSdk = new BondingCurveSDK(
+        bondingCurveId,
+        client,
+        packageId
+      );
+      const result = await bondingCurveSdk.migrateToFlowx(getActiveAddress());
+      return res.status(200).json({
+        message: "Migration successful",
+        result,
+      });
+    } else {
+      return res.status(400).json({
+        error:
+          "Migration not allowed. Token balance exceeds target supply threshold.",
+      });
+    }
+  } catch (error) {
+    console.error("Error during migration:", error);
+    return res.status(500).json({
+      error: "Failed to migrate bonding curve",
       details: error instanceof Error ? error.message : "Unknown error",
     });
   }
