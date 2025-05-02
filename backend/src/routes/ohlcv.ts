@@ -30,9 +30,6 @@ router.get("/ohlcv", async (req: any, res: any) => {
     const from = req.query.from ? req.query.from.trim() : undefined;
     const to = req.query.to ? req.query.to.trim() : undefined;
 
-    console.log(from)
-    console.log(to)
-
     if (!bondingCurveId) {
       return res
         .status(400)
@@ -63,15 +60,14 @@ router.get("/ohlcv", async (req: any, res: any) => {
                 AND "timestamp" >= ${from}::timestamp
                 AND "timestamp" <= ${to}::timestamp
             GROUP BY time, "bonding_curve_id"
-            ORDER BY time DESC
+            ORDER BY time ASC
         `;
 
-    console.log(query.compile(db).sql);
-
-    let previousOHLC = await db.selectFrom("rawPrices")
-      .select('price')
-      .where('bondingCurveId', "=", bondingCurveId)
-      .where('timestamp', '<', from)
+    let previousOHLC = await db
+      .selectFrom("rawPrices")
+      .select("price")
+      .where("bondingCurveId", "=", bondingCurveId)
+      .where("timestamp", "<", from)
       .orderBy("timestamp", "desc")
       .executeTakeFirst();
 
@@ -80,7 +76,6 @@ router.get("/ohlcv", async (req: any, res: any) => {
       .then((result) => {
         const ohlcs = result.rows;
 
-        console.log(ohlcs)
         if (!ohlcs || ohlcs.length === 0) {
           return res.status(200).json([]);
         }
@@ -89,7 +84,6 @@ router.get("/ohlcv", async (req: any, res: any) => {
         if (previousOHLC) {
           previousClose = previousOHLC.price.toString();
         }
-        console.log(previousClose)
 
         return res.status(200).json(transformOHLC(ohlcs, previousClose));
       })
@@ -106,12 +100,23 @@ router.get("/ohlcv", async (req: any, res: any) => {
   }
 });
 
-function transformOHLC(ohlcs:  OHLCVData[], prevClose: string, nextOpen?: string) {
+function transformOHLC(
+  ohlcs: OHLCVData[],
+  prevClose: string,
+  nextOpen?: string
+) {
   ohlcs[0].open = prevClose.toString();
   for (let i = 1; i < ohlcs.length; i++) {
     ohlcs[i].open = ohlcs[i - 1].close;
   }
-  return ohlcs;
+
+  return ohlcs.map((ohlc) => ({
+    ...ohlc,
+    high: parseFloat(ohlc.high),
+    open: parseFloat(ohlc.open),
+    close: parseFloat(ohlc.close),
+    low: parseFloat(ohlc.low),
+  }));
 }
 
 export default router;

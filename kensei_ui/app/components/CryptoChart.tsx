@@ -1,5 +1,10 @@
-import React, {useEffect, useRef} from "react";
-import {CandlestickSeries, ColorType, createChart, UTCTimestamp} from "lightweight-charts";
+import React, { useEffect, useRef } from "react";
+import {
+  CandlestickSeries,
+  ColorType,
+  createChart,
+  UTCTimestamp,
+} from "lightweight-charts";
 
 export interface CandleData {
   time: UTCTimestamp;
@@ -17,21 +22,21 @@ interface CryptoChartProps {
 }
 
 const CryptoChart: React.FC<CryptoChartProps> = ({
-                                                   data,
-                                                   width = 600,
-                                                   height = 300,
-                                                 }) => {
+  data,
+  width = 600,
+  height = 300,
+}) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    console.log("Data received: ", data);
-    if (!chartContainerRef.current || data.length === 0) return;
+    if (!chartContainerRef.current) return;
 
     const formattedData = data
       .map((item) => {
-        const timeValue = typeof item.time === "number"
-          ? Math.floor(item.time) // Ensure it's an integer
-          : Math.floor(new Date(item.time).getTime() / 1000);
+        const timeValue =
+          typeof item.time === "number"
+            ? Math.floor(item.time)
+            : Math.floor(new Date(item.time).getTime() / 1000);
 
         return {
           time: timeValue as UTCTimestamp,
@@ -47,7 +52,7 @@ const CryptoChart: React.FC<CryptoChartProps> = ({
       width,
       height,
       layout: {
-        background: {type: ColorType.Solid, color: "transparent"},
+        background: { type: ColorType.Solid, color: "transparent" },
         textColor: "#D9D9D9",
       },
       timeScale: {
@@ -57,17 +62,14 @@ const CryptoChart: React.FC<CryptoChartProps> = ({
       rightPriceScale: {
         autoScale: true,
       },
-
     });
 
     const candlestickSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#26a69a',
-      downColor: '#ef5350',
-      priceScaleId: 'right',
+      priceScaleId: "right",
       priceFormat: {
-        type: 'price',
+        type: "price",
         precision: 15,
-        minMove: 0.000000000000001
+        minMove: 0.000000000000001,
       },
     });
 

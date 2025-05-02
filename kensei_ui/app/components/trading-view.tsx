@@ -95,7 +95,7 @@ export default function TradingView({
             resolution: timeframe,
           },
         });
-        const data: CandleData[] = response.data.rows;
+        const data: CandleData[] = response.data || [];
         setChartData(data);
       } catch (error) {
         console.error("Error fetching chart data:", error);
@@ -130,28 +130,11 @@ export default function TradingView({
       if (!isNaN(hours)) {
         intervalMs = hours * 60 * 60 * 1000;
       }
-    } else if (timeframe.includes("day")) {
-      // Days (e.g., "1 day")
-      const days = parseInt(timeframe.split(" ")[0]);
-      if (!isNaN(days)) {
-        intervalMs = days * 24 * 60 * 60 * 1000;
-      }
-    } else if (timeframe.includes("week")) {
-      // Weeks (e.g., "1 week")
-      const weeks = parseInt(timeframe.split(" ")[0]);
-      if (!isNaN(weeks)) {
-        intervalMs = weeks * 7 * 24 * 60 * 60 * 1000;
-      }
-    } else if (timeframe.includes("month")) {
-      // Months (e.g., "1 month")
-      const months = parseInt(timeframe.split(" ")[0]);
-      if (!isNaN(months)) {
-        // Approximate a month as 30 days
-        intervalMs = months * 30 * 24 * 60 * 60 * 1000;
-      }
+    } else {
+      // Default to 1 hour if no valid timeframe is provided
+      intervalMs = 60 * 60 * 1000;
     }
 
-    // Set up interval if a valid interval was determined
     if (intervalMs > 0) {
       console.log(`Setting up interval for ${timeframe}: ${intervalMs}ms`);
       intervalId = setInterval(fetchChartData, intervalMs);
@@ -163,7 +146,7 @@ export default function TradingView({
         clearInterval(intervalId);
       }
     };
-  }, [timeframe]);
+  }, [timeframe, bondingCurveId]);
 
   // Scroll chat to bottom when new messages are added
   useEffect(() => {
