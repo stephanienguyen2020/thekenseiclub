@@ -15,17 +15,17 @@ import { AxiosResponse } from "axios";
 type ProposalStatus = "active" | "closed" | "upcoming";
 
 interface Proposal {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   status: ProposalStatus;
   endDate: string;
-  options: Array<{
-    label: string;
-    votes: number;
-    percentage: number;
-    isSelected?: boolean;
-  }>;
+  tokenAddress: string;
+  voteCount: number;
+  votePoint: number;
+  createdAt: string;
+  winningOption: string;
+  options: string[];
 }
 
 export default function TokenDetailPageClient({ id }: { id: string }) {
@@ -50,181 +50,51 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
     bondingCurveId: "",
     suiPrice: 0,
   });
+  const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data for the coin
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   useEffect(() => {
-    const fetchCoin = async () => {
-      setLoading(true);
-      const coin: AxiosResponse<Coin> = await api.get(`/coin/${id}`);
-      setCoin({
-        ...coin.data,
-        website: "https://example.com",
-        twitter: "https://twitter.com/example",
-        telegram: "https://t.me/example",
-      });
-      setLoading(false);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Fetch coin data
+        const coinResponse: AxiosResponse<Coin> = await api.get(`/coin/${id}`);
+        setCoin({
+          ...coinResponse.data,
+          website: "https://example.com",
+          twitter: "https://twitter.com/example",
+          telegram: "https://t.me/example",
+        });
+
+        // Fetch proposals
+        const proposalsResponse = await fetch(`http://localhost:3000/api/daos/token/${id}`);
+        if (!proposalsResponse.ok) {
+          throw new Error('Failed to fetch proposals');
+        }
+        const proposalsData = await proposalsResponse.json();
+        setProposals(proposalsData.data || []);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchCoin();
+
+    fetchData();
   }, [id]);
-
-  console.log("Coin data:", coin);
-
-  // Mock proposals data
-  const proposals: Proposal[] = [
-    {
-      id: "prop-1",
-      title: `${id.toUpperCase()}01: Increase Marketing Budget for Community Growth`,
-      description:
-        "The community should allocate 10% of treasury for marketing initiatives to increase visibility and attract new holders. This proposal aims to establish a dedicated marketing fund that will be used for social media campaigns, influencer partnerships, and community events.",
-      status: "active" as const,
-      endDate: "2025-05-01 05:00 GMT-4",
-      options: [
-        {
-          label: "Yes, pass this Proposal",
-          votes: 1250000,
-          percentage: 78.5,
-          isSelected: true,
-        },
-        {
-          label: "No, do not pass this Proposal",
-          votes: 342000,
-          percentage: 21.5,
-        },
-      ],
-    },
-    {
-      id: "prop-2",
-      title: `${id.toUpperCase()}02: Revisiting The ${id.toUpperCase()} Staking Mechanism`,
-      description:
-        "After the first set of staking contracts expire, we need to decide on the future staking model. This proposal presents multiple options for the community to vote on, ranging from keeping the current system to implementing new hybrid solutions.",
-      status: "closed" as const,
-      endDate: "2025-04-01 05:00 GMT-4",
-      options: [
-        {
-          label: "Option 1: Keep Staking as is (No Changes)",
-          votes: 7378000,
-          percentage: 6.43,
-        },
-        {
-          label:
-            "Option 2: Solution #1 - Tiered Staking with Early Redemption Penalties",
-          votes: 2450000,
-          percentage: 2.14,
-        },
-        {
-          label:
-            "Option 3: Solution #2 - One Liquid Staking option without Early Redemptions",
-          votes: 6130000,
-          percentage: 5.34,
-        },
-        {
-          label:
-            "Option 4: Solution #3 Hybrid - Two contracts: Liquid Staking and Tiered Staking",
-          votes: 98650000,
-          percentage: 86.07,
-          isSelected: true,
-        },
-      ],
-    },
-    {
-      id: "prop-3",
-      title: `${id.toUpperCase()}03: Community Treasury Allocation Framework`,
-      description:
-        "Create a community-managed treasury for future development with clear guidelines on how funds can be allocated. This proposal establishes a governance framework for treasury management and ensures transparency in fund allocation.",
-      status: "upcoming" as const,
-      endDate: "2025-05-15 05:00 GMT-4",
-      options: [
-        { label: "Yes, pass this Proposal", votes: 0, percentage: 0 },
-        { label: "No, do not pass this Proposal", votes: 0, percentage: 0 },
-      ],
-    },
-    {
-      id: "prop-4",
-      title: `${id.toUpperCase()}04: ${id.toUpperCase()} Token Utility Expansion`,
-      description:
-        "This proposal aims to expand the utility of our token by introducing new use cases and integrations. We present multiple options for the community to decide which direction to prioritize.",
-      status: "active" as const,
-      endDate: "2025-05-10 05:00 GMT-4",
-      options: [
-        {
-          label: "Option 1: Focus on DeFi integrations",
-          votes: 450000,
-          percentage: 22.5,
-        },
-        {
-          label: "Option 2: Develop NFT marketplace utilities",
-          votes: 320000,
-          percentage: 16.0,
-        },
-        {
-          label: "Option 3: Create a DAO-managed grants program",
-          votes: 980000,
-          percentage: 49.0,
-          isSelected: true,
-        },
-        {
-          label: "Option 4: Build cross-chain bridges",
-          votes: 250000,
-          percentage: 12.5,
-        },
-      ],
-    },
-    {
-      id: "prop-5",
-      title: `${id.toUpperCase()}05: Partner with Gaming Platform`,
-      description:
-        "Form strategic partnership with GameFi platform to increase token utility and adoption. This partnership would allow token holders to use their tokens within popular games and potentially attract gamers to our ecosystem.",
-      status: "closed" as const,
-      endDate: "2025-03-15 05:00 GMT-4",
-      options: [
-        { label: "Yes, pass this Proposal", votes: 687000, percentage: 45.8 },
-        {
-          label: "No, do not pass this Proposal",
-          votes: 813000,
-          percentage: 54.2,
-          isSelected: true,
-        },
-      ],
-    },
-    {
-      id: "prop-6",
-      title: `${id.toUpperCase()}06: Tokenomics Adjustment Proposal`,
-      description:
-        "This proposal suggests adjustments to our tokenomics to improve long-term sustainability and value accrual. Several options are presented for the community to decide on.",
-      status: "upcoming" as const,
-      endDate: "2025-06-01 05:00 GMT-4",
-      options: [
-        {
-          label: "Option 1: Implement a 1% burn on all transactions",
-          votes: 0,
-          percentage: 0,
-        },
-        {
-          label:
-            "Option 2: Increase staking rewards by reducing team allocation",
-          votes: 0,
-          percentage: 0,
-        },
-        {
-          label: "Option 3: Create a buy-back and burn mechanism from treasury",
-          votes: 0,
-          percentage: 0,
-        },
-        {
-          label: "Option 4: Keep current tokenomics unchanged",
-          votes: 0,
-          percentage: 0,
-        },
-        {
-          label:
-            "Option 5: Implement dynamic fee structure based on market conditions",
-          votes: 0,
-          percentage: 0,
-        },
-      ],
-    },
-  ];
 
   // Filter proposals based on selected filter
   const filteredProposals = proposals.filter(
@@ -239,6 +109,18 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
           <div className="flex flex-col items-center">
             <div className="w-16 h-16 border-4 border-t-[#c0ff00] border-r-[#c0ff00] border-b-transparent border-l-transparent rounded-full animate-spin"></div>
             <p className="mt-4 text-lg font-medium">Loading token details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#0039C6] flex items-center justify-center">
+        <div className="bg-white p-8 rounded-3xl shadow-lg">
+          <div className="flex flex-col items-center">
+            <p className="text-red-500 text-lg font-medium">Error: {error}</p>
           </div>
         </div>
       </div>
@@ -475,15 +357,20 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
                 <div className="space-y-4">
                   {filteredProposals.map((proposal) => (
                     <ProposalCard
-                      key={proposal.id}
-                      id={proposal.id}
+                      key={proposal._id}
+                      id={proposal._id}
                       title={proposal.title}
                       description={proposal.description}
                       status={proposal.status}
-                      endDate={proposal.endDate}
+                      endDate={formatDate(proposal.endDate)}
                       tokenSymbol={coin.symbol}
                       tokenLogo={coin.logo}
-                      options={proposal.options}
+                      options={proposal.options.map(option => ({
+                        label: option,
+                        votes: proposal.voteCount,
+                        percentage: proposal.voteCount > 0 ? (proposal.votePoint / proposal.voteCount) * 100 : 0,
+                        isSelected: option === proposal.winningOption
+                      }))}
                       tokenId={id}
                     />
                   ))}

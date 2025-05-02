@@ -8,8 +8,7 @@ export async function GET(
 ) {
     try {
         const tokenAddress = params.tokenAddress;
-        const response = await fetch(`${BACKEND_URL}/api/dao/proposals/token/${tokenAddress}`);
-
+        const response = await fetch(`${BACKEND_URL}/api/proposals/token/${tokenAddress}`);
         if (!response.ok) {
             throw new Error('Failed to fetch proposals');
         }

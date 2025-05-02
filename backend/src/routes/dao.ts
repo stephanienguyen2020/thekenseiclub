@@ -80,4 +80,17 @@ router.get('/proposals/:id/votes', async (req: any, res: any) => {
     }
 });
 
+// Get user's vote for a specific proposal
+router.get('/proposals/:proposalId/votes/user/:wallet', async (req: any, res: any) => {
+    try {
+        const vote = await daoService.getUserVoteForProposal(req.params.wallet, req.params.proposalId);
+        if (!vote) {
+            return res.status(404).json({ error: 'Vote not found' });
+        }
+        res.json(vote);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch user vote', details: error });
+    }
+});
+
 export default router; 

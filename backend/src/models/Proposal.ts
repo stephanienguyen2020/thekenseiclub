@@ -3,7 +3,11 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IProposal extends Document {
     title: string;
     description: string;
-    options: string[];
+    options: {
+        option: string;
+        votes: number;
+        points: number;
+    }[];
     createdBy: string;
     tokenAddress: string;
     createdAt: Date;
@@ -20,7 +24,11 @@ export interface IProposal extends Document {
 const ProposalSchema: Schema = new Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
-    options: { type: [String], required: true },
+    options: [{
+        option: { type: String, required: true },
+        votes: { type: Number, default: 0 },
+        points: { type: Number, default: 0 }
+    }],
     createdBy: { type: String, required: true },
     tokenAddress: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
