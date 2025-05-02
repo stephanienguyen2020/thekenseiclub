@@ -14,6 +14,7 @@ export interface Coin {
   proposals: number;
   bondingCurveId: string;
   holdings?: number;
+  suiPrice: number;
 }
 
 export interface CoinList {

@@ -48,6 +48,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
     telegram: "",
     proposals: 0,
     bondingCurveId: "",
+    suiPrice: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -66,6 +67,8 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
     };
     fetchCoin();
   }, [id]);
+
+  console.log("Coin data:", coin);
 
   // Mock proposals data
   const proposals: Proposal[] = [
@@ -529,6 +532,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
               change24h={coin.change24h}
               bondingCurveId={coin.bondingCurveId}
               tokenId={coin.id}
+              suiPrice={coin.suiPrice}
             />
           )}
         </div>

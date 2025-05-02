@@ -135,8 +135,8 @@ importers:
         specifier: 1.0.4
         version: 1.0.4(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       coin-sdk:
-        specifier: ^1.0.11
-        version: 1.0.11(graphql@16.11.0)(typescript@5.8.3)
+        specifier: ^1.0.13
+        version: 1.0.13(graphql@16.11.0)(typescript@5.8.3)
       date-fns:
         specifier: 4.1.0
         version: 4.1.0
@@ -2148,8 +2148,8 @@ packages:
       react: ^18 || ^19 || ^19.0.0-rc
       react-dom: ^18 || ^19 || ^19.0.0-rc
 
-  coin-sdk@1.0.11:
-    resolution: {integrity: sha512-ZRr/ljQ/0iY4H75FAnMfXm4Cz/CKKh0d7TtJdfjQb1eC87DJoYOCcjuJrJKWG2YOs4nfur3iTu1o4Ja86N1ZFw==}
+  coin-sdk@1.0.13:
+    resolution: {integrity: sha512-PS/1hgaqH0+rkppWtXJHfK7pRt+j0iT3kpA55AEIwQl689Q/dH8ridRGeoXl89+D2gJN8TBjvRhVjgdyw5dCzw==}
 
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
@@ -6619,7 +6619,7 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  coin-sdk@1.0.11(graphql@16.11.0)(typescript@5.8.3):
+  coin-sdk@1.0.13(graphql@16.11.0)(typescript@5.8.3):
     dependencies:
       '@flowx-finance/sdk': 1.2.2-3(graphql@16.11.0)(typescript@5.8.3)
       '@mysten/sui': 1.29.0(typescript@5.8.3)

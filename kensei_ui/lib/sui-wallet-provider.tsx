@@ -14,7 +14,7 @@ const networks = {
 
 export function SuiWalletProvider({ children }: { children: ReactNode }) {
   return (
-    <SuiClientProvider networks={networks} defaultNetwork="mainnet">
+    <SuiClientProvider networks={networks} defaultNetwork="devnet">
       <WalletProvider autoConnect preferredWallets={["Sui Wallet"]}>
         {children}
       </WalletProvider>
