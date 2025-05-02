@@ -1,10 +1,18 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Search, Filter, FileText, MessageSquare, ExternalLink, Plus } from "lucide-react"
-import { useCurrentAccount } from "@mysten/dapp-kit"
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Search,
+  Filter,
+  FileText,
+  MessageSquare,
+  ExternalLink,
+  Plus,
+} from "lucide-react";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { getObject } from "@/lib/utils";
 
 interface Proposal {
   _id: string;
@@ -17,67 +25,100 @@ interface Proposal {
   votePoint: number;
   createdAt: string;
   winningOption: string;
+  tokenName: string;
 }
 
 export default function ProposalsPage() {
-  const [filter, setFilter] = useState("all")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [proposals, setProposals] = useState<{ active: Proposal[]; closed: Proposal[] }>({ active: [], closed: [] })
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const currentAccount = useCurrentAccount()
+  const [filter, setFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [proposals, setProposals] = useState<{
+    active: Proposal[];
+    closed: Proposal[];
+  }>({ active: [], closed: [] });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const currentAccount = useCurrentAccount();
 
   useEffect(() => {
     const fetchProposals = async () => {
       try {
         if (!currentAccount?.address) {
-          setError('Please connect your wallet')
-          setLoading(false)
-          return
+          setError("Please connect your wallet");
+          setLoading(false);
+          return;
         }
-        const response = await fetch(`/api/daos?wallet=${currentAccount.address}`)
-        console.log("backendapi response", response)
+        const response = await fetch(
+          `/api/daos?wallet=${currentAccount.address}`
+        );
+        console.log("backendapi response", response);
         if (!response.ok) {
-          throw new Error('Failed to fetch proposals')
+          throw new Error("Failed to fetch proposals");
         }
-        const data = await response.json()
-        setProposals(data.data)
-        setError(null)
+        const data = await response.json();
+        const proposalsData = data.data;
+        proposalsData.active = await Promise.all(
+          proposalsData.active.map(async (proposal: Proposal) => {
+            const coinMetadata = (await getObject(
+              proposal.tokenAddress
+            )) as any;
+            return {
+              ...proposal,
+              tokenName:
+                coinMetadata?.data?.content?.fields?.name ||
+                proposal.tokenAddress,
+            };
+          })
+        );
+        proposalsData.closed = await Promise.all(
+          proposalsData.closed.map(async (proposal: Proposal) => {
+            const coinMetadata = (await getObject(
+              proposal.tokenAddress
+            )) as any;
+            return {
+              ...proposal,
+              tokenName:
+                coinMetadata?.data?.content?.fields?.name ||
+                proposal.tokenAddress,
+            };
+          })
+        );
+        setProposals(proposalsData);
+        setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred')
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchProposals()
-  }, [currentAccount?.address])
+    fetchProposals();
+  }, [currentAccount?.address]);
 
   // Combine active and closed proposals for filtering
-  const allProposals = [...proposals.active, ...proposals.closed]
+  const allProposals = [...proposals.active, ...proposals.closed];
 
   // Filter proposals
   const filteredProposals = allProposals.filter(
     (proposal) =>
       (filter === "all" || proposal.status === filter) &&
       (proposal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        proposal.tokenAddress.toLowerCase().includes(searchQuery.toLowerCase()))
-  )
+        proposal.tokenName.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   // Stats
   const stats = {
     total: allProposals.length,
     active: proposals.active.length,
     closed: proposals.closed.length,
-    upcoming: 0 // TODO: Add upcoming status to API
-  }
+    upcoming: 0, // TODO: Add upcoming status to API
+  };
 
   if (loading) {
     return (
       <div className="p-6">
         <div className="text-center">Loading proposals...</div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -85,7 +126,7 @@ export default function ProposalsPage() {
       <div className="p-6">
         <div className="text-center text-red-500">Error: {error}</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -158,7 +199,10 @@ export default function ProposalsPage() {
       <div className="bg-white rounded-3xl p-6 mb-6 border-4 border-black">
         <div className="flex flex-col md:flex-row gap-4 justify-between">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={20}
+            />
             <input
               type="text"
               placeholder="Search proposals..."
@@ -195,7 +239,9 @@ export default function ProposalsPage() {
             </button>
             <button
               className={`px-4 py-2 rounded-xl flex items-center gap-1 border-2 border-black ${
-                filter === "upcoming" ? "bg-blue-200 text-blue-800" : "bg-gray-100"
+                filter === "upcoming"
+                  ? "bg-blue-200 text-blue-800"
+                  : "bg-gray-100"
               }`}
               onClick={() => setFilter("upcoming")}
             >
@@ -209,31 +255,35 @@ export default function ProposalsPage() {
       <div className="space-y-6">
         {filteredProposals.length > 0 ? (
           filteredProposals.map((proposal) => (
-            <div key={proposal._id} className="bg-white rounded-3xl overflow-hidden border-4 border-black">
+            <div
+              key={proposal._id}
+              className="bg-white rounded-3xl overflow-hidden border-4 border-black"
+            >
               {/* Header */}
               <div className="p-4 flex justify-between items-center border-b-2 border-black">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-black">
                     <Image
                       src="/placeholder.svg"
-                      alt={proposal.tokenAddress}
+                      alt={proposal.tokenName}
                       width={32}
                       height={32}
                       className="object-cover"
                     />
                   </div>
-                  <span className="font-bold">{proposal.tokenAddress.slice(0, 6)}...{proposal.tokenAddress.slice(-4)}</span>
+                  <span className="font-bold">{proposal.tokenName}</span>
                 </div>
                 <div
                   className={`px-3 py-1 rounded-full text-xs font-bold border-2 border-black ${
                     proposal.status === "active"
                       ? "bg-[#c0ff00] text-black"
                       : proposal.status === "closed"
-                        ? "bg-red-500 text-white"
-                        : "bg-blue-200 text-blue-800"
+                      ? "bg-red-500 text-white"
+                      : "bg-blue-200 text-blue-800"
                   }`}
                 >
-                  {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
+                  {proposal.status.charAt(0).toUpperCase() +
+                    proposal.status.slice(1)}
                 </div>
               </div>
 
@@ -241,21 +291,37 @@ export default function ProposalsPage() {
               <div className="px-6 py-6">
                 <h2 className="text-xl font-bold mb-2">{proposal.title}</h2>
                 <p className="text-gray-600 mb-4">{proposal.description}</p>
-                <div className="text-sm text-gray-500 mb-4">Ends at {new Date(proposal.endDate).toLocaleString()}</div>
+                <div className="text-sm text-gray-500 mb-4">
+                  Ends at {new Date(proposal.endDate).toLocaleString()}
+                </div>
 
                 {/* Voting Progress */}
                 {proposal.status !== "upcoming" && (
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-medium">Voting Progress</span>
+                      <span className="text-sm font-medium">
+                        Voting Progress
+                      </span>
                       <span className="text-sm font-bold">
-                        {proposal.voteCount > 0 ? ((proposal.votePoint / proposal.voteCount) * 100).toFixed(1) : 0}%
+                        {proposal.voteCount > 0
+                          ? (
+                              (proposal.votePoint / proposal.voteCount) *
+                              100
+                            ).toFixed(1)
+                          : 0}
+                        %
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-4 border-2 border-black overflow-hidden">
                       <div
                         className="bg-[#c0ff00] h-full rounded-full"
-                        style={{ width: `${proposal.voteCount > 0 ? (proposal.votePoint / proposal.voteCount) * 100 : 0}%` }}
+                        style={{
+                          width: `${
+                            proposal.voteCount > 0
+                              ? (proposal.votePoint / proposal.voteCount) * 100
+                              : 0
+                          }%`,
+                        }}
                       ></div>
                     </div>
                     <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -298,7 +364,9 @@ export default function ProposalsPage() {
             </div>
             <h3 className="text-xl font-bold mb-2">No proposals found</h3>
             <p className="text-gray-500 mb-6">
-              {filter !== "all" ? `You don't have any ${filter} proposals.` : "You haven't created any proposals yet."}
+              {filter !== "all"
+                ? `You don't have any ${filter} proposals.`
+                : "You haven't created any proposals yet."}
             </p>
             <Link
               href="/dashboard/proposals/create"
@@ -311,5 +379,5 @@ export default function ProposalsPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
