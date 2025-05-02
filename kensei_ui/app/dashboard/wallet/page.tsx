@@ -38,6 +38,7 @@ export default function WalletPage() {
         console.log("Holdings data:", data);
         setHoldings(data);
       };
+      console.log("currentAccount?.address", currentAccount?.address);
       fetchHoldings();
     }
     if (activeTab === "created") {
@@ -48,6 +49,7 @@ export default function WalletPage() {
           },
         });
         const data = response.data;
+        console.log("currentAccount?.address", currentAccount?.address);
         console.log("Created tokens data:", data);
         setCreatedTokens(data);
       };

@@ -1,86 +1,67 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Plus, Search, X } from "lucide-react"
+import { useCurrentAccount } from "@mysten/dapp-kit"
+
+interface Token {
+  id: string;
+  name: string;
+  symbol: string;
+  logo: string;
+  balance: number;
+  minRequired: number;
+}
 
 export default function CreateProposalSelectToken() {
   const router = useRouter()
   const [selectedToken, setSelectedToken] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const [tokens, setTokens] = useState<Token[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [hasTokens, setHasTokens] = useState(false)
+  const currentAccount = useCurrentAccount()
 
-  // Mock data for available tokens - expanded with more tokens
-  const availableTokens = [
-    {
-      id: "pepe",
-      name: "Pepe",
-      symbol: "PEPE",
-      logo: "/happy-frog-on-a-lilypad.png",
-      balance: 1250000,
-      minRequired: 10000,
-    },
-    {
-      id: "doge",
-      name: "Doge",
-      symbol: "DOGE",
-      logo: "/alert-shiba.png",
-      balance: 5000000,
-      minRequired: 50000,
-    },
-    {
-      id: "shib",
-      name: "Shiba Inu",
-      symbol: "SHIB",
-      logo: "/stylized-shiba-inu.png",
-      balance: 75000000,
-      minRequired: 100000,
-    },
-    {
-      id: "cat",
-      name: "Cat",
-      symbol: "CAT",
-      logo: "/playful-calico.png",
-      balance: 500000,
-      minRequired: 5000,
-    },
-    {
-      id: "moon",
-      name: "Moon",
-      symbol: "MOON",
-      logo: "/crescent-moon-silhouette.png",
-      balance: 2500000,
-      minRequired: 25000,
-    },
-    {
-      id: "bull",
-      name: "Bulldog",
-      symbol: "BULL",
-      logo: "/blockchain-bulldog.png",
-      balance: 100000,
-      minRequired: 1000,
-    },
-    {
-      id: "pup",
-      name: "Puppy",
-      symbol: "PUP",
-      logo: "/pixel-pup.png",
-      balance: 3000000,
-      minRequired: 30000,
-    },
-    {
-      id: "cool",
-      name: "Cool Cat",
-      symbol: "COOL",
-      logo: "/pixel-cool-cat.png",
-      balance: 800000,
-      minRequired: 8000,
-    },
-  ]
+  useEffect(() => {
+    const fetchTokens = async () => {
+      try {
+        if (!currentAccount?.address) {
+          setError('Please connect your wallet')
+          setLoading(false)
+          return
+        }
+        const response = await fetch(`/api/coins?address=${currentAccount.address}`)
+        console.log("Tokens response:", response)
+        if (!response.ok) {
+          if (response.status === 404) {
+            setHasTokens(false)
+            setTokens([])
+            setError(null)
+          } else {
+            throw new Error('Failed to fetch tokens')
+          }
+        } else {
+          const data = await response.json()
+          setTokens(data.data || [])
+          setHasTokens((data.data || []).length > 0)
+          setError(null)
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchTokens()
+  }, [currentAccount?.address])
 
   // Filter tokens based on search query
-  const filteredTokens = availableTokens.filter((token) => {
+  const filteredTokens = tokens.filter((token) => {
     const query = searchQuery.toLowerCase()
     return token.name.toLowerCase().includes(query) || token.symbol.toLowerCase().includes(query)
   })
@@ -93,6 +74,58 @@ export default function CreateProposalSelectToken() {
 
   const clearSearch = () => {
     setSearchQuery("")
+  }
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="text-center">Loading tokens...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="text-center text-red-500">Error: {error}</div>
+      </div>
+    )
+  }
+
+  if (!hasTokens) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center mb-8">
+          <Link href="/dashboard/proposals" className="flex items-center gap-2">
+            <div className="bg-[#c0ff00] p-2 rounded-full border-4 border-black">
+              <ArrowLeft className="text-black" size={24} />
+            </div>
+            <div className="bg-white text-black px-4 py-2 rounded-xl text-sm font-bold border-4 border-black">
+              Back to Proposals
+            </div>
+          </Link>
+        </div>
+
+        <div className="bg-white rounded-3xl p-8 border-4 border-black text-center">
+          <div className="bg-yellow-100 p-8 rounded-xl border-4 border-black mb-8">
+            <h3 className="text-xl font-bold mb-2">No Tokens Found</h3>
+            <p className="text-gray-700 mb-4">
+              You don't have any tokens in your wallet that support governance proposals.
+            </p>
+            <p className="text-gray-600 mb-6">
+              To create a proposal, you need to hold tokens from a community that supports governance.
+              Consider acquiring tokens from a supported community first.
+            </p>
+            <Link
+              href="/marketplace"
+              className="bg-[#c0ff00] text-black px-6 py-2 rounded-xl font-bold border-4 border-black hover:bg-yellow-300 transition-colors inline-block"
+            >
+              Browse Supported Communities
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

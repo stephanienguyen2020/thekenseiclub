@@ -36,12 +36,13 @@ export default function ProposalsPage() {
           return
         }
         const response = await fetch(`/api/daos?wallet=${currentAccount.address}`)
+        console.log("backendapi response", response)
         if (!response.ok) {
           throw new Error('Failed to fetch proposals')
         }
-        console.log("backendapi response", response)
         const data = await response.json()
         setProposals(data.data)
+        setError(null)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred')
       } finally {
