@@ -14,6 +14,13 @@ import { AxiosResponse } from "axios";
 
 type ProposalStatus = "active" | "closed" | "upcoming";
 
+interface OptionObject {
+  option: string;
+  votes: number;
+  points: number;
+  _id?: string;
+}
+
 interface Proposal {
   _id: string;
   title: string;
@@ -25,7 +32,7 @@ interface Proposal {
   votePoint: number;
   createdAt: string;
   winningOption: string;
-  options: string[];
+  options: Array<string | OptionObject>;
 }
 
 export default function TokenDetailPageClient({ id }: { id: string }) {
@@ -56,12 +63,12 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -79,15 +86,17 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
         });
 
         // Fetch proposals
-        const proposalsResponse = await fetch(`http://localhost:3000/api/daos/token/${id}`);
+        const proposalsResponse = await fetch(
+          `http://localhost:3000/api/daos/token/${id}`
+        );
         if (!proposalsResponse.ok) {
-          throw new Error('Failed to fetch proposals');
+          throw new Error("Failed to fetch proposals");
         }
         const proposalsData = await proposalsResponse.json();
         setProposals(proposalsData.data || []);
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -365,12 +374,35 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
                       endDate={formatDate(proposal.endDate)}
                       tokenSymbol={coin.symbol}
                       tokenLogo={coin.logo}
-                      options={proposal.options.map(option => ({
-                        label: option,
-                        votes: proposal.voteCount,
-                        percentage: proposal.voteCount > 0 ? (proposal.votePoint / proposal.voteCount) * 100 : 0,
-                        isSelected: option === proposal.winningOption
-                      }))}
+                      options={proposal.options.map((option) => {
+                        // Check if option is already an object or just a string
+                        if (typeof option === "object" && option !== null) {
+                          const optionObj = option as OptionObject;
+                          return {
+                            label: optionObj.option || "Option",
+                            votes: optionObj.votes || 0,
+                            percentage:
+                              optionObj.votes > 0
+                                ? (optionObj.points / optionObj.votes) * 100
+                                : 0,
+                            isSelected:
+                              proposal.winningOption === optionObj.option,
+                          };
+                        } else {
+                          // If it's a string, create an option object
+                          const optionStr = option as string;
+                          return {
+                            label: optionStr,
+                            votes: proposal.voteCount || 0,
+                            percentage:
+                              proposal.voteCount > 0
+                                ? (proposal.votePoint / proposal.voteCount) *
+                                  100
+                                : 0,
+                            isSelected: optionStr === proposal.winningOption,
+                          };
+                        }
+                      })}
                       tokenId={id}
                     />
                   ))}

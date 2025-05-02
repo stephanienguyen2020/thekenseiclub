@@ -83,7 +83,8 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
         const response = await api.post("/users", {
           username: `${currentAccount?.address}`,
           suiAddress: currentAccount?.address,
-          profilePictureUrl: "/placeholder-user.jpg",
+          profilePictureUrl:
+            "https://teal-characteristic-echidna-176.mypinata.cloud/ipfs/bafybeigyz5u6d4crnmfsxnlelhadkmausippqr3ezpw5gcwi4yldlofc2a",
         });
         console.log("User registration response:", response.data);
       } catch (apiError) {
