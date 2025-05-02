@@ -1,95 +1,90 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Search, Filter, FileText, MessageSquare, ExternalLink, Plus } from "lucide-react"
+import { useCurrentAccount } from "@mysten/dapp-kit"
+
+interface Proposal {
+  _id: string;
+  title: string;
+  description: string;
+  status: string;
+  endDate: string;
+  tokenAddress: string;
+  voteCount: number;
+  votePoint: number;
+  createdAt: string;
+  winningOption: string;
+}
 
 export default function ProposalsPage() {
   const [filter, setFilter] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
+  const [proposals, setProposals] = useState<{ active: Proposal[]; closed: Proposal[] }>({ active: [], closed: [] })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const currentAccount = useCurrentAccount()
 
-  // Mock data for proposals
-  const proposals = [
-    {
-      id: "prop-1",
-      title: "PEPE01: Increase Marketing Budget for Community Growth",
-      description:
-        "The community should allocate 10% of treasury for marketing initiatives to increase visibility and attract new holders.",
-      status: "active",
-      endDate: "2025-05-01 05:00 GMT-4",
-      token: "PEPE",
-      tokenLogo: "/happy-frog-on-a-lilypad.png",
-      votes: 1250000,
-      totalVotes: 1592000,
-      votingPower: 78.5,
-    },
-    {
-      id: "prop-2",
-      title: "DOGE02: Revisiting The DOGE Staking Mechanism",
-      description: "After the first set of staking contracts expire, we need to decide on the future staking model.",
-      status: "closed",
-      endDate: "2025-04-01 05:00 GMT-4",
-      token: "DOGE",
-      tokenLogo: "/alert-shiba.png",
-      votes: 114608000,
-      totalVotes: 114608000,
-      votingPower: 100,
-    },
-    {
-      id: "prop-3",
-      title: "CAT03: Community Treasury Allocation Framework",
-      description:
-        "Create a community-managed treasury for future development with clear guidelines on how funds can be allocated.",
-      status: "upcoming",
-      endDate: "2025-05-15 05:00 GMT-4",
-      token: "CAT",
-      tokenLogo: "/playful-calico.png",
-      votes: 0,
-      totalVotes: 0,
-      votingPower: 0,
-    },
-    {
-      id: "prop-4",
-      title: "PEPE04: PEPE Token Utility Expansion",
-      description:
-        "This proposal aims to expand the utility of our token by introducing new use cases and integrations.",
-      status: "active",
-      endDate: "2025-05-10 05:00 GMT-4",
-      token: "PEPE",
-      tokenLogo: "/happy-frog-on-a-lilypad.png",
-      votes: 2000000,
-      totalVotes: 2000000,
-      votingPower: 100,
-    },
-    {
-      id: "prop-5",
-      title: "SHIB05: Partner with Gaming Platform",
-      description: "Form strategic partnership with GameFi platform to increase token utility and adoption.",
-      status: "closed",
-      endDate: "2025-03-15 05:00 GMT-4",
-      token: "SHIB",
-      tokenLogo: "/stylized-shiba-inu.png",
-      votes: 687000,
-      totalVotes: 1500000,
-      votingPower: 45.8,
-    },
-  ]
+  useEffect(() => {
+    const fetchProposals = async () => {
+      try {
+        if (!currentAccount?.address) {
+          setError('Please connect your wallet')
+          setLoading(false)
+          return
+        }
+        const response = await fetch(`/api/daos?wallet=${currentAccount.address}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch proposals')
+        }
+        console.log("backendapi response", response)
+        const data = await response.json()
+        setProposals(data.data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProposals()
+  }, [currentAccount?.address])
+
+  // Combine active and closed proposals for filtering
+  const allProposals = [...proposals.active, ...proposals.closed]
 
   // Filter proposals
-  const filteredProposals = proposals.filter(
+  const filteredProposals = allProposals.filter(
     (proposal) =>
       (filter === "all" || proposal.status === filter) &&
       (proposal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        proposal.token.toLowerCase().includes(searchQuery.toLowerCase())),
+        proposal.tokenAddress.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
   // Stats
   const stats = {
-    total: proposals.length,
-    active: proposals.filter((p) => p.status === "active").length,
-    closed: proposals.filter((p) => p.status === "closed").length,
-    upcoming: proposals.filter((p) => p.status === "upcoming").length,
+    total: allProposals.length,
+    active: proposals.active.length,
+    closed: proposals.closed.length,
+    upcoming: 0 // TODO: Add upcoming status to API
+  }
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="text-center">Loading proposals...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="text-center text-red-500">Error: {error}</div>
+      </div>
+    )
   }
 
   return (
@@ -213,20 +208,20 @@ export default function ProposalsPage() {
       <div className="space-y-6">
         {filteredProposals.length > 0 ? (
           filteredProposals.map((proposal) => (
-            <div key={proposal.id} className="bg-white rounded-3xl overflow-hidden border-4 border-black">
+            <div key={proposal._id} className="bg-white rounded-3xl overflow-hidden border-4 border-black">
               {/* Header */}
               <div className="p-4 flex justify-between items-center border-b-2 border-black">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-black">
                     <Image
-                      src={proposal.tokenLogo || "/placeholder.svg"}
-                      alt={proposal.token}
+                      src="/placeholder.svg"
+                      alt={proposal.tokenAddress}
                       width={32}
                       height={32}
                       className="object-cover"
                     />
                   </div>
-                  <span className="font-bold">{proposal.token}</span>
+                  <span className="font-bold">{proposal.tokenAddress.slice(0, 6)}...{proposal.tokenAddress.slice(-4)}</span>
                 </div>
                 <div
                   className={`px-3 py-1 rounded-full text-xs font-bold border-2 border-black ${
@@ -245,24 +240,26 @@ export default function ProposalsPage() {
               <div className="px-6 py-6">
                 <h2 className="text-xl font-bold mb-2">{proposal.title}</h2>
                 <p className="text-gray-600 mb-4">{proposal.description}</p>
-                <div className="text-sm text-gray-500 mb-4">Ends at {proposal.endDate}</div>
+                <div className="text-sm text-gray-500 mb-4">Ends at {new Date(proposal.endDate).toLocaleString()}</div>
 
                 {/* Voting Progress */}
                 {proposal.status !== "upcoming" && (
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-sm font-medium">Voting Progress</span>
-                      <span className="text-sm font-bold">{proposal.votingPower}%</span>
+                      <span className="text-sm font-bold">
+                        {proposal.voteCount > 0 ? ((proposal.votePoint / proposal.voteCount) * 100).toFixed(1) : 0}%
+                      </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-4 border-2 border-black overflow-hidden">
                       <div
                         className="bg-[#c0ff00] h-full rounded-full"
-                        style={{ width: `${proposal.votingPower}%` }}
+                        style={{ width: `${proposal.voteCount > 0 ? (proposal.votePoint / proposal.voteCount) * 100 : 0}%` }}
                       ></div>
                     </div>
                     <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>{(proposal.votes / 1000000).toFixed(2)}M votes</span>
-                      <span>{(proposal.totalVotes / 1000000).toFixed(2)}M total</span>
+                      <span>{proposal.votePoint} votes</span>
+                      <span>{proposal.voteCount} total</span>
                     </div>
                   </div>
                 )}
@@ -276,7 +273,7 @@ export default function ProposalsPage() {
                     <span>IPFS</span>
                   </button>
                   <Link
-                    href={`/marketplace/${proposal.token.toLowerCase()}/proposal/${proposal.id}/discussion`}
+                    href={`/marketplace/${proposal.tokenAddress}/proposal/${proposal._id}/discussion`}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white text-black text-sm font-medium border-2 border-black"
                   >
                     <MessageSquare size={16} />
@@ -284,7 +281,7 @@ export default function ProposalsPage() {
                   </Link>
                 </div>
                 <Link
-                  href={`/marketplace/${proposal.token.toLowerCase()}/proposal/${proposal.id}`}
+                  href={`/marketplace/${proposal.tokenAddress}/proposal/${proposal._id}`}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#c0ff00] text-black text-sm font-bold border-2 border-black"
                 >
                   <span>View details</span>

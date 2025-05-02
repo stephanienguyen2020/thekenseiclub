@@ -60,6 +60,7 @@ export async function POST(request: Request) {
 
 // Get all proposals
 export async function GET(req: Request) {
+    console.log("GET request received");
     try {
         const { searchParams } = new URL(req.url);
         const wallet = searchParams.get('wallet');
