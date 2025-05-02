@@ -1,9 +1,11 @@
 "use client";
 
-import { ChangeEvent, FormEvent } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import { Sparkles, AlertCircle } from "lucide-react";
 import ImageUpload from "./image-upload";
 import { motion } from "framer-motion";
+import { useTokenGeneratingService } from "@/services/TokenGeneratingService";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 
 interface ManualInputFormProps {
   tokenName: string;
@@ -38,6 +40,14 @@ export default function ManualInputForm({
   onGenerateImage,
   onSubmit,
 }: ManualInputFormProps) {
+  const [imagePrompt, setImagePrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(
+    null
+  );
+  const tokenGeneratingService = useTokenGeneratingService();
+  const currentAccount = useCurrentAccount();
+
   const validateAndSubmitForm = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -85,6 +95,53 @@ export default function ManualInputForm({
     }
   };
 
+  const handleGenerateImage = async () => {
+    if (!imagePrompt.trim()) {
+      alert("Please enter a description for your image");
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      // Generate image using the token generation service
+      const result = await tokenGeneratingService.generateImageFromPrompt(
+        imagePrompt,
+        currentAccount?.address // Pass user ID for attribution
+      );
+
+      // Update the UI with the generated image
+      setGeneratedImageUrl(result.imageUrl);
+
+      // Update the parent's imagePreview with the local URL
+      if (typeof onImageClear === "function") {
+        onImageClear();
+      }
+
+      if (
+        typeof onTokenNameChange === "function" &&
+        typeof window !== "undefined"
+      ) {
+        // Set the imagePreview in the parent component without triggering another upload
+        window.setTimeout(() => {
+          // Use a custom event to pass data between components
+          const event = new CustomEvent("setImagePreview", {
+            detail: {
+              previewUrl: result.imageUrl,
+              gatewayUrl: result.gatewayUrl,
+            },
+          });
+          window.dispatchEvent(event);
+        }, 0);
+      }
+    } catch (error) {
+      console.error("Error generating image:", error);
+      alert("Failed to generate image. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -106,7 +163,7 @@ export default function ManualInputForm({
           </label>
           <div className="grid grid-cols-2 gap-6">
             <ImageUpload
-              previewUrl={imagePreview}
+              previewUrl={imagePreview || generatedImageUrl}
               onImageSelect={onImageUpload}
               onClear={onImageClear}
             />
@@ -118,14 +175,16 @@ export default function ManualInputForm({
                   <textarea
                     placeholder="Describe the image you want"
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm min-h-[170px] resize-none focus:outline-none focus:ring-2 focus:ring-[#0039C6]"
+                    value={imagePrompt}
+                    onChange={(e) => setImagePrompt(e.target.value)}
                   />
                   <button
                     type="button"
                     className="bg-[#0039C6] text-white px-3 py-2 rounded-lg text-sm flex items-center justify-center gap-1 w-full hover:bg-opacity-90 transition-colors"
-                    onClick={onGenerateImage}
-                    disabled={isGeneratingImage}
+                    onClick={handleGenerateImage}
+                    disabled={isGenerating || !imagePrompt.trim()}
                   >
-                    {isGeneratingImage ? (
+                    {isGenerating ? (
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                         <span>Generating...</span>

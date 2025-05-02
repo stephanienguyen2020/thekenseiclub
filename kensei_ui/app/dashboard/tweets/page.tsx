@@ -1,81 +1,109 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Search, Filter, Heart, MessageSquare, Repeat, Share2, Eye } from "lucide-react"
-import EnhancedPostInput from "@/components/enhanced-post-input"
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Search,
+  Filter,
+  Heart,
+  MessageSquare,
+  Repeat,
+  Share2,
+  Eye,
+} from "lucide-react";
+import EnhancedPostInput from "@/components/enhanced-post-input";
+import api from "@/lib/api";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 
 export default function TweetsPage() {
-  const [filter, setFilter] = useState("all")
-  const [searchQuery, setSearchQuery] = useState("")
+  const [filter, setFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const currentAccount = useCurrentAccount();
+  const [tweets, setTweets] = useState<any[]>([]);
 
-  // Mock data for tweets
-  const tweets = [
-    {
-      id: "tweet-1",
-      content: "Just bought more $PEPE! This meme coin is going to the moon! 🚀🚀🚀",
-      timestamp: "2h ago",
-      token: {
-        name: "Pepe",
-        symbol: "PEPE",
-        logo: "/happy-frog-on-a-lilypad.png",
-      },
-      likes: 42,
-      boosts: 12,
-      comments: 5,
-      views: 8700,
-      isLiked: true,
-    },
-    {
-      id: "tweet-2",
-      content: "Who else thinks $DOGE is the original and best meme coin? Been holding since 2013! 💎🙌",
-      image: "/Shiba-Inu-Meme.png",
-      timestamp: "5h ago",
-      token: {
-        name: "Doge",
-        symbol: "DOGE",
-        logo: "/alert-shiba-inu.png",
-      },
-      likes: 128,
-      boosts: 37,
-      comments: 14,
-      views: 24500,
-    },
-    {
-      id: "tweet-3",
-      content:
-        "Just created a proposal for $CAT to fund community meme contests! Go vote now and let's make this happen! 🐱\n\nVoting ends in 48 hours.",
-      timestamp: "1d ago",
-      token: {
-        name: "Cat Coin",
-        symbol: "CAT",
-        logo: "/playful-calico.png",
-      },
-      likes: 76,
-      boosts: 23,
-      comments: 8,
-      views: 15300,
-    },
-    {
-      id: "tweet-4",
-      content: "tfw you buy the top and sell the bottom 😭",
-      image: "/plummeting-crypto.png",
-      timestamp: "2d ago",
-      likes: 210,
-      boosts: 45,
-      comments: 32,
-      views: 32100,
-    },
-  ]
+  useEffect(() => {
+    const fetchPost = async () => {
+      const res = await api.get("/posts", {
+        params: { userId: currentAccount?.address },
+      });
+      setTweets(res.data.data);
+    };
+    fetchPost();
+  }, [currentAccount]);
+  // }, []);
+
+  // // Mock data for tweets
+  // const tweets = [
+  //   {
+  //     id: "tweet-1",
+  //     content:
+  //       "Just bought more $PEPE! This meme coin is going to the moon! 🚀🚀🚀",
+  //     timestamp: "2h ago",
+  //     token: {
+  //       name: "Pepe",
+  //       symbol: "PEPE",
+  //       logo: "/happy-frog-on-a-lilypad.png",
+  //     },
+  //     likes: 42,
+  //     boosts: 12,
+  //     comments: 5,
+  //     views: 8700,
+  //     isLiked: true,
+  //   },
+  //   {
+  //     id: "tweet-2",
+  //     content:
+  //       "Who else thinks $DOGE is the original and best meme coin? Been holding since 2013! 💎🙌",
+  //     image: "/Shiba-Inu-Meme.png",
+  //     timestamp: "5h ago",
+  //     token: {
+  //       name: "Doge",
+  //       symbol: "DOGE",
+  //       logo: "/alert-shiba-inu.png",
+  //     },
+  //     likes: 128,
+  //     boosts: 37,
+  //     comments: 14,
+  //     views: 24500,
+  //   },
+  //   {
+  //     id: "tweet-3",
+  //     content:
+  //       "Just created a proposal for $CAT to fund community meme contests! Go vote now and let's make this happen! 🐱\n\nVoting ends in 48 hours.",
+  //     timestamp: "1d ago",
+  //     token: {
+  //       name: "Cat Coin",
+  //       symbol: "CAT",
+  //       logo: "/playful-calico.png",
+  //     },
+  //     likes: 76,
+  //     boosts: 23,
+  //     comments: 8,
+  //     views: 15300,
+  //   },
+  //   {
+  //     id: "tweet-4",
+  //     content: "tfw you buy the top and sell the bottom 😭",
+  //     image: "/plummeting-crypto.png",
+  //     timestamp: "2d ago",
+  //     likes: 210,
+  //     boosts: 45,
+  //     comments: 32,
+  //     views: 32100,
+  //   },
+  // ];
 
   // Filter tweets
   const filteredTweets = tweets.filter(
     (tweet) =>
-      (filter === "all" || (filter === "tokens" && tweet.token) || (filter === "images" && tweet.image)) &&
+      (filter === "all" ||
+        (filter === "tokens" && tweet.token) ||
+        (filter === "images" && tweet.image)) &&
       (tweet.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (tweet.token && tweet.token.symbol.toLowerCase().includes(searchQuery.toLowerCase()))),
-  )
+        (tweet.token &&
+          tweet.token.symbol.toLowerCase().includes(searchQuery.toLowerCase())))
+  );
 
   // Stats
   const stats = {
@@ -84,7 +112,7 @@ export default function TweetsPage() {
     images: tweets.filter((t) => t.image).length,
     likes: tweets.reduce((sum, tweet) => sum + tweet.likes, 0),
     views: tweets.reduce((sum, tweet) => sum + tweet.views, 0),
-  }
+  };
 
   return (
     <div className="p-6">
@@ -125,7 +153,9 @@ export default function TweetsPage() {
             </div>
             <div>
               <div className="text-gray-500 text-sm">Total Views</div>
-              <div className="text-2xl font-black">{stats.views.toLocaleString()}</div>
+              <div className="text-2xl font-black">
+                {stats.views.toLocaleString()}
+              </div>
             </div>
           </div>
         </div>
@@ -164,7 +194,10 @@ export default function TweetsPage() {
       <div className="bg-white rounded-3xl p-6 mb-6 border-4 border-black">
         <div className="flex flex-col md:flex-row gap-4 justify-between">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={20}
+            />
             <input
               type="text"
               placeholder="Search tweets..."
@@ -207,7 +240,10 @@ export default function TweetsPage() {
       <div className="space-y-6">
         {filteredTweets.length > 0 ? (
           filteredTweets.map((tweet) => (
-            <div key={tweet.id} className="bg-white rounded-3xl p-6 mb-4 border-4 border-black">
+            <div
+              key={tweet.id}
+              className="bg-white rounded-3xl p-6 mb-4 border-4 border-black"
+            >
               <div className="flex justify-between">
                 <div className="flex gap-3">
                   <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-black">
@@ -223,11 +259,15 @@ export default function TweetsPage() {
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold">You</h3>
                       <span className="text-gray-500 text-sm">@you.sui</span>
-                      <span className="text-gray-400 text-sm">{tweet.timestamp}</span>
+                      <span className="text-gray-400 text-sm">
+                        {tweet.timestamp}
+                      </span>
                     </div>
                     {tweet.token && (
                       <Link
-                        href={`/marketplace/${tweet.token.symbol?.toLowerCase() || ""}`}
+                        href={`/marketplace/${
+                          tweet.token.symbol?.toLowerCase() || ""
+                        }`}
                         className="inline-flex items-center gap-1 bg-[#0046F4] text-white px-2 py-0.5 rounded-full text-xs mt-1"
                       >
                         <div className="w-3 h-3 rounded-full overflow-hidden">
@@ -244,7 +284,13 @@ export default function TweetsPage() {
                   </div>
                 </div>
                 <button className="text-gray-500 hover:bg-gray-100 rounded-full p-1">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
                     <path
                       d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z"
                       stroke="currentColor"
@@ -289,10 +335,17 @@ export default function TweetsPage() {
                 <div className="flex items-center gap-4">
                   <button
                     className={`flex items-center gap-1 px-3 py-1 rounded-full ${
-                      tweet.isLiked ? "bg-blue-100 text-blue-600" : "hover:bg-gray-100"
+                      tweet.isLiked
+                        ? "bg-blue-100 text-blue-600"
+                        : "hover:bg-gray-100"
                     }`}
                   >
-                    <Heart size={18} className={tweet.isLiked ? "fill-blue-600 text-blue-600" : ""} />
+                    <Heart
+                      size={18}
+                      className={
+                        tweet.isLiked ? "fill-blue-600 text-blue-600" : ""
+                      }
+                    />
                     <span>{tweet.likes}</span>
                   </button>
                   <button className="flex items-center gap-1 px-3 py-1 rounded-full hover:bg-gray-100">
@@ -329,12 +382,14 @@ export default function TweetsPage() {
             <h3 className="text-xl font-bold mb-2">No tweets found</h3>
             <p className="text-gray-500 mb-6">
               {filter !== "all"
-                ? `You don't have any ${filter === "tokens" ? "token" : "image"} tweets.`
+                ? `You don't have any ${
+                    filter === "tokens" ? "token" : "image"
+                  } tweets.`
                 : "You haven't posted any tweets yet."}
             </p>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

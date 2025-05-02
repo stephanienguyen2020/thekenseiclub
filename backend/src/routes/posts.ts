@@ -50,6 +50,7 @@ router.get("/posts", async (req: any, res: any) => {
     const page = parseInt(req.query.page || "1");
     const limit = parseInt(req.query.limit || "10");
     const coinId = req.query.coinId;
+    const userId = req.query.userId;
     const offset = (page - 1) * limit;
 
     // Build query for posts with user info, like counts, and comment counts
@@ -84,6 +85,10 @@ router.get("/posts", async (req: any, res: any) => {
     // Filter by coinId if provided
     if (coinId) {
       postsQuery = postsQuery.where("p.coinId", "=", coinId);
+    }
+
+    if (userId) {
+      postsQuery = postsQuery.where("p.userId", "=", userId);
     }
 
     // Execute the query with ordering, limit and offset

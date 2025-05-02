@@ -1,5 +1,5 @@
 "use client";
-import { useState, type ChangeEvent } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
 import Image from "next/image";
 import { Upload, Sparkles } from "lucide-react";
 import Navbar from "@/components/navbar";
@@ -13,6 +13,7 @@ import InputMethodSelector, {
 } from "./components/input-method-selector";
 import AIInputForm from "./components/ai-input-form";
 import ManualInputForm from "./components/manual-input-form";
+import { useTokenGeneratingService } from "@/services/TokenGeneratingService";
 
 export default function LaunchTokenPage() {
   const router = useRouter();
@@ -28,8 +29,34 @@ export default function LaunchTokenPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const tokenGeneratingService = useTokenGeneratingService();
+
+  // Add event listener for the custom event from manual form
+  useEffect(() => {
+    const handleSetImagePreview = (event: any) => {
+      const { previewUrl, gatewayUrl } = event.detail;
+      // Update the image preview without triggering another upload
+      setImagePreview(previewUrl);
+      // Set the uploaded URL directly if available
+      if (gatewayUrl) {
+        setUploadedImageUrl(gatewayUrl);
+      }
+    };
+
+    window.addEventListener("setImagePreview", handleSetImagePreview);
+
+    return () => {
+      window.removeEventListener("setImagePreview", handleSetImagePreview);
+    };
+  }, []);
 
   const handleImageUpload = async (file: File) => {
+    // If the file is empty or has no size, it's likely a placeholder from our AI generation
+    // In this case, we don't want to trigger another upload
+    if (file.size === 0) {
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       setImagePreview(reader.result as string);
@@ -89,17 +116,33 @@ export default function LaunchTokenPage() {
   const handleCreateTokenAuto = async (description: string) => {
     setIsCreatingToken(true);
     try {
-      // Here you would typically call an AI service to generate token details
-      // For now, we'll create a simple token based on the description
+      // Call the AI service to generate token details and upload the image
+      const tokenDetails = await tokenGeneratingService.generateTokenWithAI(
+        description,
+        currentAccount?.address // Pass the user address for attribution
+      );
+      console.log("Generated token details:", tokenDetails);
+
+      // Use the gatewayUrl (IPFS URL) from the token details if available
+      const imageUrl = tokenDetails.gatewayUrl || tokenDetails.imageUrl;
+
+      // Create the token with the generated details
       const { data: result }: { data: CoinResponse } = await api.post("/coin", {
-        name: "AIGeneratedToken",
-        symbol: "AGT",
-        description: description,
-        iconUrl: "/blockchain-bulldog.png", // Default image for AI-generated tokens
+        name: tokenDetails.name,
+        symbol: tokenDetails.symbol,
+        description: tokenDetails.description,
+        iconUrl: imageUrl,
         address: currentAccount?.address || "",
       });
-      console.log("result: ", result);
-      router.push(`/marketplace/${result.coin.id}`);
+
+      console.log("Token created successfully:", result);
+
+      // Navigate to the new token's marketplace page
+      const timer = setTimeout(() => {
+        router.push(`/marketplace/${result.coin.id}`);
+      }, 2000);
+
+      return () => clearTimeout(timer);
     } catch (error) {
       console.error("Error creating token:", error);
       setIsCreatingToken(false);
@@ -110,16 +153,23 @@ export default function LaunchTokenPage() {
   const handleCreateTokenManual = async () => {
     setIsCreatingToken(true);
     try {
+      // Use the uploaded IPFS URL if available, otherwise use the local preview
+      const iconUrl = uploadedImageUrl || imagePreview;
+
       const { data: result }: { data: CoinResponse } = await api.post("/coin", {
         name: tokenName,
         symbol: tokenSymbol,
         description: tokenDescription,
-        iconUrl: imagePreview,
+        iconUrl: iconUrl,
         address: currentAccount?.address || "",
       });
+
+      console.log("Token created successfully:", result);
+
       const timer = setTimeout(() => {
         router.push(`/marketplace/${result.coin.id}`);
       }, 2000);
+
       return () => clearTimeout(timer);
     } catch (error) {
       console.error("Error creating token:", error);

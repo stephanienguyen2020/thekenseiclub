@@ -74,7 +74,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
   const proposals: Proposal[] = [
     {
       id: "prop-1",
-      title: `${id.toUpperCase()}01: Increase Marketing Budget for Community Growth`,
+      title: `${coin.name.toUpperCase()}01: Increase Marketing Budget for Community Growth`,
       description:
         "The community should allocate 10% of treasury for marketing initiatives to increase visibility and attract new holders. This proposal aims to establish a dedicated marketing fund that will be used for social media campaigns, influencer partnerships, and community events.",
       status: "active" as const,
@@ -95,7 +95,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
     },
     {
       id: "prop-2",
-      title: `${id.toUpperCase()}02: Revisiting The ${id.toUpperCase()} Staking Mechanism`,
+      title: `${coin.name.toUpperCase()}02: Revisiting The ${coin.name.toUpperCase()} Staking Mechanism`,
       description:
         "After the first set of staking contracts expire, we need to decide on the future staking model. This proposal presents multiple options for the community to vote on, ranging from keeping the current system to implementing new hybrid solutions.",
       status: "closed" as const,
@@ -129,7 +129,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
     },
     {
       id: "prop-3",
-      title: `${id.toUpperCase()}03: Community Treasury Allocation Framework`,
+      title: `${coin.name.toUpperCase()}03: Community Treasury Allocation Framework`,
       description:
         "Create a community-managed treasury for future development with clear guidelines on how funds can be allocated. This proposal establishes a governance framework for treasury management and ensures transparency in fund allocation.",
       status: "upcoming" as const,
@@ -141,7 +141,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
     },
     {
       id: "prop-4",
-      title: `${id.toUpperCase()}04: ${id.toUpperCase()} Token Utility Expansion`,
+      title: `${coin.name.toUpperCase()}04: ${coin.name.toUpperCase()} Token Utility Expansion`,
       description:
         "This proposal aims to expand the utility of our token by introducing new use cases and integrations. We present multiple options for the community to decide which direction to prioritize.",
       status: "active" as const,
@@ -172,7 +172,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
     },
     {
       id: "prop-5",
-      title: `${id.toUpperCase()}05: Partner with Gaming Platform`,
+      title: `${coin.name.toUpperCase()}05: Partner with Gaming Platform`,
       description:
         "Form strategic partnership with GameFi platform to increase token utility and adoption. This partnership would allow token holders to use their tokens within popular games and potentially attract gamers to our ecosystem.",
       status: "closed" as const,
@@ -189,7 +189,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
     },
     {
       id: "prop-6",
-      title: `${id.toUpperCase()}06: Tokenomics Adjustment Proposal`,
+      title: `${coin.name.toUpperCase()}06: Tokenomics Adjustment Proposal`,
       description:
         "This proposal suggests adjustments to our tokenomics to improve long-term sustainability and value accrual. Several options are presented for the community to decide on.",
       status: "upcoming" as const,
