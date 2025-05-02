@@ -545,7 +545,7 @@ export default function WalletPage() {
                       <td className="text-right py-4 px-2">
                         <div className="flex gap-2 justify-end">
                           <Link
-                            href={`/marketplace/${token.symbol.toLowerCase()}`}
+                            href={`/marketplace/${token.id.toLowerCase()}`}
                             className="bg-[#0046F4] text-white px-3 py-1 rounded-xl text-sm font-bold border-2 border-black"
                           >
                             View
@@ -609,7 +609,7 @@ export default function WalletPage() {
                   </div>
                   <div className="flex gap-2">
                     <Link
-                      href={`/marketplace/${token.symbol.toLowerCase()}`}
+                      href={`/marketplace/${token.id.toLowerCase()}`}
                       className="flex-1 bg-[#0046F4] text-white py-2 rounded-xl text-sm font-bold border-2 border-black text-center"
                     >
                       View

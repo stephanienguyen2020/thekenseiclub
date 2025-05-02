@@ -12,6 +12,7 @@ import {
 import api from "@/lib/api";
 import { getClient, Network } from "coin-sdk/dist/src/utils/sui-utils";
 import BondingCurveSDK from "coin-sdk/dist/src/bonding_curve";
+import { getObject } from "@/lib/utils";
 
 interface TradingViewProps {
   tokenSymbol: string;
@@ -186,7 +187,9 @@ export default function TradingView({
 
   const handleBuy = async () => {
     console.log("Buying", amount, tokenSymbol, tokenId);
-    const client = getClient((process.env.NETWORK || "devnet") as Network);
+    const client = getClient(
+      (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network
+    );
     const coinMetadata = await client.getObject({
       id: tokenId,
       options: {
@@ -198,7 +201,7 @@ export default function TradingView({
     const match = coinMetadataType.match(/CoinMetadata<(.+)>/);
     const coinType = match ? match[1] : "";
     const packageId =
-      process.env.PACKAGE_ID ||
+      process.env.NEXT_PUBLIC_PACKAGE_ID ||
       "0x8193d051bd13fb4336ad595bbb78dac06fa64ff1c3c3c184483ced397c9d2116";
     const bondingCurveSdk = new BondingCurveSDK(
       bondingCurveId,
@@ -215,11 +218,16 @@ export default function TradingView({
     signAndExecuteTransaction(
       {
         transaction: tx,
-        chain: `sui:devnet`,
+        chain: `sui:${process.env.NEXT_PUBLIC_NETWORK || "devnet"}`,
       },
       {
         onSuccess: (result: any) => {
-          console.log("object changes", result.objectChanges);
+          const rs = api.get(`/migrate`, {
+            params: {
+              bondingCurveId,
+              packageId,
+            },
+          });
           setDigest(result.digest);
         },
       }
@@ -227,7 +235,9 @@ export default function TradingView({
   };
 
   const handleSell = async () => {
-    const client = getClient((process.env.NETWORK || "devnet") as Network);
+    const client = getClient(
+      (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network
+    );
     const coinMetadata = await client.getObject({
       id: tokenId,
       options: {
@@ -239,7 +249,7 @@ export default function TradingView({
     const match = coinMetadataType.match(/CoinMetadata<(.+)>/);
     const coinType = match ? match[1] : "";
     const packageId =
-      process.env.PACKAGE_ID ||
+      process.env.NEXT_PUBLIC_PACKAGE_ID ||
       "0x8193d051bd13fb4336ad595bbb78dac06fa64ff1c3c3c184483ced397c9d2116";
     const bondingCurveSdk = new BondingCurveSDK(
       bondingCurveId,
@@ -251,7 +261,7 @@ export default function TradingView({
       minSuiRequired: 0,
       type: coinType,
       address: currentAccount?.address || "",
-      network: (process.env.NETWORK || "devnet") as Network,
+      network: (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network,
     });
 
     signAndExecuteTransaction(
