@@ -26,6 +26,16 @@ A backend service for blockchain data feeds, providing APIs for OHLCV (Open, Hig
   ```bash
   docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=password timescale/timescaledb-ha:pg17
   ```
+- Create mongodb database:
+  ```bash
+  docker run -d \
+  --name mongodb \
+  -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=root \
+  -e MONGO_INITDB_ROOT_PASSWORD=example \
+  -v mongodb_data:/data/db \
+  mongo:6.0
+  ```
 - Set up db migrations:
   ```bash
   npx kysely-ctl migrate up
