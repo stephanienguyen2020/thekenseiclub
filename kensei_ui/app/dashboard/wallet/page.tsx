@@ -44,7 +44,7 @@ export default function WalletPage() {
       const fetchCreatedTokens = async () => {
         const response = await api.get(`/coins`, {
           params: {
-            address: currentAccount?.address,
+            userId: currentAccount?.address,
           },
         });
         const data = response.data;
