@@ -3,15 +3,15 @@ import {
   SuiObjectChange,
   SuiTransactionBlockResponse,
 } from "@mysten/sui/client";
-import { Transaction } from "@mysten/sui/transactions";
+import {Transaction} from "@mysten/sui/transactions";
 import {
   ACTIVE_NETWORK,
   getCoinsByType,
   signAndExecute,
 } from "./utils/sui-utils";
-import { AddLiquidityV2 } from "@flowx-finance/sdk";
-import { SUI_COIN_TYPE } from "./constant";
-import { Network } from "../sui-utils";
+import {AddLiquidityV2} from "@flowx-finance/sdk";
+import {SUI_COIN_TYPE} from "./constant";
+import {Network} from "../sui-utils";
 
 class BondingCurveSDK {
   private bondingCurveId: string;
@@ -61,15 +61,13 @@ class BondingCurveSDK {
   }
 
   buildBuyTransaction({
-    amount,
-    minTokenRequired,
-    coinId,
-    type,
-    address,
-  }: {
-    amount: number;
-    minTokenRequired: number;
-    coinId?: string;
+                        amount,
+                        minTokenRequired,
+                        type,
+                        address,
+                      }: {
+    amount: bigint;
+    minTokenRequired: bigint;
     type: string;
     address: string;
   }): Transaction {
@@ -92,15 +90,13 @@ class BondingCurveSDK {
   }
 
   async buy({
-    amount,
-    minTokenRequired,
-    coinId,
-    type,
-    address,
-  }: {
-    amount: number;
-    minTokenRequired: number;
-    coinId?: string;
+              amount,
+              minTokenRequired,
+              type,
+              address,
+            }: {
+    amount: bigint;
+    minTokenRequired: bigint;
     type: string;
     address: string;
   }): Promise<SuiTransactionBlockResponse> {
@@ -123,16 +119,14 @@ class BondingCurveSDK {
   }
 
   async buildSellTransaction({
-    amount,
-    minSuiRequired,
-    coinId,
-    type,
-    address,
-    network,
-  }: {
-    amount: number;
-    minSuiRequired: number;
-    coinId?: string;
+                               amount,
+                               minSuiRequired,
+                               type,
+                               address,
+                               network,
+                             }: {
+    amount: bigint;
+    minSuiRequired: bigint;
     type: string;
     address: string;
     network: Network;
@@ -143,8 +137,11 @@ class BondingCurveSDK {
     if (coins.length === 0) {
       throw new Error(`No coin of type ${type} found in wallet`);
     }
+    const destinationCoin = tx.object(coins[0].coinObjectId);
+    const sourceCoins = coins.slice(1).map((coin) => tx.object(coin.coinObjectId));
+    tx.mergeCoins(destinationCoin, sourceCoins)
 
-    const [splitCoin] = tx.splitCoins(tx.object(coins[0].coinObjectId), [
+    const [splitCoin] = tx.splitCoins(destinationCoin, [
       tx.pure.u64(amount),
     ]);
 
@@ -163,38 +160,22 @@ class BondingCurveSDK {
   }
 
   async sell({
-    amount,
-    minSuiRequired,
-    coinId,
-    type,
-    address,
-  }: {
-    amount: number;
-    minSuiRequired: number;
-    coinId?: string;
+               amount,
+               minSuiRequired,
+               type,
+               address,
+             }: {
+    amount: bigint;
+    minSuiRequired: bigint;
     type: string;
     address: string;
   }): Promise<SuiTransactionBlockResponse> {
-    const tx = new Transaction();
-
-    const coins = await getCoinsByType(address, type, ACTIVE_NETWORK);
-    if (coins.length === 0) {
-      throw new Error(`No coin of type ${type} found in wallet`);
-    }
-
-    const [splitCoin] = tx.splitCoins(tx.object(coins[0].coinObjectId), [
-      tx.pure.u64(amount),
-    ]);
-
-    tx.moveCall({
-      target: `${this.packageId}::bonding_curve::sell`,
-      typeArguments: [type],
-      arguments: [
-        tx.object(this.bondingCurveId),
-        splitCoin,
-        tx.pure.u64(amount),
-        tx.pure.u64(minSuiRequired),
-      ],
+    const tx = await this.buildSellTransaction({
+      amount,
+      minSuiRequired,
+      type,
+      address,
+      network: ACTIVE_NETWORK,
     });
 
     return await signAndExecute(tx, ACTIVE_NETWORK, address);

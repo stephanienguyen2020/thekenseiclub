@@ -1,10 +1,10 @@
 import express from "express";
-import { BondingCurveSDK, CoinSDK } from "coin-sdk/dist/src";
-import { ACTIVE_NETWORK, getClient } from "../utils";
-import { db } from "../db/database";
-import { getCurrentPrice, getMarketData } from "../services/marketDataService";
-import { balanceService } from "../services/balanceService";
-import { getActiveAddress } from "coin-sdk/dist/src/utils/sui-utils";
+import {BondingCurveSDK, CoinSDK} from "coin-sdk/dist/src";
+import {ACTIVE_NETWORK, getClient} from "../utils";
+import {db} from "../db/database";
+import {getCurrentPrice, getMarketData} from "../services/marketDataService";
+import {balanceService} from "../services/balanceService";
+import {getActiveAddress} from "coin-sdk/dist/src/utils/sui-utils";
 
 const router = express.Router();
 
@@ -15,7 +15,7 @@ const router = express.Router();
 router.post("/coin", async (req: any, res: any) => {
   try {
     // Validate required fields
-    const { name, symbol, description, iconUrl, address } = req.body;
+    const {name, symbol, description, iconUrl, address} = req.body;
 
     if (!name || !symbol || !description || !iconUrl || !address) {
       return res.status(400).json({
@@ -25,7 +25,7 @@ router.post("/coin", async (req: any, res: any) => {
     }
 
     const suiClient = getClient(ACTIVE_NETWORK);
-    const rs = await CoinSDK.deployNewCoin({ ...req.body, client: suiClient });
+    const rs = await CoinSDK.deployNewCoin({...req.body, client: suiClient});
     console.log("Coin deployed successfully:", rs);
     return res.status(200).json({
       message: "Coin deployed successfully",
@@ -100,7 +100,7 @@ router.get("/coins", async (req: any, res: any) => {
             coin.bondingCurveId,
             price
           );
-          return { ...coin, ...marketData };
+          return {...coin, ...marketData};
         }
         return {
           ...coin,
@@ -142,10 +142,10 @@ router.get("/coins", async (req: any, res: any) => {
  */
 router.get("/coin/:id", async (req: any, res: any) => {
   try {
-    const { id } = req.params;
+    const {id} = req.params;
 
     if (!id) {
-      return res.status(400).json({ error: "Coin ID is required" });
+      return res.status(400).json({error: "Coin ID is required"});
     }
 
     // Get the coin with bonding curve ID
@@ -166,7 +166,7 @@ router.get("/coin/:id", async (req: any, res: any) => {
       .executeTakeFirst();
 
     if (!coin) {
-      return res.status(404).json({ error: "Coin not found" });
+      return res.status(404).json({error: "Coin not found"});
     }
 
     // Calculate market data if bonding curve exists
@@ -237,14 +237,14 @@ router.get("/allCoins", async (req: any, res: any) => {
  */
 router.get("/holding-coins/:walletAddress", async (req: any, res: any) => {
   try {
-    const { walletAddress } = req.params;
+    const {walletAddress} = req.params;
     // Default pagination values
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 100;
     const offset = (page - 1) * limit;
 
     if (!walletAddress) {
-      return res.status(400).json({ error: "Wallet address is required" });
+      return res.status(400).json({error: "Wallet address is required"});
     }
 
     // Get all coin balances for the wallet address
@@ -356,7 +356,7 @@ router.get("/holding-coins/:walletAddress", async (req: any, res: any) => {
 
 router.get("/migrate", async (req: any, res: any) => {
   try {
-    const { bondingCurveId, packageId } = req.query;
+    const {bondingCurveId, packageId} = req.query;
     const client = getClient(ACTIVE_NETWORK);
     const bondingCurve: any = await client.getObject({
       id: bondingCurveId,
@@ -378,15 +378,13 @@ router.get("/migrate", async (req: any, res: any) => {
         client,
         packageId
       );
-      const result = await bondingCurveSdk.migrateToFlowx(getActiveAddress());
+      await bondingCurveSdk.migrateToFlowx(getActiveAddress());
       return res.status(200).json({
         message: "Migration successful",
-        result,
       });
     } else {
-      return res.status(400).json({
-        error:
-          "Migration not allowed. Token balance exceeds target supply threshold.",
+      return res.status(200).json({
+        message: "Target supply threshold not reached",
       });
     }
   } catch (error) {
