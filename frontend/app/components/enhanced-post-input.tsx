@@ -117,8 +117,6 @@ export default function EnhancedPostInput({
       // Send post to backend
       const response = await api.post("/posts", postData);
 
-      console.log("Post created successfully:", response.data);
-
       // Reset form
       setContent("");
       setSelectedImage(null);

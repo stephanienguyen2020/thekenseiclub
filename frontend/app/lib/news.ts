@@ -1,13 +1,19 @@
-export async function fetchNewsItems() {
+export async function fetchNewsItems({
+                                       searchTerm,
+                                       filterTerm,
+                                     }: {
+  searchTerm: string;
+  filterTerm: string;
+}) {
   const apiKey = process.env.NEXT_PUBLIC_NEWS_API_KEY;
 
   if (!apiKey) {
-    throw { error: "Invalid API KEY", status: 401 };
+    throw {error: "Invalid API KEY", status: 401};
   }
 
   try {
-    const searchTerm = "meme+coin";
-    const filterTerm = "meme coin";
+    // const searchTerm = "meme+coin";
+    // const filterTerm = "meme coin";
     const [everythingResponse, headlinesResponse] = await Promise.all([
       fetch(
         `https://newsapi.org/v2/everything?q=${searchTerm}&sortBy=relevancy&language=en&pageSize=50&apiKey=${apiKey}`
@@ -43,6 +49,6 @@ export async function fetchNewsItems() {
 
     return uniqueArticles;
   } catch (error) {
-    return { error: "Failed to load news", status: 500 };
+    return {error: "Failed to load news", status: 500};
   }
 }

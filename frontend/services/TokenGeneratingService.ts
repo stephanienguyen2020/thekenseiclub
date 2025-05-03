@@ -1,4 +1,4 @@
-import { generateTokenConcept } from "@/app/lib/nebula";
+import { generateTokenConcept } from "@/app/lib/genToken";
 import OpenAI from "openai";
 import api from "@/lib/api";
 

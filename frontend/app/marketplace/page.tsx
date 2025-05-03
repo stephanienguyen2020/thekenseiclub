@@ -40,7 +40,6 @@ export default function MarketplacePage() {
   useEffect(() => {
     const fetchCoins = async () => {
       const rs: AxiosResponse<CoinList> = await api.get("/coins");
-      console.log(rs.data);
       const coinList = rs.data.data.map((ele) => ({
         ...ele,
         proposals: 8,
