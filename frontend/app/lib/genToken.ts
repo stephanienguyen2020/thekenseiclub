@@ -9,29 +9,6 @@ export async function generateTokenConcept(input: string, openai: any) {
     }
   Do not include any other text or explanation.`;
 
-  // const response = await fetch(
-  //   "https://inference.nebulablock.com/v1/chat/completions",
-  //   {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Authorization: `Bearer ${process.env.NEXT_PUBLIC_NEBULA_API_KEY}`,
-  //     },
-  //     body: JSON.stringify({
-  //       messages: [
-  //         {
-  //           role: "user",
-  //           content: token_gen_prompt,
-  //         },
-  //       ],
-  //       model: "meta-llama/Llama-3.1-8B-Instruct",
-  //       max_tokens: null,
-  //       temperature: 1,
-  //       top_p: 0.9,
-  //       stream: false,
-  //     }),
-  //   }
-  // );
   const response = await openai.chat.completions.create({
     model: "gpt-4",
     messages: [

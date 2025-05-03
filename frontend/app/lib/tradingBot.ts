@@ -8,6 +8,7 @@ const openai = new OpenAI({
 export async function tradeAgent(input: string): Promise<{
   action: "BUY" | "SELL" | "GENERAL",
   amount: string,
+  coinName: string,
   message: string,
 }> {
   const tradingPrompt = `You are a trading assistant that processes user commands.
@@ -15,25 +16,32 @@ export async function tradeAgent(input: string): Promise<{
 User query: "${input}"
 
 Analyze the query and determine if it's a BUY command, SELL command, or a GENERAL message.
+For BUY commands, the amount will always be in SUI and you need to extract the token name to buy.
+For SELL commands, the amount will always be the token and you need to extract the token name to sell.
+
 Return a JSON object with the following structure:
 {
   "action": "BUY" | "SELL" | "GENERAL",
   "amount": string, // Only include when action is BUY or SELL. This is the numeric amount of tokens to buy or sell.
+  "coinName": string, // Only include when action is BUY or SELL. This is the name of the token to buy or sell.
   "message": string // Only include when action is GENERAL. This is your response to the user's query.
 }
 
 Examples:
-1. User: "Buy 10 tokens of ABC"
-   Response: {"action": "BUY", "amount": 10}
+1. User: "Buy token XYZ with 10 SUI"
+   Response: {"action": "BUY", "amount": "10", "coinName": "XYZ"}
 
-2. User: "I want to sell 25 XYZ tokens"
-   Response: {"action": "SELL", "amount": 25}
+2. User: "Use 10 SUI to buy ABC"
+   Response: {"action": "BUY", "amount": "10", "coinName": "ABC"}
 
-3. User: "What is the current price of token A?"
+3. User: "I want to sell 25 XYZ tokens"
+   Response: {"action": "SELL", "amount": "25", "coinName": "XYZ"}
+
+4. User: "Sell 15 PEPE"
+   Response: {"action": "SELL", "amount": "15", "coinName": "PEPE"}
+
+5. User: "What is the current price of token A?"
    Response: {"action": "GENERAL", "message": "I'll provide information about token A's current price."}
-
-4. User: "Purchase 5 SUI tokens"
-   Response: {"action": "BUY", "amount": 5}
 
 Return only the JSON object without any additional text or explanation.`;
 

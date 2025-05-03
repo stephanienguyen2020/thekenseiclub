@@ -194,6 +194,68 @@ GET /coin/:id
 }
 ```
 
+### Get Coin by Name
+
+This endpoint retrieves detailed information about a specific coin by its name.
+
+```
+GET /coin/name/:name
+```
+
+#### Path Parameters
+
+| Parameter | Type   | Required | Description             |
+| --------- | ------ | -------- | ----------------------- |
+| name      | string | Yes      | The name of the coin    |
+
+#### Success Response
+
+```json
+{
+  "id": "0x1234...",
+  "name": "My Coin",
+  "symbol": "MC",
+  "description": "A custom coin for demonstration purposes",
+  "logo": "https://example.com/icon.png",
+  "address": "0x1234...",
+  "createdAt": "2025-05-01T12:34:56.789Z",
+  "bondingCurveId": "0xabcd...",
+  "suiPrice": 0.001,
+  "price": 0.02,
+  "change24h": 2.5,
+  "volume24h": "10000",
+  "marketCap": "100000",
+  "holders": 50
+}
+```
+
+#### Error Responses
+
+##### 400 Bad Request
+
+```json
+{
+  "error": "Coin name is required"
+}
+```
+
+##### 404 Not Found
+
+```json
+{
+  "error": "Coin not found"
+}
+```
+
+##### 500 Internal Server Error
+
+```json
+{
+  "error": "Failed to fetch coin by name",
+  "details": "Error message details"
+}
+```
+
 ### Get All Coins (No Pagination)
 
 This endpoint retrieves all coins without pagination and without market data.

@@ -110,7 +110,6 @@ export default function LaunchTokenPage() {
       iconUrl: uploadedImageUrl,
       address: currentAccount?.address || "",
     });
-    console.log("result: ", result);
     window.location.href = `/marketplace/${result?.data.coin.id}`;
   };
   const handleCreateTokenAuto = async (description: string) => {
@@ -121,7 +120,6 @@ export default function LaunchTokenPage() {
         description,
         currentAccount?.address // Pass the user address for attribution
       );
-      console.log("Generated token details:", tokenDetails);
 
       // Use the gatewayUrl (IPFS URL) from the token details if available
       const imageUrl = tokenDetails.gatewayUrl || tokenDetails.imageUrl;
@@ -134,8 +132,6 @@ export default function LaunchTokenPage() {
         iconUrl: imageUrl,
         address: currentAccount?.address || "",
       });
-
-      console.log("Token created successfully:", result);
 
       // Navigate to the new token's marketplace page
       const timer = setTimeout(() => {
@@ -163,8 +159,6 @@ export default function LaunchTokenPage() {
         iconUrl: iconUrl,
         address: currentAccount?.address || "",
       });
-
-      console.log("Token created successfully:", result);
 
       const timer = setTimeout(() => {
         router.push(`/marketplace/${result.coin.id}`);

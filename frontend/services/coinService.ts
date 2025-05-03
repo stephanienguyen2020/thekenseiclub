@@ -26,14 +26,12 @@ async function retrieveBondingCurveData(client: SuiClient, tokenId: string, bond
   return {coinType, packageId, bondingCurveSdk};
 }
 
-export const builtBuyTransaction = async (tokenName: string, buyAmount: string, currentAccount: any ) => {
+export const buildBuyTransaction = async (tokenName: string, buyAmount: string, currentAccount: any ) => {
   const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
-  const client = getClient(
-    (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network
-  );
+  const client = getClient(network);
 
-  const coins = await getCoinsByName(tokenName);
-  const {id: tokenId, bondingCurveId} = coins[0];
+  const coin = await getCoinsByName(tokenName);
+  const {id: tokenId, bondingCurveId} = coin;
 
   const {coinType, packageId, bondingCurveSdk} = await retrieveBondingCurveData(client, tokenId, bondingCurveId);
   // Convert to string first to avoid precision issues, then parse as float and multiply
@@ -45,33 +43,37 @@ export const builtBuyTransaction = async (tokenName: string, buyAmount: string, 
     address: currentAccount?.address || "",
   });
 
-  return tx;
+  return {
+    buyTransaction: tx,
+    bondingCurveId,
+    packageId,
+  };
+};
 
-  // signAndExecuteTransaction(
-  //   {
-  //     transaction: tx,
-  //     chain: `sui:${network}`,
-  //   },
-  //   {
-  //     onSuccess: (result: any) => {
-  //       api.get<{message: string}>(`/migrate`, {
-  //         params: {
-  //           bondingCurveId,
-  //           packageId,
-  //         },
-  //       }).then((result) => {
-  //         console.log("migration status", result.data.message);
-  //       });
-  //       console.log("Buy successfully", result);
-  //     },
-  //     onError: (error: any) => {
-  //       console.log("error", error);
-  //     }
-  //   }
-  // );
+export const buildSellTransaction = async (tokenName: string, sellAmount: string, currentAccount: any ) => {
+  const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
+  const client = getClient(network);
+
+  const coin = await getCoinsByName(tokenName);
+  const {id: tokenId, bondingCurveId} = coin;
+
+  const {coinType, packageId, bondingCurveSdk} = await retrieveBondingCurveData(client, tokenId, bondingCurveId);
+  const parsedAmount = BigInt(sellAmount) * BigInt(1000000000);
+  const tx = await bondingCurveSdk.buildSellTransaction({
+    amount: parsedAmount,
+    minSuiRequired: BigInt(0),
+    type: coinType,
+    address: currentAccount?.address || "",
+    network: (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network,
+  });
+  return {
+    sellTransaction: tx,
+    bondingCurveId,
+    packageId,
+  };
 };
 
 const getCoinsByName = async (coinName: string) => {
-  const coins = await api.get<Coin[]>(`/coin/name/${coinName}`);
+  const coins = await api.get<Coin>(`/coin/name/${coinName}`);
   return coins.data;
 }

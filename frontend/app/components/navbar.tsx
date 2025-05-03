@@ -27,8 +27,6 @@ import api from "@/lib/api";
 import { type } from "os";
 import { size } from "viem";
 
-console.log("API Base URL:", process.env.NEXT_PUBLIC_API_URL);
-
 interface NavbarProps {
   isAuthenticated?: boolean;
 }

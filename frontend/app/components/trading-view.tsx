@@ -193,12 +193,15 @@ export default function TradingView({
     return {coinType, packageId, bondingCurveSdk};
   }
 
-  const handleBuy = async (buyAmount = amount) => {
+  const handleBuy = async (buyAmount = amount, coinName?: string) => {
     const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
     const client = getClient(
       (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network
     );
     const {coinType, packageId, bondingCurveSdk} = await retrieveBondingCurveData(client);
+
+    // Log the coin name for debugging
+    console.log("Buy operation - Amount:", buyAmount, "SUI, Token:", coinName || "default");
     // Convert to string first to avoid precision issues, then parse as float and multiply
     const parsedAmount = BigInt(buyAmount) * BigInt(1000000000);
     const tx = bondingCurveSdk.buildBuyTransaction({
@@ -207,37 +210,41 @@ export default function TradingView({
       type: coinType,
       address: currentAccount?.address || "",
     });
-
-    signAndExecuteTransaction(
-      {
-        transaction: tx,
-        chain: `sui:${network}`,
-      },
-      {
-        onSuccess: (result: any) => {
-          api.get<{message: string}>(`/migrate`, {
-            params: {
-              bondingCurveId,
-              packageId,
-            },
-          }).then((result) => {
-            console.log("migration status", result.data.message);
-          });
-          console.log("Buy successfully", result);
+    try {
+      signAndExecuteTransaction(
+        {
+          transaction: tx,
+          chain: `sui:${network}`,
         },
-        onError: (error: any) => {
-          console.log("error", error);
+        {
+          onSuccess: (result: any) => {
+            api.get<{ message: string }>(`/migrate`, {
+              params: {
+                bondingCurveId,
+                packageId,
+              },
+            }).then((result) => {
+              console.log("migration status", result.data.message);
+            });
+            console.log("Buy successfully", result);
+          },
+          onError: (error: any) => {
+            console.log("error", error);
+          }
         }
-      }
-    );
+      );
+    } catch (e) {
+      console.log("error", e);
+    }
   };
 
-  const handleSell = async (sellAmount = amount) => {
+  const handleSell = async (sellAmount = amount, coinName?: string) => {
     const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
     const client = getClient(
       network
     );
     const {coinType, packageId, bondingCurveSdk} = await retrieveBondingCurveData(client);
+
     // Convert to string first to avoid precision issues, then parse as float and multiply
     const parsedAmount = BigInt(sellAmount) * BigInt(1000000000);
     const tx = await bondingCurveSdk.buildSellTransaction({
@@ -248,20 +255,24 @@ export default function TradingView({
       network: (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network,
     });
 
-    signAndExecuteTransaction(
-      {
-        transaction: tx,
-        chain: `sui:${network}`,
-      },
-      {
-        onSuccess: (result: any) => {
-          console.log("success", result);
+    try {
+      signAndExecuteTransaction(
+        {
+          transaction: tx,
+          chain: `sui:${network}`,
         },
-        onError: (error: any) => {
-          console.log("error", error);
+        {
+          onSuccess: (result: any) => {
+            console.log("success", result);
+          },
+          onError: (error: any) => {
+            console.log("error", error);
+          }
         }
-      }
-    );
+      );
+    } catch (e) {
+      console.log("error", e);
+    }
   };
 
   // Handle chat message submission
@@ -277,10 +288,10 @@ export default function TradingView({
     console.log("result", result);
     if (result.action === "BUY") {
       setAmount(result.amount); // Update state for UI consistency
-      handleBuy(result.amount); // Pass amount directly to avoid async state issues
+      handleBuy(result.amount, result.coinName); // Pass amount and coinName directly to avoid async state issues
     } else if (result.action === "SELL") {
       setAmount(result.amount); // Update state for UI consistency
-      handleSell(result.amount); // Pass amount directly to avoid async state issues
+      handleSell(result.amount, result.coinName); // Pass amount and coinName directly to avoid async state issues
     } else {
       setAmount("");
     }
@@ -466,7 +477,7 @@ export default function TradingView({
 
                 <button
                   className="w-full py-4 rounded-xl font-black text-xl border-4 border-black bg-[#c0ff00] text-black hover:bg-yellow-300 transition-colors hover:translate-y-[-5px]"
-                  onClick={handleBuy}
+                  onClick={() => handleBuy()}
                   disabled={!amount}
                 >
                   BUY {tokenSymbol}
@@ -514,7 +525,7 @@ export default function TradingView({
 
                 <button
                   className="w-full py-4 rounded-xl font-black text-xl border-4 border-black bg-red-500 text-white hover:bg-red-600 transition-colors hover:translate-y-[-5px]"
-                  onClick={handleSell}
+                  onClick={() => handleSell()}
                   disabled={!amount}
                 >
                   SELL {tokenSymbol}

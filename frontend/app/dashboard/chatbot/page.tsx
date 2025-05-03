@@ -5,8 +5,14 @@ import type React from "react"
 import {useState, useRef, useEffect} from "react"
 import {Send, Bot, User, Sparkles, Trash2, Download} from "lucide-react"
 import {processUserQuery} from "@/app/lib/agents";
-import {useCurrentAccount} from "@mysten/dapp-kit";
-import {builtBuyTransaction} from "@/services/coinService";
+import {buildBuyTransaction, buildSellTransaction} from "@/services/coinService";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+  useSuiClient,
+} from "@mysten/dapp-kit";
+import api from "@/lib/api";
+import {Network} from "coin-sdk/dist/src/utils/sui-utils";
 
 export default function ChatbotPage() {
   const [message, setMessage] = useState("")
@@ -19,6 +25,21 @@ export default function ChatbotPage() {
     },
   ])
   const [isTyping, setIsTyping] = useState(false)
+  const client = useSuiClient();
+  const {mutate: signAndExecuteTransaction} = useSignAndExecuteTransaction({
+    execute: async ({bytes, signature}: any) =>
+      await client.executeTransactionBlock({
+        transactionBlock: bytes,
+        signature,
+        options: {
+          // Raw effects are required so the effects can be reported back to the wallet
+          showRawEffects: true,
+          // Select additional data to return
+          showObjectChanges: true,
+        },
+      }),
+  });
+
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const currentAccount = useCurrentAccount();
 
@@ -45,7 +66,7 @@ export default function ChatbotPage() {
 
     try {
       // Process the user query to determine if it's about news or token trading
-      const response:any = await processUserQuery(message.trim());
+      const response: any = await processUserQuery(message.trim());
 
       let botMessageContent = "";
 
@@ -66,20 +87,122 @@ export default function ChatbotPage() {
           botMessageContent = `I couldn't find any relevant news articles about ${response.result.extractedTerms.filterTerm}. Please try a different query.`;
         }
       } else if (response.queryType === "TOKEN_TRADING") {
-        // Format token trading response
+        const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
         const tradingResult = response.result;
-
         if (tradingResult.action === "BUY") {
-          botMessageContent = `I understand you want to buy ${tradingResult.amount} tokens. To execute this transaction, please go to the Trading View page where you can complete your purchase securely.`;
-          const buyTransaction = await builtBuyTransaction(tradingResult.coinId, tradingResult.amount, currentAccount);
+          const {
+            buyTransaction,
+            bondingCurveId,
+            packageId
+          } = await buildBuyTransaction(tradingResult.coinName, tradingResult.amount, currentAccount);
+          try {
+            signAndExecuteTransaction(
+              {
+                transaction: buyTransaction,
+                chain: `sui:${network}`,
+              },
+              {
+                onSuccess: (result: any) => {
+                  api.get<{ message: string }>(`/migrate`, {
+                    params: {
+                      bondingCurveId,
+                      packageId,
+                    },
+                  }).then((result) => {
+                    console.log("migration status", result.data.message);
+                  });
+                  console.log("Buy successfully", result);
+                  botMessageContent = `You have successfully bought ${tradingResult.amount} ${tradingResult.coinName}.`;
+                  const botMessage = {
+                    role: "bot" as const,
+                    message: botMessageContent,
+                    timestamp: new Date().toLocaleTimeString(),
+                  }
+
+                  setChatHistory((prev) => [...prev, botMessage])
+                },
+                onError: (error: any) => {
+                  console.log("error", error);
+                  botMessageContent = `Sorry, I encountered an error while processing your buy request. Please try again.`;
+                  const botMessage = {
+                    role: "bot" as const,
+                    message: botMessageContent,
+                    timestamp: new Date().toLocaleTimeString(),
+                  }
+
+                  setChatHistory((prev) => [...prev, botMessage])
+                },
+              }
+            );
+          } catch (error) {
+            console.log("error", error);
+            botMessageContent = `Sorry, I encountered an error while processing your buy request. Please try again.`;
+            const botMessage = {
+              role: "bot" as const,
+              message: botMessageContent,
+              timestamp: new Date().toLocaleTimeString(),
+            }
+            setChatHistory((prev) => [...prev, botMessage])
+
+          }
+
         } else if (tradingResult.action === "SELL") {
-          botMessageContent = `I understand you want to sell ${tradingResult.amount} tokens. To execute this transaction, please go to the Trading View page where you can complete your sale securely.`;
+          const {
+            sellTransaction,
+            bondingCurveId,
+            packageId
+          } = await buildSellTransaction(tradingResult.coinName, tradingResult.amount, currentAccount);
+          try {
+            signAndExecuteTransaction(
+              {
+                transaction: sellTransaction,
+                chain: `sui:${network}`,
+              },
+              {
+                onSuccess: (result: any) => {
+                  console.log("success", result);
+                  botMessageContent = `You have successfully sold ${tradingResult.amount} ${tradingResult.coinName}.`;
+                  const botMessage = {
+                    role: "bot" as const,
+                    message: botMessageContent,
+                    timestamp: new Date().toLocaleTimeString(),
+                  }
+
+                  setChatHistory((prev) => [...prev, botMessage])
+                },
+                onError: (error: any) => {
+                  console.log("error", error);
+                  botMessageContent = `Sorry, I encountered an error while processing your sell request. Please try again.`;
+                  const botMessage = {
+                    role: "bot" as const,
+                    message: botMessageContent,
+                    timestamp: new Date().toLocaleTimeString(),
+                  }
+
+                  setChatHistory((prev) => [...prev, botMessage])
+                },
+              }
+            );
+          } catch (error) {
+            console.log("error", error);
+            botMessageContent = `Sorry, I encountered an error while processing your sell request. Please try again.`;
+            const botMessage = {
+              role: "bot" as const,
+              message: botMessageContent,
+              timestamp: new Date().toLocaleTimeString(),
+            }
+            setChatHistory((prev) => [...prev, botMessage])
+
+          }
+
         } else {
           // For GENERAL messages
           botMessageContent = tradingResult.message || "I'm not sure how to process your trading request. Please try again with a clearer instruction.";
         }
       }
-
+      if (botMessageContent === "") {
+        return
+      }
       const botMessage = {
         role: "bot" as const,
         message: botMessageContent,
