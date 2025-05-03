@@ -1,13 +1,9 @@
-import { monaSans } from "./fonts";
-import { cn } from "@/lib/utils";
-import { Providers } from "./providers";
-import "./globals.css";
-import type React from "react"; // Import React
+"use client";
 
-export const metadata = {
-  title: "HyperSonic",
-  description: "One-stop shop for all your meme coin needs",
-};
+import "./globals.css";
+import { ClientProviders } from "./client-providers";
+import { ThemeProvider } from "next-themes";
+import { AuthGuard } from "./providers/AuthGuard";
 
 export default function RootLayout({
   children,
@@ -16,13 +12,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          monaSans.variable
-        )}
-      >
-        <Providers>{children}</Providers>
+      <body suppressHydrationWarning>
+        <ClientProviders>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <AuthGuard>{children}</AuthGuard>
+          </ThemeProvider>
+        </ClientProviders>
       </body>
     </html>
   );

@@ -1,357 +1,227 @@
 "use client";
-
-import { useState } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
+import Image from "next/image";
+import { Upload, Sparkles } from "lucide-react";
+import Navbar from "@/components/navbar";
+import axios, { AxiosResponse } from "axios";
+import api from "@/lib/api";
+import { CoinResponse } from "@/app/launch/types";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { AppLayout } from "../components/app-layout";
-import { InputMethodSelector, type InputMethod } from "./input-method-selector";
-import { AIInputForm } from "./ai-input-form";
-import { RegenerationControls } from "./regeneration-controls";
-import { TokenFormSection } from "./token-form";
-import { useTokenStore, type Token } from "../store/tokenStore";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { createToken } from "@/services/memecoin-launchpad";
-import { generateTokenConcept } from "@/app/lib/nebula";
-import { useTestTokenService } from "@/services/TestTokenService";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import InputMethodSelector, {
+  LaunchMethod,
+} from "./components/input-method-selector";
+import AIInputForm from "./components/ai-input-form";
+import ManualInputForm from "./components/manual-input-form";
 import { useTokenGeneratingService } from "@/services/TokenGeneratingService";
 
-interface TokenDetails {
-  name: string;
-  symbol: string;
-  description: string;
-  imageUrl: string;
-}
-
-interface LaunchConfig {
-  initialSupply: string;
-  maxSupply: string;
-  launchCost: string;
-  liquidityPercentage: string;
-  lockupPeriod: string;
-}
-
-export default function LaunchPage() {
+export default function LaunchTokenPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [prompt, setPrompt] = useState<string>("");
-  const [aiImageUrl, setAiImageUrl] = useState<string>("");
-  const [loadingAI, setLoadingAI] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-  const [launchConfig, setLaunchConfig] = useState<LaunchConfig>({
-    initialSupply: "200000",
-    maxSupply: "1000000",
-    launchCost: "0.1",
-    liquidityPercentage: "60",
-    lockupPeriod: "180",
-  });
-  const [inputMethod, setInputMethod] = useState<InputMethod>("manual");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isRegeneratingDetails, setIsRegeneratingDetails] = useState(false);
-  const [isRegeneratingImage, setIsRegeneratingImage] = useState(false);
-  const [aiInput, setAiInput] = useState("");
-  const [generatedDetails, setGeneratedDetails] = useState<TokenDetails | null>(
-    null
-  );
-  const addToken = useTokenStore((state) => state.addToken);
-  const testTokenService = useTestTokenService();
-  const { generateTokenWithAI } = useTokenGeneratingService();
+  const currentAccount = useCurrentAccount();
+  const [launchMethod, setLaunchMethod] = useState<LaunchMethod>("auto");
+  const [description, setDescription] = useState("");
+  const [tokenName, setTokenName] = useState("");
+  const [tokenSymbol, setTokenSymbol] = useState("");
+  const [tokenDescription, setTokenDescription] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isCreatingToken, setIsCreatingToken] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const tokenGeneratingService = useTokenGeneratingService();
 
-  const handleImageSelect = (file: File) => {
-    setError("");
-    setImageFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-    setAiImageUrl("");
-  };
+  // Add event listener for the custom event from manual form
+  useEffect(() => {
+    const handleSetImagePreview = (event: any) => {
+      const { previewUrl, gatewayUrl } = event.detail;
+      // Update the image preview without triggering another upload
+      setImagePreview(previewUrl);
+      // Set the uploaded URL directly if available
+      if (gatewayUrl) {
+        setUploadedImageUrl(gatewayUrl);
+      }
+    };
 
-  const clearImage = () => {
-    setImageFile(null);
-    setPreviewUrl(null);
-    setAiImageUrl("");
-    setError("");
-  };
+    window.addEventListener("setImagePreview", handleSetImagePreview);
 
-  const generateImageWithPromptInput = async (inputPrompt: string) => {
-    if (!inputPrompt.trim()) return;
-    console.log("generating image", inputPrompt);
+    return () => {
+      window.removeEventListener("setImagePreview", handleSetImagePreview);
+    };
+  }, []);
+
+  const handleImageUpload = async (file: File) => {
+    // If the file is empty or has no size, it's likely a placeholder from our AI generation
+    // In this case, we don't want to trigger another upload
+    if (file.size === 0) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    // Upload the file to the API
+    setIsUploading(true);
     try {
-      setError("");
-      setLoadingAI(true);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", "post");
+      formData.append("userId", currentAccount?.address || "");
 
-      const result = await generateTokenWithAI(inputPrompt);
-      
-      if (!result.imageBase64) {
-        throw new Error("No image data received");
+      const response = await api.post("/images", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (
+        response.data &&
+        response.data.image &&
+        response.data.image.gatewayUrl
+      ) {
+        setUploadedImageUrl(response.data.image.gatewayUrl);
       }
-
-      // Convert base64 to binary
-      const byteCharacters = atob(result.imageBase64);
-      const byteNumbers = new Array(byteCharacters.length);
-
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-
-      const byteArray = new Uint8Array(byteNumbers);
-
-      // Create a Blob from the binary data
-      const blob = new Blob([byteArray], { type: "image/png" });
-
-      // Create File object from blob
-      const file = new File([blob], "ai-generated.png", { type: "image/png" });
-
-      setImageFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
     } catch (error) {
-      console.error("Error generating image:", error);
-      setError(
-        "Failed to generate image. Please try again or upload an image manually."
-      );
+      console.error("Error uploading image:", error);
     } finally {
-      setLoadingAI(false);
+      setIsUploading(false);
     }
   };
-
-  const generateImage = async () => {
-    if (!prompt.trim()) return;
-    console.log("generating image");
-    try {
-      setError("");
-      setLoadingAI(true);
-
-      const result = await generateTokenWithAI(prompt);
-      
-      if (!result.imageBase64) {
-        throw new Error("No image data received");
-      }
-
-      // Convert base64 to binary
-      const byteCharacters = atob(result.imageBase64);
-      const byteNumbers = new Array(byteCharacters.length);
-
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-
-      const byteArray = new Uint8Array(byteNumbers);
-
-      // Create a Blob from the binary data
-      const blob = new Blob([byteArray], { type: "image/png" });
-
-      // Create File object from blob
-      const file = new File([blob], "ai-generated.png", { type: "image/png" });
-
-      setImageFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    } catch (error) {
-      console.error("Error generating image:", error);
-      setError(
-        "Failed to generate image. Please try again or upload an image manually."
-      );
-    } finally {
-      setLoadingAI(false);
-    }
+  const handleImageClear = () => {
+    setImagePreview(null);
+  };
+  const handleGenerateImage = () => {
+    setIsGeneratingImage(true);
+    // Simulate AI image generation
+    setTimeout(() => {
+      setImagePreview("/blockchain-bulldog.png");
+      setIsGeneratingImage(false);
+    }, 1500);
   };
 
-  const handleSubmit = async (data: Record<string, string>) => {
-    console.log("Submitting data:", data);
-    console.log("Image file:", imageFile);
+  const handleCreateToken = async () => {
+    setIsCreatingToken(true);
+    const result: AxiosResponse<CoinResponse> = await api.post("/coin", {
+      name: tokenName,
+      symbol: tokenSymbol,
+      description: tokenDescription,
+      iconUrl: uploadedImageUrl,
+      address: currentAccount?.address || "",
+    });
+    console.log("result: ", result);
+    window.location.href = `/marketplace/${result?.data.coin.id}`;
+  };
+  const handleCreateTokenAuto = async (description: string) => {
+    setIsCreatingToken(true);
     try {
-      if (!imageFile) {
-        setError("Please upload an image or generate one using AI");
-        return;
-      }
-
-      // If we have generated details, use those instead of form data
-      const tokenName = generatedDetails?.name || data?.name;
-      const tokenSymbol = generatedDetails?.symbol || data?.symbol;
-      const tokenDescription =
-        generatedDetails?.description || data?.description;
-
-      if (!tokenName || !tokenSymbol) {
-        setError("Name and symbol are required");
-        return;
-      }
-
-      setIsLoading(true);
-
-      const metaData = {
-        name: tokenName.trim(),
-        ticker: tokenSymbol.trim(),
-        description: tokenDescription || "",
-      };
-
-      // Use testCreateToken instead of createToken
-      const result = await testTokenService.testCreateToken(
-        metaData,
-        imageFile
+      // Call the AI service to generate token details and upload the image
+      const tokenDetails = await tokenGeneratingService.generateTokenWithAI(
+        description,
+        currentAccount?.address // Pass the user address for attribution
       );
+      console.log("Generated token details:", tokenDetails);
 
-      if (!result.success) {
-        setError("Failed to create token");
-        return false;
-      }
+      // Use the gatewayUrl (IPFS URL) from the token details if available
+      const imageUrl = tokenDetails.gatewayUrl || tokenDetails.imageUrl;
 
-      // Create a new token object
-      const newToken: Token = {
-        id: result.imageURL?.split("ipfs/")[1] || Date.now().toString(),
-        name: tokenName,
-        symbol: tokenSymbol,
-        imageUrl: result.imageURL || "",
-        description: tokenDescription || "",
-        price: "$0.00",
-        priceChange: 0,
-        marketCap: "0",
-        holders: "0",
-        volume24h: "$0",
-        launchDate: new Date().toISOString().split("T")[0],
-        chain: data.chain || "NEAR",
-        status: "active",
-        fundingRaised: "0",
-      };
+      // Create the token with the generated details
+      const { data: result }: { data: CoinResponse } = await api.post("/coin", {
+        name: tokenDetails.name,
+        symbol: tokenDetails.symbol,
+        description: tokenDetails.description,
+        iconUrl: imageUrl,
+        address: currentAccount?.address || "",
+      });
 
-      // Add token to store
-      addToken(newToken);
-      router.push("/dashboard/my-tokens");
-      return true;
+      console.log("Token created successfully:", result);
+
+      // Navigate to the new token's marketplace page
+      const timer = setTimeout(() => {
+        router.push(`/marketplace/${result.coin.id}`);
+      }, 2000);
+
+      return () => clearTimeout(timer);
     } catch (error) {
       console.error("Error creating token:", error);
-      setError("Failed to create token. Please try again.");
-      return false;
-    } finally {
-      setIsLoading(false);
+      setIsCreatingToken(false);
+      throw error; // Re-throw to let the form handle the error
     }
   };
 
-  const handleGenerate = async (input: string) => {
+  const handleCreateTokenManual = async () => {
+    setIsCreatingToken(true);
     try {
-      setAiInput(input);
-      setIsGenerating(true);
-      const response = await generateTokenConcept(input);
-      response.imageUrl = "";
-      setPrompt(response.image_description);
-      console.log("response", response);
-      setGeneratedDetails(response);
-      await generateImageWithPromptInput(response.image_description);
-      // After successful generation, switch to manual mode
-      setInputMethod("manual");
+      // Use the uploaded IPFS URL if available, otherwise use the local preview
+      const iconUrl = uploadedImageUrl || imagePreview;
+
+      const { data: result }: { data: CoinResponse } = await api.post("/coin", {
+        name: tokenName,
+        symbol: tokenSymbol,
+        description: tokenDescription,
+        iconUrl: iconUrl,
+        address: currentAccount?.address || "",
+      });
+
+      console.log("Token created successfully:", result);
+
+      const timer = setTimeout(() => {
+        router.push(`/marketplace/${result.coin.id}`);
+      }, 2000);
+
+      return () => clearTimeout(timer);
     } catch (error) {
-      console.error("Error generating token:", error);
-      setError("Failed to generate token details");
-    } finally {
-      setIsGenerating(false);
+      console.error("Error creating token:", error);
+      setIsCreatingToken(false);
     }
-  };
-
-  const handleRegenerateDetails = async () => {
-    if (!aiInput) return;
-    setIsRegeneratingDetails(true);
-    await handleGenerate(aiInput);
-    setIsRegeneratingDetails(false);
-  };
-
-  const handleRegenerateImage = async () => {
-    // Similar to handleRegenerateDetails but only for the image
-    // You'll need to create a new API endpoint for this
-  };
-
-  const handleConfigChange = (key: keyof LaunchConfig, value: string) => {
-    setLaunchConfig((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
   };
 
   return (
-    <AppLayout showFooter={false}>
-      <div className="py-8">
-        <div className="container max-w-7xl">
-          <div className="flex flex-col items-center mb-12 space-y-4 text-center">
-            <div className="space-y-4">
-              <Badge variant="secondary" className="mb-4">
-                Token Launch Platform
-              </Badge>
-              <h1 className="text-4xl font-bold text-transparent md:text-5xl bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text">
-                Launch Your Own Token
-              </h1>
-              <p className="max-w-2xl mx-auto text-lg text-muted-foreground">
-                Create, deploy, and manage your meme token with our secure and
-                automated platform. No coding required.
-              </p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#0039C6]">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header with authenticated navbar */}
+        <Navbar isAuthenticated={!!currentAccount} />
 
-          <div>
-            <Card className="border-primary/20 bg-background/60 backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle>Create Your Token</CardTitle>
-                <CardDescription>
-                  Choose how you want to create your token
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-8">
-                  <InputMethodSelector
-                    selected={inputMethod}
-                    onSelect={setInputMethod}
-                  />
+        <div className="bg-white rounded-3xl p-8 mt-8 max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold mb-8 text-center">
+            Launch Your Token
+          </h1>
 
-                  {(inputMethod === "ai-joke" ||
-                    inputMethod === "ai-tweet") && (
-                    <div className="space-y-6">
-                      <AIInputForm
-                        inputMethod={inputMethod}
-                        onGenerate={handleGenerate}
-                        isGenerating={isGenerating}
-                      />
+          {/* Launch Method Selection */}
+          <InputMethodSelector
+            selectedMethod={launchMethod}
+            onMethodChange={setLaunchMethod}
+          />
 
-                      {generatedDetails && (
-                        <RegenerationControls
-                          onRegenerateDetails={handleRegenerateDetails}
-                          onRegenerateImage={handleRegenerateImage}
-                          isRegeneratingDetails={isRegeneratingDetails}
-                          isRegeneratingImage={isRegeneratingImage}
-                        />
-                      )}
-                    </div>
-                  )}
+          {/* Auto Generated Form */}
+          {launchMethod === "auto" && (
+            <AIInputForm
+              onSubmit={handleCreateTokenAuto}
+              isCreatingToken={isCreatingToken}
+            />
+          )}
 
-                  {(inputMethod === "manual" || generatedDetails) && (
-                    <TokenFormSection
-                      inputMethod={inputMethod}
-                      generatedDetails={generatedDetails}
-                      error={error}
-                      imageFile={imageFile}
-                      previewUrl={previewUrl}
-                      aiImageUrl={aiImageUrl}
-                      prompt={prompt}
-                      loadingAI={loadingAI}
-                      isLoading={isLoading}
-                      launchConfig={launchConfig}
-                      onImageSelect={handleImageSelect}
-                      onClearImage={clearImage}
-                      onPromptChange={setPrompt}
-                      onGenerateImage={generateImage}
-                      onSubmit={handleSubmit}
-                      onConfigChange={handleConfigChange}
-                    />
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Manual Entry Form */}
+          {launchMethod === "manual" && (
+            <ManualInputForm
+              tokenName={tokenName}
+              tokenSymbol={tokenSymbol}
+              tokenDescription={tokenDescription}
+              imagePreview={imagePreview}
+              isGeneratingImage={isGeneratingImage}
+              isCreatingToken={isCreatingToken}
+              onTokenNameChange={setTokenName}
+              onTokenSymbolChange={setTokenSymbol}
+              onTokenDescriptionChange={setTokenDescription}
+              onImageUpload={handleImageUpload}
+              onImageClear={handleImageClear}
+              onGenerateImage={handleGenerateImage}
+              onSubmit={handleCreateTokenManual}
+            />
+          )}
         </div>
       </div>
-    </AppLayout>
+    </div>
   );
 }
