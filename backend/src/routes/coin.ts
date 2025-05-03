@@ -354,6 +354,68 @@ router.get("/holding-coins/:walletAddress", async (req: any, res: any) => {
   }
 });
 
+/**
+ * Endpoint to get a coin by name
+ * @route GET /coin/name/:name
+ */
+router.get("/coin/name/:name", async (req: any, res: any) => {
+  try {
+    const { name } = req.params;
+
+    if (!name) {
+      return res.status(400).json({ error: "Coin name is required" });
+    }
+
+    // Get the coin with bonding curve ID
+    const coin = await db
+      .selectFrom("coins as c")
+      .leftJoin("bondingCurve as b", "c.id", "b.coinMetadata")
+      .select([
+        "c.id",
+        "c.name",
+        "c.symbol",
+        "c.description",
+        "c.logo",
+        "c.address",
+        "c.createdAt",
+        "b.id as bondingCurveId",
+      ])
+      .where("c.name", "=", name)
+      .executeTakeFirst();
+
+    if (!coin) {
+      return res.status(404).json({ error: "Coin not found" });
+    }
+
+    // Calculate market data if bonding curve exists
+    let marketData = {
+      suiPrice: 0,
+      price: 0, // USD price
+      change24h: 0,
+      volume24h: "0",
+      marketCap: "0",
+      holders: 0,
+    };
+
+    if (coin.bondingCurveId) {
+      const price = await getCurrentPrice(coin.bondingCurveId);
+      marketData = await getMarketData(coin.id, coin.bondingCurveId, price);
+    }
+
+    // Return coin with market data
+    return res.status(200).json({
+      ...coin,
+      ...marketData,
+    });
+  } catch (error) {
+    console.error("Error fetching coin by name:", error);
+    return res.status(500).json({
+      error: "Failed to fetch coin by name",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
 router.get("/migrate", async (req: any, res: any) => {
   try {
     const {bondingCurveId, packageId} = req.query;

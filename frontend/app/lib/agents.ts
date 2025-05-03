@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { fetchNewsItems } from "./news";
+import { tradeAgent } from "./tradingBot";
 
 const openai = new OpenAI({
   apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
@@ -24,6 +25,85 @@ export async function agent(input: string) {
   }
   // Parse the JSON response
   return JSON.parse(content);
+}
+
+/**
+ * Processes a user query to determine if it's about news or token trading
+ * @param userInput The user's message
+ * @returns An object containing the query type and the result of processing the query
+ */
+export async function processUserQuery(userInput: string) {
+  // Define the prompt for GPT-4 to determine the query type
+  const queryTypePrompt = `
+You are an AI assistant that helps users with two types of queries:
+1. News queries - where users ask for news or information about a topic
+2. Token trading queries - where users want to buy or sell tokens
+
+Your task is to analyze the user's input and determine which type of query it is.
+
+Examples of news queries:
+- "Show me news about Bitcoin"
+- "What's happening with Ethereum lately?"
+- "Tell me about recent developments in AI"
+- "Latest news on cryptocurrency"
+- "Updates on blockchain technology"
+
+Examples of token trading queries:
+- "Buy 10 tokens of SUI"
+- "I want to sell 25 XYZ tokens"
+- "Purchase 5 SUI tokens"
+- "Sell 15 tokens"
+- "Buy 100 PEPE"
+
+Respond with a JSON object with the following structure:
+{
+  "queryType": "NEWS" | "TOKEN_TRADING"
+}
+
+User input: "${userInput}"
+`;
+
+  try {
+    // Call OpenAI API to determine the query type
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: queryTypePrompt,
+        },
+      ],
+      response_format: { type: "json_object" },
+    });
+
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error("No content received from OpenAI");
+    }
+
+    // Parse the JSON response
+    const queryTypeResult = JSON.parse(content);
+
+    // Process the query based on its type
+    if (queryTypeResult.queryType === "NEWS") {
+      // If it's a news query, use the existing extractTermsAndFetchNews function
+      const newsResult = await extractTermsAndFetchNews(userInput);
+      return {
+        queryType: "NEWS",
+        result: newsResult
+      };
+    } else {
+      // If it's a token trading query, use the tradeAgent function
+      const tradingResult = await tradeAgent(userInput);
+      return {
+        queryType: "TOKEN_TRADING",
+        result: tradingResult
+      };
+    }
+  } catch (error) {
+    console.error("Error processing user query:", error);
+    throw error;
+  }
 }
 
 /**

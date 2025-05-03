@@ -4,7 +4,9 @@ import type React from "react"
 
 import {useState, useRef, useEffect} from "react"
 import {Send, Bot, User, Sparkles, Trash2, Download} from "lucide-react"
-import {extractTermsAndFetchNews} from "@/app/lib/agents";
+import {processUserQuery} from "@/app/lib/agents";
+import {useCurrentAccount} from "@mysten/dapp-kit";
+import {builtBuyTransaction} from "@/services/coinService";
 
 export default function ChatbotPage() {
   const [message, setMessage] = useState("")
@@ -18,6 +20,7 @@ export default function ChatbotPage() {
   ])
   const [isTyping, setIsTyping] = useState(false)
   const chatContainerRef = useRef<HTMLDivElement>(null)
+  const currentAccount = useCurrentAccount();
 
   // Scroll to bottom when chat history updates
   useEffect(() => {
@@ -40,16 +43,64 @@ export default function ChatbotPage() {
     setMessage("")
     setIsTyping(true)
 
-    const botResponse = await extractTermsAndFetchNews(message.trim());
+    try {
+      // Process the user query to determine if it's about news or token trading
+      const response:any = await processUserQuery(message.trim());
 
-    const botMessage = {
-      role: "bot" as const,
-      message: JSON.stringify(botResponse),
-      timestamp: new Date().toLocaleTimeString(),
+      let botMessageContent = "";
+
+      if (response.queryType === "NEWS") {
+        // Format news response
+        const newsItems = response.result.newsItems;
+        if (Array.isArray(newsItems) && newsItems.length > 0) {
+          botMessageContent = `Here are some news articles about ${response.result.extractedTerms.filterTerm}:\n\n`;
+          newsItems.forEach((item, index) => {
+            botMessageContent += `${index + 1}. **${item.title}**\n`;
+            botMessageContent += `${item.description}\n`;
+            if (item.url) {
+              botMessageContent += `[Read more](${item.url})\n`;
+            }
+            botMessageContent += "\n";
+          });
+        } else {
+          botMessageContent = `I couldn't find any relevant news articles about ${response.result.extractedTerms.filterTerm}. Please try a different query.`;
+        }
+      } else if (response.queryType === "TOKEN_TRADING") {
+        // Format token trading response
+        const tradingResult = response.result;
+
+        if (tradingResult.action === "BUY") {
+          botMessageContent = `I understand you want to buy ${tradingResult.amount} tokens. To execute this transaction, please go to the Trading View page where you can complete your purchase securely.`;
+          const buyTransaction = await builtBuyTransaction(tradingResult.coinId, tradingResult.amount, currentAccount);
+        } else if (tradingResult.action === "SELL") {
+          botMessageContent = `I understand you want to sell ${tradingResult.amount} tokens. To execute this transaction, please go to the Trading View page where you can complete your sale securely.`;
+        } else {
+          // For GENERAL messages
+          botMessageContent = tradingResult.message || "I'm not sure how to process your trading request. Please try again with a clearer instruction.";
+        }
+      }
+
+      const botMessage = {
+        role: "bot" as const,
+        message: botMessageContent,
+        timestamp: new Date().toLocaleTimeString(),
+      }
+
+      setChatHistory((prev) => [...prev, botMessage])
+    } catch (error) {
+      console.error("Error processing query:", error);
+
+      // Add error message to chat
+      const errorMessage = {
+        role: "bot" as const,
+        message: "Sorry, I encountered an error while processing your request. Please try again.",
+        timestamp: new Date().toLocaleTimeString(),
+      }
+
+      setChatHistory((prev) => [...prev, errorMessage])
+    } finally {
+      setIsTyping(false)
     }
-
-    setChatHistory((prev) => [...prev, botMessage])
-    setIsTyping(false)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
