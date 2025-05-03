@@ -57,8 +57,8 @@ export default function AboutPage() {
     {
       name: "Dat N.",
       role: "Head of Blockchain Infra",
-      image: "/confident-professional.png",
-      bio: "Product leader with experience at Coinbase and Uniswap. Crypto native since 2017.",
+      image: "/datnguyen.jpg",
+      bio: "Blockchain Engineer @Minswap",
       twitter: "https://twitter.com",
       github: "https://github.com",
       linkedin: "https://linkedin.com",

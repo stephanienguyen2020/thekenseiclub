@@ -28,6 +28,31 @@ export default function WalletPage() {
   const [createdTokens, setCreatedTokens] = useState<CoinList>();
   const currentAccount = useCurrentAccount();
 
+  // Calculate total value and 24h change from holdings
+  const totalValue = holdings?.data
+    ? holdings.data
+        .reduce((sum, coin: any) => {
+          // Use any type to bypass TypeScript's strict checking
+          return sum + (coin.balance || 0) * (coin.price || 0);
+        }, 0)
+        .toFixed(2)
+    : "0.00";
+
+  const change = holdings?.data
+    ? holdings.data.length > 0
+      ? holdings.data
+          .reduce((sum, coin: any) => {
+            // Use any type to bypass TypeScript's strict checking
+            const coinValue = (coin.balance || 0) * (coin.price || 0);
+            const coinChange = coinValue * ((coin.change24h || 0) / 100);
+            return sum + coinChange;
+          }, 0)
+          .toFixed(2)
+      : "0.00"
+    : "0.00";
+
+  const changeIsPositive = parseFloat(change) >= 0;
+
   useEffect(() => {
     if (activeTab === "holdings") {
       const fetchHoldings = async () => {
@@ -125,20 +150,22 @@ export default function WalletPage() {
 
           <div className="flex-1">
             <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
-              <h2 className="text-2xl font-bold">0x1a2b...3c4d</h2>
+              <h2 className="text-2xl font-bold">{currentAccount?.address}</h2>
             </div>
             <div className="flex flex-wrap gap-4">
               <div className="bg-gray-100 px-4 py-2 rounded-xl border-2 border-black">
                 <span className="text-gray-500 text-sm">Total Value</span>
-                <div className="font-bold">$78,425.03</div>
+                <div className="font-bold">${totalValue} </div>
               </div>
               <div className="bg-gray-100 px-4 py-2 rounded-xl border-2 border-black">
                 <span className="text-gray-500 text-sm">24h Change</span>
-                <div className="font-bold text-green-500">+12.5%</div>
+                <div className="font-bold text-green-500">{change}</div>
               </div>
               <div className="bg-gray-100 px-4 py-2 rounded-xl border-2 border-black">
                 <span className="text-gray-500 text-sm">Total Tokens</span>
-                <div className="font-bold">10</div>
+                <div className="font-bold">
+                  {createdTokens?.data.length || 0}
+                </div>
               </div>
             </div>
           </div>
@@ -545,7 +572,7 @@ export default function WalletPage() {
                       <td className="text-right py-4 px-2">
                         <div className="flex gap-2 justify-end">
                           <Link
-                            href={`/marketplace/${token.symbol.toLowerCase()}`}
+                            href={`/marketplace/${token.id.toLowerCase()}`}
                             className="bg-[#0046F4] text-white px-3 py-1 rounded-xl text-sm font-bold border-2 border-black"
                           >
                             View
@@ -609,7 +636,7 @@ export default function WalletPage() {
                   </div>
                   <div className="flex gap-2">
                     <Link
-                      href={`/marketplace/${token.symbol.toLowerCase()}`}
+                      href={`/marketplace/${token.id.toLowerCase()}`}
                       className="flex-1 bg-[#0046F4] text-white py-2 rounded-xl text-sm font-bold border-2 border-black text-center"
                     >
                       View

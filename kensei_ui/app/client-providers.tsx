@@ -16,7 +16,10 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SuiClientProvider networks={networks} defaultNetwork="devnet">
+      <SuiClientProvider
+        networks={networks}
+        defaultNetwork={(process.env.NEXT_PUBLIC_NETWORK || "devnet") as any}
+      >
         <WalletProvider autoConnect={false}>{children}</WalletProvider>
       </SuiClientProvider>
     </QueryClientProvider>

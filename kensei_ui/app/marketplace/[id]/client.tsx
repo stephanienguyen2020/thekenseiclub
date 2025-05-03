@@ -13,7 +13,14 @@ import { Coin } from "@/app/marketplace/types";
 import { AxiosResponse } from "axios";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 
-type ProposalStatus = "active" | "closed" | "upcoming";
+type ProposalStatus = "open" | "closed" | "upcoming";
+
+interface OptionObject {
+  option: string;
+  votes: number;
+  points: number;
+  _id?: string;
+}
 
 interface Proposal {
   _id: string;
@@ -65,12 +72,12 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -157,9 +164,11 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
         });
 
         // Fetch proposals
-        const proposalsResponse = await fetch(`http://localhost:3000/api/daos/token/${id}`);
+        const proposalsResponse = await fetch(
+          `http://localhost:3000/api/daos/token/${id}`
+        );
         if (!proposalsResponse.ok) {
-          throw new Error('Failed to fetch proposals');
+          throw new Error("Failed to fetch proposals");
         }
         const proposalsData = await proposalsResponse.json();
         setProposals(proposalsData.data || []);
@@ -178,7 +187,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
 
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -414,13 +423,13 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
                 </button>
                 <button
                   className={`px-4 py-2 rounded-full ${
-                    governanceFilter === "active"
+                    governanceFilter === "open"
                       ? "bg-[#0039C6] text-white"
                       : "bg-gray-100"
                   }`}
-                  onClick={() => setGovernanceFilter("active")}
+                  onClick={() => setGovernanceFilter("open")}
                 >
-                  Active
+                  Open
                 </button>
                 <button
                   className={`px-4 py-2 rounded-full ${
@@ -479,7 +488,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
                     No {governanceFilter} proposals found
                   </h3>
                   <p className="text-gray-500 mb-6">
-                    {governanceFilter === "active"
+                    {governanceFilter === "open"
                       ? "There are no active proposals at the moment."
                       : governanceFilter === "closed"
                       ? "No proposals have been closed yet."
