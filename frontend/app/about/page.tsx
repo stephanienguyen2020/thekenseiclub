@@ -58,7 +58,7 @@ export default function AboutPage() {
       name: "Dat N.",
       role: "Head of Blockchain Infra",
       image: "/datnguyen.jpg",
-      bio: "Blockchain Engineer @Minswap",
+      bio: "CS @ Vietnam National University | Blockchain Engineer @Minswap",
       twitter: "https://twitter.com",
       github: "https://github.com",
       linkedin: "https://linkedin.com",
