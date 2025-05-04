@@ -82,6 +82,32 @@ export async function up(db: Kysely<any>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("reTweets")
+    .addColumn("id", "bigserial", (col) => col.primaryKey().notNull())
+    .addColumn("user_id", "varchar", (col) =>
+      col.references("users.sui_address").notNull()
+    )
+    .addColumn("post_id", "bigint", (col) =>
+      col.references("posts.id").notNull()
+    )
+    .addColumn("created_at", "timestamp", (col) => col.notNull())
+    .addUniqueConstraint("reTweets_unique", ["user_id", "post_id"])
+    .execute();
+
+  await db.schema
+    .createTable("savePosts")
+    .addColumn("id", "bigserial", (col) => col.primaryKey().notNull())
+    .addColumn("user_id", "varchar", (col) =>
+      col.references("users.sui_address").notNull()
+    )
+    .addColumn("post_id", "bigint", (col) =>
+      col.references("posts.id").notNull()
+    )
+    .addColumn("created_at", "timestamp", (col) => col.notNull())
+    .addUniqueConstraint("savePosts_unique", ["user_id", "post_id"])
+    .execute();
+
+  await db.schema
     .createTable("images")
     .addColumn("image_name", "varchar", (col) => col.notNull())
     .addColumn("image_path", "varchar", (col) => col.notNull())
@@ -143,6 +169,8 @@ export async function down(db: Kysely<any>): Promise<void> {
   await db.schema.dropTable("comments").execute();
   await db.schema.dropTable("images").execute();
   await db.schema.dropTable("likes").execute();
+  await db.schema.dropTable("reTweets").execute();
+  await db.schema.dropTable("savePosts").execute();
   await db.schema.dropTable("posts").execute();
   await db.schema.dropTable("users").execute();
   await db.schema.dropTable("bonding_curve").execute();
