@@ -1,10 +1,12 @@
-import express, { Request, Response } from "express";
+import express, {Request, Response} from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { db } from "../db/database";
-import { PinataSDK } from "pinata";
+import {db} from "../db/database";
+import {PinataSDK} from "pinata";
 import "dotenv/config";
+import {getWalrusClient, ACTIVE_NETWORK} from "../utils";
+import {getFundedKeypair} from "../funded-keypair";
 
 const router = express.Router();
 console.log("gateway", process.env.GATEWAY_URL);
@@ -17,7 +19,7 @@ const pinata = new PinataSDK({
 // Create temporary uploads directory if it doesn't exist
 const tempUploadDir = path.join(__dirname, "../../temp-uploads");
 if (!fs.existsSync(tempUploadDir)) {
-  fs.mkdirSync(tempUploadDir, { recursive: true });
+  fs.mkdirSync(tempUploadDir, {recursive: true});
 }
 
 // Configure multer storage for temporary storage
@@ -70,7 +72,7 @@ router.post("/images", upload.single("file"), async (req: any, res: any) => {
     if (!req.file) {
       return res
         .status(400)
-        .json({ error: "No file uploaded or file type not supported" });
+        .json({error: "No file uploaded or file type not supported"});
     }
 
     const userId = req.body.userId;
@@ -102,7 +104,7 @@ router.post("/images", upload.single("file"), async (req: any, res: any) => {
     }
 
     if (!pinataResult.cid) {
-      return res.status(500).json({ error: "Failed to upload to Pinata" });
+      return res.status(500).json({error: "Failed to upload to Pinata"});
     }
 
     // Generate the gateway URL for the uploaded file
@@ -144,7 +146,7 @@ router.post("/images", upload.single("file"), async (req: any, res: any) => {
  */
 router.get("/images/:imageName", async (req: any, res: any) => {
   try {
-    const { imageName } = req.params;
+    const {imageName} = req.params;
 
     // Find the image in the database
     const image = await db
@@ -154,12 +156,12 @@ router.get("/images/:imageName", async (req: any, res: any) => {
       .executeTakeFirst();
 
     if (!image) {
-      return res.status(404).json({ error: "Image not found" });
+      return res.status(404).json({error: "Image not found"});
     }
 
     // Check if the imagePath is a valid URL (should be a Pinata gateway URL)
     if (!image.imagePath || !image.imagePath.startsWith("http")) {
-      return res.status(404).json({ error: "Image URL not found or invalid" });
+      return res.status(404).json({error: "Image URL not found or invalid"});
     }
 
     // Redirect to the Pinata gateway URL
@@ -182,7 +184,7 @@ router.get("/images/:imageName", async (req: any, res: any) => {
  */
 router.get("/images/info/:imageName", async (req: any, res: any) => {
   try {
-    const { imageName } = req.params;
+    const {imageName} = req.params;
 
     // Find the image in the database
     const image = await db
@@ -192,7 +194,7 @@ router.get("/images/info/:imageName", async (req: any, res: any) => {
       .executeTakeFirst();
 
     if (!image) {
-      return res.status(404).json({ error: "Image not found" });
+      return res.status(404).json({error: "Image not found"});
     }
 
     return res.status(200).json({
@@ -202,6 +204,90 @@ router.get("/images/info/:imageName", async (req: any, res: any) => {
     console.error("Error retrieving image info:", error);
     return res.status(500).json({
       error: "Failed to retrieve image information",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
+/**
+ * Upload an image to Walrus storage
+ * @route POST /images/walrus
+ * @param {Request} req - Express request object with file in files
+ * @param {Response} res - Express response object
+ * @returns {Response} 201 on success with image details, error status on failure
+ */
+router.post("/images/walrus", upload.single("file"), async (req: any, res: any) => {
+  try {
+    // Check if file was uploaded
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({error: "No file uploaded or file type not supported"});
+    }
+
+    // Read file into a buffer
+    const fileBuffer = fs.readFileSync(req.file.path);
+
+    // Get Walrus client
+    const walrusClient = getWalrusClient(ACTIVE_NETWORK);
+
+    const keypair = await getFundedKeypair();
+
+    // Upload to Walrus
+    const { blobId } = await walrusClient.writeBlob({
+      blob: fileBuffer,
+      deletable: false,
+      epochs: 3,
+      signer: keypair,
+    });
+
+    console.log("blobId", blobId);
+
+    return res.status(201).json({
+      message: "Image uploaded successfully to Walrus",
+      blobId,
+    });
+  } catch (error) {
+    console.error("Error uploading image to Walrus:", error);
+    return res.status(500).json({
+      error: "Failed to upload image to Walrus",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+})
+
+/**
+ * Get image from Walrus by its blobId
+ * @route GET /images/walrus/info/:blobId
+ * @param {Request} req - Express request object with blobId in params
+ * @param {Response} res - Express response object
+ * @returns {Response} 200 with image data
+ */
+router.get("/images/walrus/info/:blobId", async (req: Request, res: Response) => {
+  try {
+    const { blobId } = req.params;
+    const walrusClient = getWalrusClient(ACTIVE_NETWORK);
+
+    // Retrieve blob data
+    const blobBytes = await walrusClient.readBlob({ blobId });
+
+    // Convert to Blob object
+    const blob = new Blob([new Uint8Array(blobBytes)]);
+
+    // Convert blob to buffer for response
+    const arrayBuffer = await blob.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Set appropriate content type (assuming image/jpeg, but could be determined dynamically)
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.setHeader('Content-Length', buffer.length);
+
+    // Send the image data
+    return res.status(200).send(buffer);
+  } catch (error) {
+    console.error("Error retrieving image from Walrus:", error);
+    return res.status(500).json({
+      error: "Failed to retrieve image from Walrus",
       details: error instanceof Error ? error.message : "Unknown error",
     });
   }
