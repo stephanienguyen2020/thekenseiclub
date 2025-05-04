@@ -5,6 +5,7 @@ import {db} from "../db/database";
 import {getCurrentPrice, getMarketData} from "../services/marketDataService";
 import {balanceService} from "../services/balanceService";
 import {getActiveAddress} from "coin-sdk/dist/src/utils/sui-utils";
+import {sql} from "kysely/dist/esm";
 
 const router = express.Router();
 
@@ -278,8 +279,6 @@ router.get("/holding-coins/:walletAddress", async (req: any, res: any) => {
             .where("c.id", "=", coin.id as string)
             .executeTakeFirst();
 
-          console.log("dbCoin", dbCoin);
-
           // If found in our database, enrich with market data
           if (dbCoin && dbCoin.bondingCurveId) {
             const price = await getCurrentPrice(dbCoin.bondingCurveId);
@@ -304,45 +303,30 @@ router.get("/holding-coins/:walletAddress", async (req: any, res: any) => {
             };
           }
 
-          // If not found, return basic coin data
-          return {
-            ...coin,
-            name: coin.symbol,
-            description: "No description available",
-            logo: "",
-            suiPrice: 0,
-            price: 0, // USD price
-            change24h: 0,
-            volume24h: "0",
-            marketCap: "0",
-            holders: 0,
-          };
+          // If not found, do not include in the list returned
+          return null;
         } catch (error) {
-          // In case of any error processing a coin, return basic data
+          // In case of any error processing a coin, do not include in the list returned
           console.error(`Error enriching coin data for ${coin.symbol}:`, error);
-          return {
-            ...coin,
-            name: coin.symbol,
-            description: "No description available",
-            logo: "",
-            suiPrice: 0,
-            price: 0,
-            change24h: 0,
-            volume24h: "0",
-            marketCap: "0",
-            holders: 0,
-          };
+          return null;
         }
       })
     );
 
+    // Filter out null values (coins not found or with errors)
+    const filteredCoins = enrichedCoins.filter(coin => coin !== null);
+
+    // Update pagination counts based on filtered results
+    const filteredCount = filteredCoins.length;
+    const filteredTotalPages = Math.ceil(filteredCount / limit);
+
     return res.status(200).json({
-      data: enrichedCoins,
+      data: filteredCoins.sort((a:any, b:any) => b.holdings - a.holdings),
       pagination: {
-        total: totalCount,
+        total: filteredCount,
         page,
         limit,
-        totalPages,
+        totalPages: filteredTotalPages,
       },
     });
   } catch (error) {
@@ -415,6 +399,7 @@ router.get("/coin/name/:name", async (req: any, res: any) => {
     });
   }
 });
+
 
 router.get("/migrate", async (req: any, res: any) => {
   try {

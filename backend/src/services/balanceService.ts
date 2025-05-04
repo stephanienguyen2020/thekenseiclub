@@ -36,8 +36,6 @@ export class BalanceService {
         owner: walletAddress,
       });
 
-      console.log("All coins:", allCoins);
-
       // Group coins by coin type
       const coinsByType = new Map();
 
