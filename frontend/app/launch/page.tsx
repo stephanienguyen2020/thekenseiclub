@@ -70,7 +70,7 @@ export default function LaunchTokenPage() {
       formData.append("type", "post");
       formData.append("userId", currentAccount?.address || "");
 
-      const response = await api.post("/images", formData, {
+      const response = await api.post("/images/walrus", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -78,10 +78,9 @@ export default function LaunchTokenPage() {
 
       if (
         response.data &&
-        response.data.image &&
-        response.data.image.gatewayUrl
+        response.data.blobId
       ) {
-        setUploadedImageUrl(response.data.image.gatewayUrl);
+        setUploadedImageUrl(response.data.blobId);
       }
     } catch (error) {
       console.error("Error uploading image:", error);
