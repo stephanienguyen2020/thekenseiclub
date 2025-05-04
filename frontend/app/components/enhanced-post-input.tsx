@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, {useEffect} from "react";
 
-import { useState, useRef } from "react";
+import {useState, useRef} from "react";
 import Image from "next/image";
 import {
   ImageIcon,
@@ -14,9 +14,9 @@ import {
   Calendar,
   BarChart2,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import {motion} from "framer-motion";
 import api from "@/lib/api";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import {useCurrentAccount} from "@mysten/dapp-kit";
 
 interface Token {
   id: string;
@@ -30,8 +30,8 @@ interface EnhancedPostInputProps {
 }
 
 export default function EnhancedPostInput({
-  preselectedToken = null,
-}: EnhancedPostInputProps) {
+                                            preselectedToken = null,
+                                          }: EnhancedPostInputProps) {
   const [content, setContent] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
@@ -64,8 +64,8 @@ export default function EnhancedPostInput({
     const file = e.target.files?.[0];
     if (file) {
       // Show preview immediately for better UX
-      const reader = new FileReader();
-      reader.onload = (e) => {
+      const reader: any = new FileReader();
+      reader.onload = (e: any) => {
         setSelectedImage(e.target?.result as string);
       };
       reader.readAsDataURL(file);
@@ -135,9 +135,9 @@ export default function EnhancedPostInput({
   return (
     <motion.div
       className="bg-white rounded-3xl p-6 mb-6 border-2 border-black"
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      initial={{opacity: 0, y: -20}}
+      animate={{opacity: 1, y: 0}}
+      transition={{duration: 0.3}}
     >
       <div className="flex gap-4">
         <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-black">
@@ -170,7 +170,7 @@ export default function EnhancedPostInput({
                 className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1"
                 onClick={() => setSelectedImage(null)}
               >
-                <X size={16} />
+                <X size={16}/>
               </button>
             </div>
           )}
@@ -183,7 +183,7 @@ export default function EnhancedPostInput({
                 onClick={() => fileInputRef.current?.click()}
                 title="Add media"
               >
-                <ImageIcon size={20} />
+                <ImageIcon size={20}/>
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -248,7 +248,7 @@ export default function EnhancedPostInput({
                 className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
                 title="Add location"
               >
-                <MapPin size={20} />
+                <MapPin size={20}/>
               </button>
 
               {/* Emoji */}
@@ -256,7 +256,7 @@ export default function EnhancedPostInput({
                 className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
                 title="Add emoji"
               >
-                <Smile size={20} />
+                <Smile size={20}/>
               </button>
 
               {/* Schedule */}
@@ -264,7 +264,7 @@ export default function EnhancedPostInput({
                 className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
                 title="Schedule post"
               >
-                <Calendar size={20} />
+                <Calendar size={20}/>
               </button>
 
               {/* AI Enhance */}
@@ -272,7 +272,7 @@ export default function EnhancedPostInput({
                 className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
                 title="Enhance with AI"
               >
-                <BarChart2 size={20} />
+                <BarChart2 size={20}/>
               </button>
 
               {/* Token tagging - only show if not in token-specific feed */}
@@ -301,11 +301,12 @@ export default function EnhancedPostInput({
                     ) : (
                       <span>Tag a token</span>
                     )}
-                    <ChevronDown size={14} />
+                    <ChevronDown size={14}/>
                   </button>
 
                   {isTokenDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg p-2 z-10 min-w-[220px] border-2 border-black">
+                    <div
+                      className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg p-2 z-10 min-w-[220px] border-2 border-black">
                       <div className="px-2 py-1 mb-2">
                         <div className="relative">
                           <Search

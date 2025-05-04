@@ -1,8 +1,8 @@
 "use client";
 
-import { CoinList } from "@/app/marketplace/types";
+import {CoinList} from "@/app/marketplace/types";
 import api from "@/lib/api";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import {useCurrentAccount} from "@mysten/dapp-kit";
 import {
   ArrowDown,
   ArrowUp,
@@ -14,7 +14,9 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
+import {getChanges24h, getCreatedToken, getHoldingToken, getTotalValue} from "@/services/coinService";
+import {fetchUserByAddress} from "@/app/api/users/route";
 
 export default function WalletPage() {
   const [activeTab, setActiveTab] = useState<"holdings" | "created">(
@@ -26,57 +28,43 @@ export default function WalletPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [holdings, setHoldings] = useState<CoinList>();
   const [createdTokens, setCreatedTokens] = useState<CoinList>();
+  const [user, setUser] = useState<{username: string}>({username: ""});
+
   const currentAccount = useCurrentAccount();
 
   // Calculate total value and 24h change from holdings
-  const totalValue = holdings?.data
-    ? holdings.data
-        .reduce((sum, coin: any) => {
-          // Use any type to bypass TypeScript's strict checking
-          return sum + (coin.balance || 0) * (coin.price || 0);
-        }, 0)
-        .toFixed(2)
-    : "0.00";
+  const totalValue = getTotalValue(holdings?.data);
 
-  const change = holdings?.data
-    ? holdings.data.length > 0
-      ? holdings.data
-          .reduce((sum, coin: any) => {
-            // Use any type to bypass TypeScript's strict checking
-            const coinValue = (coin.balance || 0) * (coin.price || 0);
-            const coinChange = coinValue * ((coin.change24h || 0) / 100);
-            return sum + coinChange;
-          }, 0)
-          .toFixed(2)
-      : "0.00"
-    : "0.00";
+  const change = getChanges24h(holdings?.data)
 
   const changeIsPositive = parseFloat(change) >= 0;
 
   useEffect(() => {
     if (activeTab === "holdings") {
       const fetchHoldings = async () => {
-        const response = await api.get(
-          `/holding-coins/${currentAccount?.address}`
-        );
-        const data = response.data;
-        setHoldings(data);
+        const tokensHolding = await getHoldingToken(currentAccount);
+        setHoldings(tokensHolding);
       };
       fetchHoldings();
     }
     if (activeTab === "created") {
       const fetchCreatedTokens = async () => {
-        const response = await api.get(`/coins`, {
-          params: {
-            userId: currentAccount?.address,
-          },
-        });
-        const data = response.data;
-        setCreatedTokens(data);
+        const createdToken = await getCreatedToken(currentAccount);
+        setCreatedTokens(createdToken);
       };
       fetchCreatedTokens();
     }
   }, [activeTab, currentAccount]);
+
+  useEffect(() => {
+    async function fetchUserData() {
+      if (currentAccount?.address) {
+        const userData = await fetchUserByAddress(currentAccount?.address);
+        setUser(userData);
+      }
+    }
+    fetchUserData();
+  }, [currentAccount?.address]);
 
   // Filter and sort holdings
   const filteredHoldings =
@@ -146,7 +134,7 @@ export default function WalletPage() {
 
           <div className="flex-1">
             <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
-              <h2 className="text-2xl font-bold">{currentAccount?.address}</h2>
+              <h2 className="text-2xl font-bold">{user.username}</h2>
             </div>
             <div className="flex flex-wrap gap-4">
               <div className="bg-gray-100 px-4 py-2 rounded-xl border-2 border-black">
@@ -155,7 +143,7 @@ export default function WalletPage() {
               </div>
               <div className="bg-gray-100 px-4 py-2 rounded-xl border-2 border-black">
                 <span className="text-gray-500 text-sm">24h Change</span>
-                <div className="font-bold text-green-500">{change}</div>
+                <div className="font-bold text-green-500">{change}%</div>
               </div>
               <div className="bg-gray-100 px-4 py-2 rounded-xl border-2 border-black">
                 <span className="text-gray-500 text-sm">Total Tokens</span>
@@ -233,7 +221,7 @@ export default function WalletPage() {
                 onClick={() => setViewMode("table")}
                 aria-label="Table view"
               >
-                <List size={24} />
+                <List size={24}/>
               </button>
               <button
                 className={`p-2 ${
@@ -242,7 +230,7 @@ export default function WalletPage() {
                 onClick={() => setViewMode("cards")}
                 aria-label="Card view"
               >
-                <Grid size={24} />
+                <Grid size={24}/>
               </button>
             </div>
           </div>
@@ -256,107 +244,107 @@ export default function WalletPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b-4 border-black">
-                    <th
-                      className="text-left py-4 px-2 cursor-pointer"
-                      onClick={() => handleSort("name")}
-                    >
-                      <div className="flex items-center gap-1">
-                        Asset
-                        {sortBy === "name" &&
-                          (sortOrder === "asc" ? (
-                            <ChevronUp size={16} />
-                          ) : (
-                            <ChevronDown size={16} />
-                          ))}
-                      </div>
-                    </th>
-                    <th
-                      className="text-right py-4 px-2 cursor-pointer"
-                      onClick={() => handleSort("price")}
-                    >
-                      <div className="flex items-center gap-1 justify-end">
-                        Price
-                        {sortBy === "price" &&
-                          (sortOrder === "asc" ? (
-                            <ChevronUp size={16} />
-                          ) : (
-                            <ChevronDown size={16} />
-                          ))}
-                      </div>
-                    </th>
-                    <th
-                      className="text-right py-4 px-2 cursor-pointer"
-                      onClick={() => handleSort("change24h")}
-                    >
-                      <div className="flex items-center gap-1 justify-end">
-                        24h P/L
-                        {sortBy === "change24h" &&
-                          (sortOrder === "asc" ? (
-                            <ChevronUp size={16} />
-                          ) : (
-                            <ChevronDown size={16} />
-                          ))}
-                      </div>
-                    </th>
-                    <th
-                      className="text-right py-4 px-2 cursor-pointer"
-                      onClick={() => handleSort("holdings")}
-                    >
-                      <div className="flex items-center gap-1 justify-end">
-                        Holdings
-                        {sortBy === "holdings" &&
-                          (sortOrder === "asc" ? (
-                            <ChevronUp size={16} />
-                          ) : (
-                            <ChevronDown size={16} />
-                          ))}
-                      </div>
-                    </th>
-                    <th
-                      className="text-right py-4 px-2 cursor-pointer"
-                      onClick={() => handleSort("value")}
-                    >
-                      <div className="flex items-center gap-1 justify-end">
-                        Value
-                        {sortBy === "value" &&
-                          (sortOrder === "asc" ? (
-                            <ChevronUp size={16} />
-                          ) : (
-                            <ChevronDown size={16} />
-                          ))}
-                      </div>
-                    </th>
-                    <th className="text-right py-4 px-2">Actions</th>
-                  </tr>
+                <tr className="border-b-4 border-black">
+                  <th
+                    className="text-left py-4 px-2 cursor-pointer"
+                    onClick={() => handleSort("name")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Asset
+                      {sortBy === "name" &&
+                        (sortOrder === "asc" ? (
+                          <ChevronUp size={16}/>
+                        ) : (
+                          <ChevronDown size={16}/>
+                        ))}
+                    </div>
+                  </th>
+                  <th
+                    className="text-right py-4 px-2 cursor-pointer"
+                    onClick={() => handleSort("price")}
+                  >
+                    <div className="flex items-center gap-1 justify-end">
+                      Price
+                      {sortBy === "price" &&
+                        (sortOrder === "asc" ? (
+                          <ChevronUp size={16}/>
+                        ) : (
+                          <ChevronDown size={16}/>
+                        ))}
+                    </div>
+                  </th>
+                  <th
+                    className="text-right py-4 px-2 cursor-pointer"
+                    onClick={() => handleSort("change24h")}
+                  >
+                    <div className="flex items-center gap-1 justify-end">
+                      24h P/L
+                      {sortBy === "change24h" &&
+                        (sortOrder === "asc" ? (
+                          <ChevronUp size={16}/>
+                        ) : (
+                          <ChevronDown size={16}/>
+                        ))}
+                    </div>
+                  </th>
+                  <th
+                    className="text-right py-4 px-2 cursor-pointer"
+                    onClick={() => handleSort("holdings")}
+                  >
+                    <div className="flex items-center gap-1 justify-end">
+                      Holdings
+                      {sortBy === "holdings" &&
+                        (sortOrder === "asc" ? (
+                          <ChevronUp size={16}/>
+                        ) : (
+                          <ChevronDown size={16}/>
+                        ))}
+                    </div>
+                  </th>
+                  <th
+                    className="text-right py-4 px-2 cursor-pointer"
+                    onClick={() => handleSort("value")}
+                  >
+                    <div className="flex items-center gap-1 justify-end">
+                      Value
+                      {sortBy === "value" &&
+                        (sortOrder === "asc" ? (
+                          <ChevronUp size={16}/>
+                        ) : (
+                          <ChevronDown size={16}/>
+                        ))}
+                    </div>
+                  </th>
+                  <th className="text-right py-4 px-2">Actions</th>
+                </tr>
                 </thead>
                 <tbody>
-                  {sortedHoldings.map((holding, index) => (
-                    <tr
-                      key={index}
-                      className="border-b border-gray-200 hover:bg-gray-50"
-                    >
-                      <td className="py-4 px-2">
-                        <div className="flex items-center gap-3">
-                          <Image
-                            src={holding.logo || "/placeholder.svg"}
-                            width={40}
-                            height={40}
-                            alt={holding.name}
-                            className="rounded-full border-2 border-black"
-                          />
-                          <div>
-                            <div className="font-medium">{holding.name}</div>
-                            <div className="text-sm text-gray-500">
-                              {holding.symbol}
-                            </div>
+                {sortedHoldings.map((holding, index) => (
+                  <tr
+                    key={index}
+                    className="border-b border-gray-200 hover:bg-gray-50"
+                  >
+                    <td className="py-4 px-2">
+                      <div className="flex items-center gap-3">
+                        <Image
+                          src={holding.logo || "/placeholder.svg"}
+                          width={40}
+                          height={40}
+                          alt={holding.name}
+                          className="rounded-full border-2 border-black"
+                        />
+                        <div>
+                          <div className="font-medium">{holding.name}</div>
+                          <div className="text-sm text-gray-500">
+                            {holding.symbol}
                           </div>
                         </div>
-                      </td>
-                      <td className="text-right py-4 px-2 font-medium">
-                        ${holding.price.toFixed(8)}
-                      </td>
-                      <td className="text-right py-4 px-2">
+                      </div>
+                    </td>
+                    <td className="text-right py-4 px-2 font-medium">
+                      ${holding.price.toFixed(8)}
+                    </td>
+                    <td className="text-right py-4 px-2">
                         <span
                           className={`flex items-center justify-end gap-1 ${
                             holding.change24h >= 0
@@ -365,34 +353,35 @@ export default function WalletPage() {
                           }`}
                         >
                           {holding.change24h >= 0 ? (
-                            <ArrowUp size={16} />
+                            <ArrowUp size={16}/>
                           ) : (
-                            <ArrowDown size={16} />
+                            <ArrowDown size={16}/>
                           )}
                           {Math.abs(holding.change24h)}%
                         </span>
-                      </td>
-                      <td className="text-right py-4 px-2 font-medium">
-                        {holding.holdings?.toLocaleString() || "0"}
-                      </td>
-                      {/* <td className="text-right py-4 px-2 font-bold">
+                    </td>
+                    <td className="text-right py-4 px-2 font-medium">
+                      {holding.holdings?.toLocaleString() || "0"}
+                    </td>
+                    {/* <td className="text-right py-4 px-2 font-bold">
                         ${holding.value.toLocaleString()}
                       </td> */}
-                      <td className="text-right py-4 px-2">
-                        <div className="flex gap-2 justify-end">
-                          <Link
-                            href={`/marketplace/${holding.id}`}
-                            className="bg-[#0046F4] text-white px-4 py-1 rounded-xl text-sm font-bold border-2 border-black"
-                          >
-                            View
-                          </Link>
-                          <button className="bg-[#c0ff00] text-black px-4 py-1 rounded-xl text-sm font-bold border-2 border-black">
-                            AutoShill
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                    <td className="text-right py-4 px-2">
+                      <div className="flex gap-2 justify-end">
+                        <Link
+                          href={`/marketplace/${holding.id}`}
+                          className="bg-[#0046F4] text-white px-4 py-1 rounded-xl text-sm font-bold border-2 border-black"
+                        >
+                          View
+                        </Link>
+                        <button
+                          className="bg-[#c0ff00] text-black px-4 py-1 rounded-xl text-sm font-bold border-2 border-black">
+                          AutoShill
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
                 </tbody>
               </table>
             </div>
@@ -435,9 +424,9 @@ export default function WalletPage() {
                         }`}
                       >
                         {holding.change24h >= 0 ? (
-                          <ArrowUp size={14} />
+                          <ArrowUp size={14}/>
                         ) : (
-                          <ArrowDown size={14} />
+                          <ArrowDown size={14}/>
                         )}
                         {Math.abs(holding.change24h)}%
                       </p>
@@ -462,7 +451,8 @@ export default function WalletPage() {
                     >
                       View
                     </Link>
-                    <button className="flex-1 bg-[#c0ff00] text-black py-2 rounded-xl text-sm font-bold border-2 border-black">
+                    <button
+                      className="flex-1 bg-[#c0ff00] text-black py-2 rounded-xl text-sm font-bold border-2 border-black">
                       AutoShill
                     </button>
                   </div>
@@ -505,58 +495,58 @@ export default function WalletPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b-4 border-black">
-                    <th className="text-left py-4 px-2">Token</th>
-                    <th className="text-right py-4 px-2">Price</th>
-                    <th className="text-right py-4 px-2">Market Cap</th>
-                    <th className="text-right py-4 px-2">Holders</th>
-                    <th className="text-right py-4 px-2">24h Volume</th>
-                    <th className="text-center py-4 px-2">Launch Date</th>
-                    <th className="text-center py-4 px-2">Status</th>
-                    <th className="text-right py-4 px-2">Actions</th>
-                  </tr>
+                <tr className="border-b-4 border-black">
+                  <th className="text-left py-4 px-2">Token</th>
+                  <th className="text-right py-4 px-2">Price</th>
+                  <th className="text-right py-4 px-2">Market Cap</th>
+                  <th className="text-right py-4 px-2">Holders</th>
+                  <th className="text-right py-4 px-2">24h Volume</th>
+                  <th className="text-center py-4 px-2">Launch Date</th>
+                  <th className="text-center py-4 px-2">Status</th>
+                  <th className="text-right py-4 px-2">Actions</th>
+                </tr>
                 </thead>
                 <tbody>
-                  {filteredCreatedTokens.map((token, index) => (
-                    <tr
-                      key={index}
-                      className="border-b border-gray-200 hover:bg-gray-50"
-                    >
-                      <td className="py-4 px-2">
-                        <div className="flex items-center gap-3">
-                          <Image
-                            src={token.logo || "/placeholder.svg"}
-                            width={40}
-                            height={40}
-                            alt={token.name}
-                            className="rounded-full border-2 border-black"
-                          />
-                          <div>
-                            <div className="font-medium">{token.name}</div>
-                            <div className="text-sm text-gray-500">
-                              {token.symbol}
-                            </div>
+                {filteredCreatedTokens.map((token, index) => (
+                  <tr
+                    key={index}
+                    className="border-b border-gray-200 hover:bg-gray-50"
+                  >
+                    <td className="py-4 px-2">
+                      <div className="flex items-center gap-3">
+                        <Image
+                          src={token.logo || "/placeholder.svg"}
+                          width={40}
+                          height={40}
+                          alt={token.name}
+                          className="rounded-full border-2 border-black"
+                        />
+                        <div>
+                          <div className="font-medium">{token.name}</div>
+                          <div className="text-sm text-gray-500">
+                            {token.symbol}
                           </div>
                         </div>
-                      </td>
-                      <td className="text-right py-4 px-2">
-                        <div className="font-medium">
-                          ${token.price.toFixed(4)}
-                        </div>
-                        <div className="text-sm text-green-500">
-                          +{token.change24h}%
-                        </div>
-                      </td>
-                      <td className="text-right py-4 px-2 font-medium">
-                        ${token.marketCap.toLocaleString()}
-                      </td>
-                      <td className="text-right py-4 px-2 font-medium">
-                        {token.holders.toLocaleString()}
-                      </td>
-                      <td className="text-right py-4 px-2 font-medium">
-                        $1,000.00
-                      </td>
-                      {/* <td className="text-center py-4 px-2">
+                      </div>
+                    </td>
+                    <td className="text-right py-4 px-2">
+                      <div className="font-medium">
+                        ${token.price.toFixed(4)}
+                      </div>
+                      <div className="text-sm text-green-500">
+                        +{token.change24h}%
+                      </div>
+                    </td>
+                    <td className="text-right py-4 px-2 font-medium">
+                      ${token.marketCap.toLocaleString()}
+                    </td>
+                    <td className="text-right py-4 px-2 font-medium">
+                      {token.holders.toLocaleString()}
+                    </td>
+                    <td className="text-right py-4 px-2 font-medium">
+                      $1,000.00
+                    </td>
+                    {/* <td className="text-center py-4 px-2">
                         {token.launchDate}
                       </td>
                       <td className="text-center py-4 px-2">
@@ -565,21 +555,22 @@ export default function WalletPage() {
                             token.status.slice(1)}
                         </span>
                       </td> */}
-                      <td className="text-right py-4 px-2">
-                        <div className="flex gap-2 justify-end">
-                          <Link
-                            href={`/marketplace/${token.id.toLowerCase()}`}
-                            className="bg-[#0046F4] text-white px-3 py-1 rounded-xl text-sm font-bold border-2 border-black"
-                          >
-                            View
-                          </Link>
-                          <button className="bg-[#c0ff00] text-black px-3 py-1 rounded-xl text-sm font-bold border-2 border-black">
-                            AutoShill
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                    <td className="text-right py-4 px-2">
+                      <div className="flex gap-2 justify-end">
+                        <Link
+                          href={`/marketplace/${token.id.toLowerCase()}`}
+                          className="bg-[#0046F4] text-white px-3 py-1 rounded-xl text-sm font-bold border-2 border-black"
+                        >
+                          View
+                        </Link>
+                        <button
+                          className="bg-[#c0ff00] text-black px-3 py-1 rounded-xl text-sm font-bold border-2 border-black">
+                          AutoShill
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
                 </tbody>
               </table>
             </div>
@@ -637,7 +628,8 @@ export default function WalletPage() {
                     >
                       View
                     </Link>
-                    <button className="flex-1 bg-[#c0ff00] text-black py-2 rounded-xl text-sm font-bold border-2 border-black">
+                    <button
+                      className="flex-1 bg-[#c0ff00] text-black py-2 rounded-xl text-sm font-bold border-2 border-black">
                       AutoShill
                     </button>
                   </div>

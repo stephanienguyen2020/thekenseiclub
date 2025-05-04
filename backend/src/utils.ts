@@ -1,6 +1,8 @@
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
+import {WalrusClient} from "@mysten/walrus";
 
 export type Network = "mainnet" | "testnet" | "devnet" | "localnet";
+export type WalrusNetwork = "mainnet" | "testnet";
 
 // Validate network value from environment variable
 function isValidNetwork(network: string | undefined): network is Network {
@@ -28,4 +30,12 @@ export const ACTIVE_NETWORK: Network = (() => {
  */
 export const getClient = (network?: Network): SuiClient => {
   return new SuiClient({ url: getFullnodeUrl(network ?? ACTIVE_NETWORK) });
+};
+
+export const getWalrusClient = (network?: Network) => {
+  if (!network || network === 'devnet' || network === 'localnet') {
+    throw new Error('Walrus is only supported on mainnet or testnet');
+  }
+  return new WalrusClient({network: network as WalrusNetwork, suiClient: getClient(network) as any});
+
 };

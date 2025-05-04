@@ -14,7 +14,7 @@ import {
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { getObject } from "@/lib/utils";
 
-interface Proposal {
+export interface Proposal {
   _id: string;
   title: string;
   description: string;

@@ -31,68 +31,6 @@ export default function TweetsPage() {
     };
     fetchPost();
   }, [currentAccount]);
-  // }, []);
-
-  // // Mock data for tweets
-  // const tweets = [
-  //   {
-  //     id: "tweet-1",
-  //     content:
-  //       "Just bought more $PEPE! This meme coin is going to the moon! 🚀🚀🚀",
-  //     timestamp: "2h ago",
-  //     token: {
-  //       name: "Pepe",
-  //       symbol: "PEPE",
-  //       logo: "/happy-frog-on-a-lilypad.png",
-  //     },
-  //     likes: 42,
-  //     boosts: 12,
-  //     comments: 5,
-  //     views: 8700,
-  //     isLiked: true,
-  //   },
-  //   {
-  //     id: "tweet-2",
-  //     content:
-  //       "Who else thinks $DOGE is the original and best meme coin? Been holding since 2013! 💎🙌",
-  //     image: "/Shiba-Inu-Meme.png",
-  //     timestamp: "5h ago",
-  //     token: {
-  //       name: "Doge",
-  //       symbol: "DOGE",
-  //       logo: "/alert-shiba-inu.png",
-  //     },
-  //     likes: 128,
-  //     boosts: 37,
-  //     comments: 14,
-  //     views: 24500,
-  //   },
-  //   {
-  //     id: "tweet-3",
-  //     content:
-  //       "Just created a proposal for $CAT to fund community meme contests! Go vote now and let's make this happen! 🐱\n\nVoting ends in 48 hours.",
-  //     timestamp: "1d ago",
-  //     token: {
-  //       name: "Cat Coin",
-  //       symbol: "CAT",
-  //       logo: "/playful-calico.png",
-  //     },
-  //     likes: 76,
-  //     boosts: 23,
-  //     comments: 8,
-  //     views: 15300,
-  //   },
-  //   {
-  //     id: "tweet-4",
-  //     content: "tfw you buy the top and sell the bottom 😭",
-  //     image: "/plummeting-crypto.png",
-  //     timestamp: "2d ago",
-  //     likes: 210,
-  //     boosts: 45,
-  //     comments: 32,
-  //     views: 32100,
-  //   },
-  // ];
 
   // Filter tweets
   const filteredTweets = tweets.filter(

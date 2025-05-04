@@ -363,6 +363,20 @@ export interface RawPrices {
   timestamp: Timestamp;
 }
 
+export interface ReTweets {
+  createdAt: Timestamp;
+  id: Generated<Int8>;
+  postId: Int8;
+  userId: string;
+}
+
+export interface SavePosts {
+  createdAt: Timestamp;
+  id: Generated<Int8>;
+  postId: Int8;
+  userId: string;
+}
+
 export interface TimescaledbExperimentalPolicies {
   config: Json | null;
   hypertableName: string | null;
@@ -568,6 +582,8 @@ export interface DB {
   likes: Likes;
   posts: Posts;
   rawPrices: RawPrices;
+  reTweets: ReTweets;
+  savePosts: SavePosts;
   "timescaledbExperimental.policies": TimescaledbExperimentalPolicies;
   "timescaledbInformation.chunkColumnstoreSettings": TimescaledbInformationChunkColumnstoreSettings;
   "timescaledbInformation.chunkCompressionSettings": TimescaledbInformationChunkCompressionSettings;

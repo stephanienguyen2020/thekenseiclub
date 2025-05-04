@@ -1,21 +1,22 @@
 "use client";
 
-import {useState, useEffect, useRef} from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import {ArrowUp, ArrowDown, RefreshCw, ChevronDown, Send} from "lucide-react";
-import CryptoChart, {CandleData} from "./CryptoChart";
+import { ArrowUp, ArrowDown, RefreshCw, ChevronDown, Send } from "lucide-react";
+import CryptoChart, { CandleData } from "./CryptoChart";
 import {
   useCurrentAccount,
   useSignAndExecuteTransaction,
   useSuiClient,
 } from "@mysten/dapp-kit";
 import api from "@/lib/api";
-import {getClient, Network} from "coin-sdk/dist/src/utils/sui-utils";
+import { getClient, Network } from "coin-sdk/dist/src/utils/sui-utils";
 import BondingCurveSDK from "coin-sdk/dist/src/bonding_curve";
-import {getObject} from "@/lib/utils";
-import {tradeAgent} from "@/app/lib/tradingBot";
-import {SuiClient} from "@mysten/sui/client";
-import {AxiosResponse} from "axios";
+import { getObject } from "@/lib/utils";
+import { tradeAgent } from "@/app/lib/tradingBot";
+import { SuiClient } from "@mysten/sui/client";
+import axios from "axios";
+import { TransactionSuccess } from "./ui/transaction-success";
 
 interface TradingViewProps {
   tokenSymbol: string;
@@ -29,15 +30,15 @@ interface TradingViewProps {
 }
 
 export default function TradingView({
-                                      tokenSymbol,
-                                      tokenName,
-                                      tokenLogo,
-                                      currentPrice,
-                                      change24h,
-                                      bondingCurveId,
-                                      tokenId,
-                                      suiPrice,
-                                    }: TradingViewProps) {
+  tokenSymbol,
+  tokenName,
+  tokenLogo,
+  currentPrice,
+  change24h,
+  bondingCurveId,
+  tokenId,
+  suiPrice,
+}: TradingViewProps) {
   const [amount, setAmount] = useState("");
   const [activeTradeTab, setActiveTradeTab] = useState<
     "buy" | "sell" | "swap" | "assistant"
@@ -60,8 +61,8 @@ export default function TradingView({
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const client = useSuiClient();
 
-  const {mutate: signAndExecuteTransaction} = useSignAndExecuteTransaction({
-    execute: async ({bytes, signature}) =>
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
+    execute: async ({ bytes, signature }) =>
       await client.executeTransactionBlock({
         transactionBlock: bytes,
         signature,
@@ -75,6 +76,11 @@ export default function TradingView({
   });
 
   const [digest, setDigest] = useState("");
+  const [transactionHash, setTransactionHash] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [lastAction, setLastAction] = useState<"buy" | "sell" | "swap" | null>(
+    null
+  );
 
   // Simulate chart loading
   useEffect(() => {
@@ -163,11 +169,9 @@ export default function TradingView({
   const handleTrade = () => {
     if (!amount) return;
 
-    alert(
-      `${
-        activeTradeTab === "buy" ? "Bought" : "Sold"
-      } ${amount} ${tokenSymbol} at $${currentPrice.toFixed(15)}`
-    );
+    setLastAction("swap");
+    setTransactionHash("0x" + Math.random().toString(16).slice(2));
+    setShowSuccess(true);
     setAmount("");
   };
 
@@ -190,19 +194,21 @@ export default function TradingView({
       client,
       packageId
     );
-    return {coinType, packageId, bondingCurveSdk};
+    return { coinType, packageId, bondingCurveSdk };
   }
 
   const handleBuy = async (buyAmount = amount, coinName?: string) => {
     const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
-    const client = getClient(
-      (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network
-    );
-    const {coinType, packageId, bondingCurveSdk} = await retrieveBondingCurveData(client);
+    const client = getClient(network);
+    const { coinType, packageId, bondingCurveSdk } =
+      await retrieveBondingCurveData(client);
 
-    // Log the coin name for debugging
-    console.log("Buy operation - Amount:", buyAmount, "SUI, Token:", coinName || "default");
-    // Convert to string first to avoid precision issues, then parse as float and multiply
+    console.log(
+      "Buy operation - Amount:",
+      buyAmount,
+      "SUI, Token:",
+      coinName || "default"
+    );
     const parsedAmount = BigInt(buyAmount) * BigInt(1000000000);
     const tx = bondingCurveSdk.buildBuyTransaction({
       amount: parsedAmount,
@@ -218,19 +224,24 @@ export default function TradingView({
         },
         {
           onSuccess: (result: any) => {
-            api.get<{ message: string }>(`/migrate`, {
-              params: {
-                bondingCurveId,
-                packageId,
-              },
-            }).then((result) => {
-              console.log("migration status", result.data.message);
-            });
+            api
+              .get<{ message: string }>(`/migrate`, {
+                params: {
+                  bondingCurveId,
+                  packageId,
+                },
+              })
+              .then((result) => {
+                console.log("migration status", result.data.message);
+              });
             console.log("Buy successfully", result);
+            setTransactionHash(result.digest);
+            setLastAction("buy");
+            setShowSuccess(true);
           },
           onError: (error: any) => {
             console.log("error", error);
-          }
+          },
         }
       );
     } catch (e) {
@@ -240,12 +251,10 @@ export default function TradingView({
 
   const handleSell = async (sellAmount = amount, coinName?: string) => {
     const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
-    const client = getClient(
-      network
-    );
-    const {coinType, packageId, bondingCurveSdk} = await retrieveBondingCurveData(client);
+    const client = getClient(network);
+    const { coinType, packageId, bondingCurveSdk } =
+      await retrieveBondingCurveData(client);
 
-    // Convert to string first to avoid precision issues, then parse as float and multiply
     const parsedAmount = BigInt(sellAmount) * BigInt(1000000000);
     const tx = await bondingCurveSdk.buildSellTransaction({
       amount: parsedAmount,
@@ -264,10 +273,13 @@ export default function TradingView({
         {
           onSuccess: (result: any) => {
             console.log("success", result);
+            setTransactionHash(result.digest);
+            setLastAction("sell");
+            setShowSuccess(true);
           },
           onError: (error: any) => {
             console.log("error", error);
-          }
+          },
         }
       );
     } catch (e) {
@@ -280,7 +292,7 @@ export default function TradingView({
     if (!chatMessage.trim()) return;
 
     // Add user message to chat
-    setChatHistory([...chatHistory, {role: "user", message: chatMessage}]);
+    setChatHistory([...chatHistory, { role: "user", message: chatMessage }]);
 
     // Clear input
     setChatMessage("");
@@ -329,9 +341,9 @@ export default function TradingView({
                 }`}
               >
                 {change24h >= 0 ? (
-                  <ArrowUp size={16}/>
+                  <ArrowUp size={16} />
                 ) : (
-                  <ArrowDown size={16}/>
+                  <ArrowDown size={16} />
                 )}
                 <span className="font-bold">
                   {Math.abs(change24h).toFixed(2)}%
@@ -366,9 +378,8 @@ export default function TradingView({
                 {time[0]}
               </button>
             ))}
-            <button
-              className="ml-auto px-4 py-2 rounded-xl font-bold border-4 border-black bg-white text-black flex items-center gap-2">
-              <RefreshCw size={16}/>
+            <button className="ml-auto px-4 py-2 rounded-xl font-bold border-4 border-black bg-white text-black flex items-center gap-2">
+              <RefreshCw size={16} />
               <span>Refresh</span>
             </button>
           </div>
@@ -378,16 +389,14 @@ export default function TradingView({
         <div className="bg-white rounded-xl border-4 border-black p-4 h-[400px] relative">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className="w-12 h-12 border-4 border-t-[#c0ff00] border-r-[#c0ff00] border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+              <div className="w-12 h-12 border-4 border-t-[#c0ff00] border-r-[#c0ff00] border-b-transparent border-l-transparent rounded-full animate-spin"></div>
               <p className="ml-3 font-bold">Loading chart...</p>
             </div>
           ) : (
             <div ref={chartRef} className="w-full h-full">
               {/* This would be replaced with an actual trading chart library in a real implementation */}
-              <div
-                className="w-full h-full flex items-center justify-center bg-[#131722] text-white rounded-lg overflow-hidden">
-                <CryptoChart data={chartData}/>
+              <div className="w-full h-full flex items-center justify-center bg-[#131722] text-white rounded-lg overflow-hidden">
+                <CryptoChart data={chartData} />
               </div>
             </div>
           )}
@@ -554,16 +563,15 @@ export default function TradingView({
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                     />
-                    <div
-                      className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
+                    <div className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
                       USD
-                      <ChevronDown size={16}/>
+                      <ChevronDown size={16} />
                     </div>
                   </div>
 
                   <div className="flex justify-center my-2">
                     <div className="bg-[#0039C6] p-2 rounded-full border-2 border-black">
-                      <RefreshCw size={20} className="text-white"/>
+                      <RefreshCw size={20} className="text-white" />
                     </div>
                   </div>
 
@@ -578,16 +586,15 @@ export default function TradingView({
                       value={
                         amount
                           ? (Number.parseFloat(amount) / currentPrice).toFixed(
-                            8
-                          )
+                              8
+                            )
                           : ""
                       }
                       readOnly
                     />
-                    <div
-                      className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
+                    <div className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
                       {tokenSymbol}
-                      <ChevronDown size={16}/>
+                      <ChevronDown size={16} />
                     </div>
                   </div>
                 </div>
@@ -658,7 +665,7 @@ export default function TradingView({
                       className="bg-purple-500 p-3 rounded-xl border-4 border-black"
                       onClick={handleSendMessage}
                     >
-                      <Send size={20} className="text-white"/>
+                      <Send size={20} className="text-white" />
                     </button>
                   </div>
                 </div>
@@ -667,6 +674,20 @@ export default function TradingView({
           </div>
         </div>
       </div>
+
+      {showSuccess && (
+        <TransactionSuccess
+          open={showSuccess}
+          onOpenChange={setShowSuccess}
+          tokenSymbol={tokenSymbol}
+          amount={amount}
+          transactionHash={transactionHash}
+          onNewTransaction={() => {
+            setAmount("");
+            setActiveTradeTab(lastAction || "buy");
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import imageRouter from "./routes/image";
 import postRouter from "./routes/posts";
 import userRouter from "./routes/user";
 import commentRouter from "./routes/comments";
-import likesRouter from "./routes/likes";
+import likesRouter from "./routes/interact";
 import daoRouter from "./routes/dao";
 import balanceRouter from "./routes/balance";
 import cors from "cors"
