@@ -11,90 +11,98 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import {useEffect, useState} from "react";
+import {getChanges24h, getHoldingToken, getTotalValue} from "@/services/coinService";
+import {useCurrentAccount} from "@mysten/dapp-kit";
+import {Coin} from "@/app/marketplace/types";
+import {getObject} from "@/lib/utils";
+import {Proposal} from "@/app/dashboard/proposals/page";
 
 export default function DashboardPage() {
   const [timeframe, setTimeframe] = useState("1W");
+  const [topHoldings, setTopHoldings] = useState<Coin[]>([]);
+  const [recentProposals, setRecentProposals] = useState<Proposal[]>([]);
+  const currentAccount = useCurrentAccount();
+
+  useEffect(() => {
+    if (currentAccount?.address) {
+      const fetchTopHoldings = async () => {
+        const topHoldings = await getHoldingToken(currentAccount);
+        setTopHoldings(topHoldings.data);
+      }
+      fetchTopHoldings()
+    }
+  }, [currentAccount])
+
+  useEffect(() => {
+    const fetchProposals = async () => {
+      if (!currentAccount?.address) {
+        return;
+      }
+      const response = await fetch(
+        `/api/daos?wallet=${currentAccount.address}`
+      );
+      console.log("backendapi response", response);
+      if (!response.ok) {
+        throw new Error("Failed to fetch proposals");
+      }
+      const data = await response.json();
+      const proposalsData = data.data;
+      proposalsData.active = await Promise.all(
+        proposalsData.active.map(async (proposal: Proposal) => {
+          const coinMetadata = (await getObject(
+            proposal.tokenAddress
+          )) as any;
+          return {
+            ...proposal,
+            tokenName:
+              coinMetadata?.data?.content?.fields?.name ||
+              proposal.tokenAddress,
+          };
+        })
+      );
+      proposalsData.closed = await Promise.all(
+        proposalsData.closed.map(async (proposal: Proposal) => {
+          const coinMetadata = (await getObject(
+            proposal.tokenAddress
+          )) as any;
+          return {
+            ...proposal,
+            tokenName:
+              coinMetadata?.data?.content?.fields?.name ||
+              proposal.tokenAddress,
+          };
+        })
+      );
+      const allProposals = [...proposalsData.active, ...proposalsData.closed];
+
+      setRecentProposals(allProposals);
+    };
+
+    fetchProposals();
+  }, [currentAccount]);
+
+  console.log("recent proposals", recentProposals)
 
   // Mock data for portfolio overview
-  const portfolioValue = 78425.03;
-  const portfolioChange = 12.5;
-  const portfolioChangeAmount = 8725.03;
+  const portfolioValue = parseFloat(getTotalValue(topHoldings));
+  const portfolioChange = parseFloat(getChanges24h(topHoldings));
+  const portfolioChangeAmount = portfolioValue * portfolioChange / 100;
 
   // Mock data for stats
   const stats = [
     {
       title: "Total Tokens",
-      value: "10",
+      value: topHoldings.length.toString(),
       icon: Plus,
       color: "bg-[#c0ff00]",
     },
     {
       title: "Total Proposals",
-      value: "5",
+      value: recentProposals.length.toString(),
       icon: FileText,
       color: "bg-[#c0ff00]",
-    },
-    {
-      title: "Total Tweets",
-      value: "42",
-      icon: Twitter,
-      color: "bg-[#c0ff00]",
-    },
-    {
-      title: "Chat Sessions",
-      value: "8",
-      icon: MessageSquare,
-      color: "bg-[#c0ff00]",
-    },
-  ];
-
-  // Mock data for top holdings
-  const topHoldings = [
-    {
-      name: "Pepe",
-      symbol: "PEPE",
-      logo: "/happy-frog-on-a-lilypad.png",
-      value: 43500.0,
-      change: 81.25,
-      holdings: "500000000.00",
-    },
-    {
-      name: "Doge",
-      symbol: "DOGE",
-      logo: "/alert-shiba.png",
-      value: 12000.0,
-      change: 33.3,
-      holdings: "10000.00",
-    },
-    {
-      name: "Cat Coin",
-      symbol: "CAT",
-      logo: "/playful-calico.png",
-      value: 7800.0,
-      change: 85.7,
-      holdings: "1000.00",
-    },
-  ];
-
-  // Mock data for recent proposals
-  const recentProposals = [
-    {
-      id: "prop-1",
-      title: "PEPE01: Increase Marketing Budget for Community Growth",
-      status: "active",
-      token: "PEPE",
-      tokenLogo: "/happy-frog-on-a-lilypad.png",
-      endDate: "2025-05-01",
-    },
-    {
-      id: "prop-2",
-      title: "DOGE02: Revisiting The DOGE Staking Mechanism",
-      status: "closed",
-      token: "DOGE",
-      tokenLogo: "/alert-shiba.png",
-      endDate: "2025-04-01",
-    },
+    }
   ];
 
   return (
@@ -135,9 +143,9 @@ export default function DashboardPage() {
                 }`}
               >
                 {portfolioChange >= 0 ? (
-                  <ArrowUp size={16} />
+                  <ArrowUp size={16}/>
                 ) : (
-                  <ArrowDown size={16} />
+                  <ArrowDown size={16}/>
                 )}
                 <span className="font-bold">
                   {Math.abs(portfolioChange).toFixed(2)}%
@@ -161,28 +169,28 @@ export default function DashboardPage() {
                   href="/dashboard/wallet"
                   className="bg-[#c0ff00] text-black p-3 rounded-xl border-2 border-black flex flex-col items-center"
                 >
-                  <Wallet size={24} />
+                  <Wallet size={24}/>
                   <span className="text-xs font-bold mt-1">My Wallet</span>
                 </Link>
                 <Link
                   href="/dashboard/proposals"
                   className="bg-[#c0ff00] text-black p-3 rounded-xl border-2 border-black flex flex-col items-center"
                 >
-                  <FileText size={24} />
+                  <FileText size={24}/>
                   <span className="text-xs font-bold mt-1">Proposals</span>
                 </Link>
                 <Link
                   href="/dashboard/tweets"
                   className="bg-[#c0ff00] text-black p-3 rounded-xl border-2 border-black flex flex-col items-center"
                 >
-                  <Twitter size={24} />
+                  <Twitter size={24}/>
                   <span className="text-xs font-bold mt-1">Tweets</span>
                 </Link>
                 <Link
                   href="/dashboard/chatbot"
                   className="bg-[#c0ff00] text-black p-3 rounded-xl border-2 border-black flex flex-col items-center"
                 >
-                  <MessageSquare size={24} />
+                  <MessageSquare size={24}/>
                   <span className="text-xs font-bold mt-1">Chat Bot</span>
                 </Link>
               </div>
@@ -202,7 +210,7 @@ export default function DashboardPage() {
               <div
                 className={`${stat.color} p-3 rounded-xl border-2 border-black`}
               >
-                <stat.icon size={24} className="text-black" />
+                <stat.icon size={24} className="text-black"/>
               </div>
               <div>
                 <div className="text-gray-500 text-sm">{stat.title}</div>
@@ -260,15 +268,15 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-black">
-                    ${holding.value.toLocaleString()}
+                    ${((holding?.holdings || 1) * (holding?.price)).toLocaleString()}
                   </div>
                   <div
                     className={`text-sm ${
-                      holding.change >= 0 ? "text-green-500" : "text-red-500"
+                      holding.change24h >= 0 ? "text-green-500" : "text-red-500"
                     }`}
                   >
-                    {holding.change >= 0 ? "+" : ""}
-                    {holding.change}%
+                    {holding.change24h >= 0 ? "+" : ""}
+                    {holding.change24h.toFixed(2)}%
                   </div>
                 </div>
               </div>
@@ -299,8 +307,8 @@ export default function DashboardPage() {
                     <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-black">
                       <div className="relative w-8 h-8">
                         <Image
-                          src={proposal.tokenLogo || "/placeholder.svg"}
-                          alt={proposal.token}
+                          src="/placeholder.svg"
+                          alt={proposal.tokenName}
                           width={32}
                           height={32}
                           className="object-cover"
@@ -312,14 +320,14 @@ export default function DashboardPage() {
                         />
                       </div>
                     </div>
-                    <div className="font-bold text-black">{proposal.token}</div>
+                    <div className="font-bold text-black">{proposal.tokenName}</div>
                     <div
                       className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                         proposal.status === "active"
                           ? "bg-[#c0ff00] text-black"
                           : proposal.status === "closed"
-                          ? "bg-red-500 text-white"
-                          : "bg-blue-200 text-blue-800"
+                            ? "bg-red-500 text-white"
+                            : "bg-blue-200 text-blue-800"
                       }`}
                     >
                       {proposal.status.charAt(0).toUpperCase() +
@@ -333,8 +341,8 @@ export default function DashboardPage() {
                 <div className="font-medium text-black">{proposal.title}</div>
                 <div className="mt-2">
                   <Link
-                    href={`/marketplace/${proposal.token.toLowerCase()}/proposal/${
-                      proposal.id
+                    href={`/marketplace/${proposal.tokenName.toLowerCase()}/proposal/${
+                      proposal._id
                     }`}
                     className="text-[#0039C6] text-sm font-bold hover:underline"
                   >

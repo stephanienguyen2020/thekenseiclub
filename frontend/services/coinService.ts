@@ -1,8 +1,25 @@
 import {getClient, Network} from "coin-sdk/dist/src/utils/sui-utils";
 import BondingCurveSDK from "coin-sdk/dist/src/bonding_curve";
-import { Coin } from "@/app/marketplace/types";
+import {Coin, CoinList} from "@/app/marketplace/types";
 import api from "@/lib/api";
 import {SuiClient} from "@mysten/sui/client";
+import type {WalletAccount} from "@mysten/wallet-standard";
+
+export const getHoldingToken = async (currentAccount: WalletAccount | null) => {
+  const response = await api.get(
+    `/holding-coins/${currentAccount?.address}`
+  );
+  return response.data;
+};
+
+export const getCreatedToken = async (currentAccount: WalletAccount | null) => {
+  const response = await api.get(`/coins`, {
+    params: {
+      userId: currentAccount?.address,
+    },
+  });
+  return response.data;
+}
 
 async function retrieveBondingCurveData(client: SuiClient, tokenId: string, bondingCurveId: string) {
   const coinMetadata = await client.getObject({
@@ -26,7 +43,7 @@ async function retrieveBondingCurveData(client: SuiClient, tokenId: string, bond
   return {coinType, packageId, bondingCurveSdk};
 }
 
-export const buildBuyTransaction = async (tokenName: string, buyAmount: string, currentAccount: any ) => {
+export const buildBuyTransaction = async (tokenName: string, buyAmount: string, currentAccount: any) => {
   const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
   const client = getClient(network);
 
@@ -50,7 +67,7 @@ export const buildBuyTransaction = async (tokenName: string, buyAmount: string, 
   };
 };
 
-export const buildSellTransaction = async (tokenName: string, sellAmount: string, currentAccount: any ) => {
+export const buildSellTransaction = async (tokenName: string, sellAmount: string, currentAccount: any) => {
   const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
   const client = getClient(network);
 
@@ -76,4 +93,30 @@ export const buildSellTransaction = async (tokenName: string, sellAmount: string
 const getCoinsByName = async (coinName: string) => {
   const coins = await api.get<Coin>(`/coin/name/${coinName}`);
   return coins.data;
+}
+
+export const getTotalValue = (holdings: Coin[] | undefined) => {
+  return holdings
+    ? holdings
+      .reduce((sum, coin: any) => {
+        // Use any type to bypass TypeScript's strict checking
+        return sum + (coin.balance || 0) * (coin.price || 0);
+      }, 0)
+      .toFixed(2)
+    : "0.00";
+}
+
+export const getChanges24h = (holdings: Coin[] | undefined) => {
+  return holdings
+    ? holdings.length > 0
+      ? holdings
+        .reduce((sum, coin: any) => {
+          // Use any type to bypass TypeScript's strict checking
+          const coinValue = (coin.balance || 0) * (coin.price || 0);
+          const coinChange = coinValue * ((coin.change24h || 0) / 100);
+          return sum + coinChange;
+        }, 0)
+        .toFixed(2)
+      : "0.00"
+    : "0.00";
 }
