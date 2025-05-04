@@ -62,8 +62,29 @@ export default function PostCard({ post }: PostCardProps) {
       });
       setIsLiked(rs.data.isLiked);
     };
+    const fetchIsBoosted = async () => {
+      const rs = await api.get("/posts/isBoosted", {
+        params: {
+          postId: post.id,
+          userId: post.user.id,
+        },
+      });
+      setIsBoosted(rs.data.isBoosted);
+    };
+    const fetchIsSaved = async () => {
+      const rs = await api.get("/posts/isSaved", {
+        params: {
+          postId: post.id,
+          userId: post.user.id,
+        },
+      });
+      setIsBookmarked(rs.data.isSaved);
+    };
     fetchIsLiked();
-  });
+    fetchIsBoosted();
+    fetchIsSaved();
+  }, []);
+
 
   const handleLike = () => {
     const likePost = async () => {
@@ -80,16 +101,30 @@ export default function PostCard({ post }: PostCardProps) {
   };
 
   const handleBoost = () => {
-    if (isBoosted) {
-      setBoosts(boosts - 1);
-    } else {
-      setBoosts(boosts + 1);
+    const retweetPost = async () => {
+      await api.post("/posts/reTweet", {
+          postId: post.id,
+          userId: post.user.id,
+        isReTweet: !isBoosted,
+      });
+
+      setBoosts(isBoosted ? boosts - 1 : boosts + 1);
+      setIsBoosted(!isBoosted);
     }
-    setIsBoosted(!isBoosted);
+    retweetPost();
   };
 
   const handleBookmark = () => {
     setIsBookmarked(!isBookmarked);
+    const bookmarkPost = async () => {
+      await api.post("/posts/save", {
+        postId: post.id,
+        userId: post.user.id,
+        isSave: !isBookmarked,
+      });
+    }
+    setIsBookmarked(!isBookmarked);
+    bookmarkPost();
   };
 
   return (

@@ -82,7 +82,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("reTweets")
+    .createTable("re_tweets")
     .addColumn("id", "bigserial", (col) => col.primaryKey().notNull())
     .addColumn("user_id", "varchar", (col) =>
       col.references("users.sui_address").notNull()
@@ -95,7 +95,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("savePosts")
+    .createTable("save_posts")
     .addColumn("id", "bigserial", (col) => col.primaryKey().notNull())
     .addColumn("user_id", "varchar", (col) =>
       col.references("users.sui_address").notNull()
