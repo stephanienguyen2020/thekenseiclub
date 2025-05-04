@@ -214,7 +214,7 @@ router.get("/images/info/:imageName", async (req: any, res: any) => {
  * @route POST /images/walrus
  * @param {Request} req - Express request object with file in files
  * @param {Response} res - Express response object
- * @returns {Response} 201 on success with image details, error status on failure
+ * @returns {Response} 201 on success with blobId, error status on failure
  */
 router.post("/images/walrus", upload.single("file"), async (req: any, res: any) => {
   try {
