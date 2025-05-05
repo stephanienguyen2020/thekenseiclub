@@ -1,14 +1,14 @@
 # Frontend
 
-This is the frontend application for the Sui Hackathon project.
+This is the frontend application for thekenseiclub.
 
 ## Installation Guide
 
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/yourusername/suihackathon.git
-   cd suihackathon/frontend
+   git clone https://github.com/stephanienguyen2020/thekenseiclub.git
+   cd suihackathon/thekenseiclub
    ```
 
 2. **Install dependencies**
