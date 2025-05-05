@@ -41,7 +41,7 @@ Meme coins often lack structure, transparency, and post-launch governance. They'
 - Prices adjust automatically as tokens are minted or burned
 - Once a token reaches a predefined trading volume, it transitions to a full AMM pool on FlowX DEX using the FlowX TypeScript SDK
 
-## ## 💻 Technology Stack
+## 💻 Technology Stack
 
 ### 🎨 Frontend & UI
 
