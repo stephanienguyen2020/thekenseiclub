@@ -25,13 +25,10 @@ Contracts on testnet:
 
 ## 🧱 Core Features
 
-### 1. 🧠 AI Agentic Launchpad
+### 1. 🪧 Token feed
 
-- Create meme coins in seconds using natural language prompts or manual input
-- Automatically generate tokens with unique social profiles
-- Engage with the community through posts, tags, and social interactions
-
-![Image 3](https://drive.google.com/uc?export=view&id=17e6U1PzqIIRxOrRajP-FglURlwr4E3vv)
+- Real-time social feed for each meme coin showcasing latest updates and community activity
+- Token-specific posts, comments, and reactions to foster engagement and transparency
 
 ### 2. 📊 On-Chain Governance
 
@@ -40,7 +37,13 @@ Contracts on testnet:
 
 ![Image 4](https://drive.google.com/uc?export=view&id=1mQJXu717lxIISAXLnHLIDY8ny0A8Aoqk)
 
-### 3. 🤖 Multi-Agent AI Framework
+### 3. 💧 Virtual Liquidity via Bonding Curves
+
+- Enables immediate trading of newly created tokens without the need for initial liquidity pools
+- Prices adjust automatically as tokens are minted or burned
+- Once a token reaches a predefined trading volume, it transitions to a full AMM pool on FlowX DEX using the FlowX TypeScript SDK
+
+### 4. 🤖 Multi-Agent AI Framework
 
 - **News Agent**: Monitors real-time crypto news
 - **Asset Agent**: Facilitates buying, selling, and swapping of tokens
@@ -48,11 +51,13 @@ Contracts on testnet:
 - **Whale Watch Agent**: Tracks large-scale transactions
 - **Sentiment Agent**: Analyzes cross-platform sentiment
 
-### 4. 💧 Virtual Liquidity via Bonding Curves
+### 5. 🧠 AI Agentic Launchpad
 
-- Enables immediate trading of newly created tokens without the need for initial liquidity pools
-- Prices adjust automatically as tokens are minted or burned
-- Once a token reaches a predefined trading volume, it transitions to a full AMM pool on FlowX DEX using the FlowX TypeScript SDK
+- Create meme coins in seconds using natural language prompts or manual input
+- Automatically generate tokens with unique social profiles
+- Engage with the community through posts, tags, and social interactions
+
+![Image 3](https://drive.google.com/uc?export=view&id=17e6U1PzqIIRxOrRajP-FglURlwr4E3vv)
 
 ## 💻 Technology Stack
 

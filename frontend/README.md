@@ -1,6 +1,6 @@
 # Frontend
 
-This is the frontend application for the Sui Hackathon project.
+This is the frontend application for thekenseiclub.
 
 ## Installation Guide
 
