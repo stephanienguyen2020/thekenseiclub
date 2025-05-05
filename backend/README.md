@@ -21,6 +21,7 @@ A backend service for blockchain data feeds, providing APIs for OHLCV (Open, Hig
 - MongoDB database
 - Sui blockchain node access
 - pnpm or bun package manager (recommended)
+- Sui installed: https://docs.sui.io/guides/developer/getting-started/sui-install
 
 ## Installation
 
