@@ -1,4 +1,5 @@
 # 🥋 Kensei – The SocialFi Layer for Meme Coins on SUI
+
 ![Image 1](https://drive.google.com/uc?export=view&id=1voGMmuPIvsoEmpuRqUGI29c9Yal8-N8a)
 
 Memes are culture. Let’s make them governable.
@@ -18,6 +19,10 @@ Meme coins often lack structure, transparency, and post-launch governance. They'
 
 ## 🚀 Contract Address
 
+Contracts on testnet:
+
+- **Bonding curve**: 0x913fe46c07dc2fac627f94a9727a26e8e671f0e816b83d1bd5096e2889f1d2d5
+
 ## 🧱 Core Features
 
 ### 1. 🧠 AI Agentic Launchpad
@@ -34,6 +39,7 @@ Meme coins often lack structure, transparency, and post-launch governance. They'
 - Each token has its own forum, polls, and updates, fostering community-driven development
 
 ![Image 4](https://drive.google.com/uc?export=view&id=1mQJXu717lxIISAXLnHLIDY8ny0A8Aoqk)
+
 ### 3. 🤖 Multi-Agent AI Framework
 
 - **News Agent**: Monitors real-time crypto news
@@ -61,7 +67,7 @@ Meme coins often lack structure, transparency, and post-launch governance. They'
 ![Move](https://img.shields.io/badge/Move-363636?style=for-the-badge&logo=move&logoColor=white)
 ![FlowX](https://img.shields.io/badge/FlowX-FFD700?style=for-the-badge&logo=flowX&logoColor=black)
 
-### 📦 Storage 
+### 📦 Storage
 
 ![Walrus](https://img.shields.io/badge/Walrus-E4405F?style=for-the-badge&logo=walrus&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-E4405F?style=for-the-badge&logo=mongodb&logoColor=white)
@@ -71,7 +77,7 @@ Meme coins often lack structure, transparency, and post-launch governance. They'
 ![OpenAI](https://img.shields.io/badge/GPT--4-412991?style=for-the-badge&logo=openai&logoColor=white)
 ![ElizaOS](https://img.shields.io/badge/ElizaOS-4B0082?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+&logoColor=white)
 ![Twitter API](https://img.shields.io/badge/Twitter%20API-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)
- 
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -82,7 +88,17 @@ Meme coins often lack structure, transparency, and post-launch governance. They'
 
 ### Installation
 
+For detailed installation instructions, please refer to:
 
+- [Frontend Installation Guide](/frontend/README.md)
+- [Backend Installation Guide](/backend/README.md)
+
+For the Move contracts:
+
+```bash
+cd move/coin-sdk
+sui move build
+```
 
 ## 🌐 Access Points
 

@@ -1,4 +1,4 @@
-# Feed Backend
+# Backend
 
 A backend service for blockchain data feeds, providing APIs for OHLCV (Open, High, Low, Close, Volume) data, coin deployment, and social media functionality on the Sui blockchain.
 
@@ -16,39 +16,91 @@ A backend service for blockchain data feeds, providing APIs for OHLCV (Open, Hig
 
 ## Prerequisites
 
-- Node.js (v14 or higher)
+- Node.js (v18 or higher)
 - PostgreSQL database
+- MongoDB database
 - Sui blockchain node access
+- pnpm or bun package manager (recommended)
 
 ## Installation
 
-- Clone the repository
-- Install dependencies:
-  ```bash
-  npm install
-  ```
-- Create timeseries database:
-  ```bash
-  docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=password timescale/timescaledb-ha:pg17
-  ```
-- Create mongodb database:
-  ```bash
-  docker run -d \
-  --name mongodb \
-  -p 27017:27017 \
-  -e MONGO_INITDB_ROOT_USERNAME=root \
-  -e MONGO_INITDB_ROOT_PASSWORD=example \
-  -v mongodb_data:/data/db \
-  mongo:6.0
-  ```
-- Set up db migrations:
-  ```bash
-  npx kysely-ctl migrate up
-  ```
-- Start the development server:
-  ```bash
-  PORT=3001 NETWORK=devnet PACKAGE_ID=0x8193d051bd13fb4336ad595bbb78dac06fa64ff1c3c3c184483ced397c9d2116 pnpm run dev
-  ```
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/yourusername/suihackathon.git
+   cd suihackathon/backend
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   pnpm install
+   # or
+   npm install
+   # or
+   bun install
+   ```
+
+3. **Database Setup**
+
+   Start PostgreSQL TimescaleDB (for time-series data):
+
+   ```bash
+   docker run -d --name timescaledb -p 5432:5432 -e POSTGRES_PASSWORD=password timescale/timescaledb-ha:pg17
+   ```
+
+   Start MongoDB (for document storage):
+
+   ```bash
+   docker run -d \
+   --name mongodb \
+   -p 27017:27017 \
+   -e MONGO_INITDB_ROOT_USERNAME=root \
+   -e MONGO_INITDB_ROOT_PASSWORD=example \
+   -v mongodb_data:/data/db \
+   mongo:6.0
+   ```
+
+4. **Environment Configuration**
+
+   Create a `.env` file in the backend directory:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit the `.env` file with your specific configuration values.
+
+5. **Run Database Migrations**
+
+   ```bash
+   pnpm run migrate
+   # or
+   npx kysely-ctl migrate up
+   ```
+
+6. **Generate Database Types**
+
+   ```bash
+   chmod +x kysely-codegen.sh  # Make the script executable if needed
+   ./kysely-codegen.sh
+   ```
+
+7. **Start the Development Server**
+
+   ```bash
+   pnpm dev
+   # or
+   npm run dev
+   # or
+   bun dev
+   ```
+
+   Or with specific environment variables:
+
+   ```bash
+   PORT=3001 NETWORK=devnet PACKAGE_ID=0x8193d051bd13fb4336ad595bbb78dac06fa64ff1c3c3c184483ced397c9d2116 pnpm run dev
+   ```
 
 ## Configuration
 
