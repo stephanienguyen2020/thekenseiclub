@@ -16,6 +16,11 @@ OAI_CONFIG_LIST.json
 /__pycache__/*
 */__pycache__/*
 
+.idea
+feed-backend/dist
+feed-backend/node_modules
+feed-backend/.idea
+
 .vscode/*
 
 # Start Generation Here

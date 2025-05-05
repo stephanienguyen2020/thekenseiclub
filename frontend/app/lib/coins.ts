@@ -26,7 +26,7 @@ interface BaseTokenInfo {
   name: string;
   symbol: string;
   image_url: string;
-  price: number; // base token price in USD
+  price: number; // base token price in USDcoin
   price_change_24h: number; // 24h price change percentage
   marketcap: number | null; // market capitalization (may be null)
   volume_24h: number; // 24h trading volume (in USD)

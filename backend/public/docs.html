@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed Backend API Documentation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #0066cc;
+        }
+        .api-section {
+            margin-bottom: 40px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .endpoint {
+            background-color: #e6f0ff;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Feed Backend API Documentation</h1>
+    <p>
+        This documentation provides information about the available endpoints in the Feed Backend API.
+        The API provides data feeds for blockchain data, including OHLCV (Open, High, Low, Close, Volume) data
+        and coin deployment functionality.
+    </p>
+
+    <div class="api-section">
+        <h2>OHLCV API</h2>
+        <p>
+            The OHLCV API provides time-series price data for bonding curves on the Sui blockchain.
+            This data can be used for charting, analysis, and trading strategies.
+        </p>
+
+        <h3>Endpoint</h3>
+        <div class="endpoint">GET /ohlcv</div>
+
+        <h3>Query Parameters</h3>
+        <table>
+            <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>bonding_curve_id</td>
+                <td>string</td>
+                <td>Yes</td>
+                <td>The ID of the bonding curve to retrieve data for</td>
+            </tr>
+            <tr>
+                <td>from</td>
+                <td>string</td>
+                <td>Yes</td>
+                <td>Start timestamp (ISO format or compatible with PostgreSQL timestamp)</td>
+            </tr>
+            <tr>
+                <td>to</td>
+                <td>string</td>
+                <td>Yes</td>
+                <td>End timestamp (ISO format or compatible with PostgreSQL timestamp)</td>
+            </tr>
+            <tr>
+                <td>resolution</td>
+                <td>string</td>
+                <td>No</td>
+                <td>Time bucket size (default: '15 minutes'). Examples: '1 minute', '1 hour', '1 day'</td>
+            </tr>
+        </table>
+
+        <h3>Response</h3>
+        <p>The API returns an array of OHLCV data points, with each point containing:</p>
+        <pre><code>[
+  {
+    "time": "2023-06-01T12:00:00.000Z",
+    "bondingCurveId": "0x1234...",
+    "high": "1.25",
+    "open": "1.20",
+    "close": "1.22",
+    "low": "1.18"
+  },
+  ...
+]</code></pre>
+
+        <h3>Example Request</h3>
+        <pre><code>curl -X GET "http://localhost:3000/ohlcv?bonding_curve_id=0x1234...&from=2023-06-01T00:00:00Z&to=2023-06-02T00:00:00Z&resolution=1%20hour"</code></pre>
+    </div>
+
+    <div class="api-section">
+        <h2>Coin API</h2>
+        <p>
+            The Coin API allows for the deployment of new coins on the Sui blockchain using the CoinSDK.
+            This API is useful for creating custom tokens with specific properties.
+        </p>
+
+        <h3>Endpoint</h3>
+        <div class="endpoint">POST /coin</div>
+
+        <h3>Request Body</h3>
+        <p>The request body should be a JSON object with the following properties:</p>
+        <pre><code>{
+  "name": "My Coin",
+  "symbol": "MC",
+  "description": "A custom coin for demonstration purposes",
+  "iconUrl": "https://example.com/icon.png",
+  "address": "0x1234..."
+}</code></pre>
+
+        <h3>Request Fields</h3>
+        <table>
+            <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>name</td>
+                <td>string</td>
+                <td>Yes</td>
+                <td>The name of the coin</td>
+            </tr>
+            <tr>
+                <td>symbol</td>
+                <td>string</td>
+                <td>Yes</td>
+                <td>The symbol/ticker of the coin (e.g., BTC, ETH)</td>
+            </tr>
+            <tr>
+                <td>description</td>
+                <td>string</td>
+                <td>Yes</td>
+                <td>A description of the coin's purpose</td>
+            </tr>
+            <tr>
+                <td>iconUrl</td>
+                <td>string</td>
+                <td>Yes</td>
+                <td>URL to the coin's icon image</td>
+            </tr>
+            <tr>
+                <td>address</td>
+                <td>string</td>
+                <td>Yes</td>
+                <td>The address where the coin will be deployed</td>
+            </tr>
+        </table>
+
+        <h3>Response</h3>
+        <p>Upon successful deployment, the API returns a 200 OK status code with a JSON response:</p>
+        <pre><code>{
+  "message": "Coin deployed successfully",
+  "network": "testnet"
+}</code></pre>
+
+        <h3>Example Request</h3>
+        <pre><code>curl -X POST "http://localhost:3000/coin" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Coin",
+    "symbol": "MC",
+    "description": "A custom coin for demonstration purposes",
+    "iconUrl": "https://example.com/icon.png",
+    "address": "0x1234..."
+  }'</code></pre>
+    </div>
+
+    <footer>
+        <p>For more detailed documentation, please refer to the <a href="https://github.com/yourusername/feed-backend">GitHub repository</a>.</p>
+    </footer>
+</body>
+</html>
