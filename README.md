@@ -1,4 +1,6 @@
 # 🥋 Kensei – The SocialFi Layer for Meme Coins on SUI
+![Image 1](https://drive.google.com/uc?export=view&id=1voGMmuPIvsoEmpuRqUGI29c9Yal8-N8a)
+
 Memes are culture. Let’s make them governable.
 
 Kensei is a SocialFi platform built on the SUI blockchain, designed to transform meme coins from fleeting hype into sustainable, community-driven assets. We provide a social and governance layer that empowers holders, creators, and communities to collaborate, vote, and shape the future of their tokens.
@@ -12,6 +14,8 @@ Meme coins often lack structure, transparency, and post-launch governance. They'
 - Facilitating discussions and updates through on-chain forums and polls
 - Allowing easy buying, selling, or swapping of tokens via a natural language chatbot
 
+![Image 2](https://drive.google.com/uc?export=view&id=1IdTcE4A2YujTB0cP1roeGp7fsDbUq6Ax)
+
 ## 🚀 Contract Address
 
 ## 🧱 Core Features
@@ -22,11 +26,14 @@ Meme coins often lack structure, transparency, and post-launch governance. They'
 - Automatically generate tokens with unique social profiles
 - Engage with the community through posts, tags, and social interactions
 
+![Image 3](https://drive.google.com/uc?export=view&id=17e6U1PzqIIRxOrRajP-FglURlwr4E3vv)
+
 ### 2. 📊 On-Chain Governance
 
 - Token holders can propose and vote on key decisions (e.g., treasury allocation, token burns, liquidity additions)
 - Each token has its own forum, polls, and updates, fostering community-driven development
 
+![Image 4](https://drive.google.com/uc?export=view&id=1mQJXu717lxIISAXLnHLIDY8ny0A8Aoqk)
 ### 3. 🤖 Multi-Agent AI Framework
 
 - **News Agent**: Monitors real-time crypto news
