@@ -25,6 +25,8 @@ Contracts on testnet:
 
 ## 🧱 Core Features
 
+![Image](https://drive.google.com/uc?export=view&id=1qhZSwvKVMAm_n3I3EXe0lrX_FcnqkmOM)
+
 ### 1. 🪧 Token feed
 
 - Real-time social feed for each meme coin showcasing latest updates and community activity
@@ -63,7 +65,6 @@ Contracts on testnet:
 - **Whale Watch Agent**: Tracks large-scale transactions
 - **Sentiment Agent**: Analyzes cross-platform sentiment
 <img width="1890" alt="Screenshot 2025-05-05 at 21 26 19" src="https://github.com/user-attachments/assets/6bfe7516-58ac-4fa6-9b80-2ec8325fb36d" />
-
 
 ## 💻 Technology Stack
 
