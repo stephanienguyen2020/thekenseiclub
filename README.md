@@ -49,10 +49,6 @@ Meme coins often lack structure, transparency, and post-launch governance. They'
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
-### 🔧 AI Framework
-
-![Zerepy](https://img.shields.io/badge/Zerepy-4B0082?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+&logoColor=white)
-
 ### ⛓️ Blockchain & Smart Contracts
 
 ![Move](https://img.shields.io/badge/Move-363636?style=for-the-badge&logo=move&logoColor=white)
@@ -66,6 +62,7 @@ Meme coins often lack structure, transparency, and post-launch governance. They'
 ### 📊 AI & Integration
 
 ![OpenAI](https://img.shields.io/badge/GPT--4-412991?style=for-the-badge&logo=openai&logoColor=white)
+![ElizaOS](https://img.shields.io/badge/ElizaOS-4B0082?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+&logoColor=white)
 ![Twitter API](https://img.shields.io/badge/Twitter%20API-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)
  
 ## 🚀 Getting Started
