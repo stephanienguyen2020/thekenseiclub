@@ -1,0 +1,99 @@
+/* Markdown content styling */
+.markdown-content {
+  /* General text styling */
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: pre-wrap;
+  color: inherit;
+}
+
+/* Link styling */
+.markdown-content a {
+  color: #c0ff00;
+  text-decoration: underline;
+  transition: opacity 0.2s;
+}
+
+.markdown-content a:hover {
+  opacity: 0.8;
+}
+
+/* List styling */
+.markdown-content ul, .markdown-content ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.25rem;
+}
+
+/* Text formatting */
+.markdown-content strong {
+  font-weight: 700;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+/* Headers */
+.markdown-content h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Code blocks */
+.markdown-content pre {
+  background-color: #1f2937;
+  color: #f3f4f6;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  margin: 0.75rem 0;
+  overflow-x: auto;
+  font-family: monospace;
+}
+
+.markdown-content code {
+  font-family: monospace;
+  background-color: rgba(229, 231, 235, 0.5);
+  color: #111827;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+/* Horizontal rule */
+.markdown-content hr {
+  border: 0;
+  border-top: 2px solid rgba(229, 231, 235, 0.8);
+  margin: 1rem 0;
+}
+
+/* Spacing between paragraphs */
+.markdown-content p {
+  margin-bottom: 0.75rem;
+}
+
+/* Ensure proper spacing after line breaks */
+.markdown-content br {
+  display: block;
+  content: "";
+  margin-bottom: 0.25rem;
+}

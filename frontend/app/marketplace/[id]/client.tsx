@@ -42,7 +42,7 @@ interface Proposal {
 }
 
 export default function TokenDetailPageClient({ id }: { id: string }) {
-  const [activeTab, setActiveTab] = useState("governance");
+  const [activeTab, setActiveTab] = useState("feed");
   const [governanceFilter, setGovernanceFilter] = useState<
     "all" | ProposalStatus
   >("all");
@@ -163,6 +163,8 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
           telegram: "https://t.me/example",
         });
 
+        console.log("coin: ", coinResponse.data);
+
         // Fetch proposals
         const proposalsResponse = await fetch(
           `http://localhost:3000/api/daos/token/${id}`
@@ -266,7 +268,7 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
               <div className="flex flex-wrap gap-4">
                 <div className="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
                   <LineChart size={16} />
-                  <span>${coin.price.toFixed(15)}</span>
+                  <span>${coin.price?.toFixed(15)}</span>
                   <span
                     className={
                       coin.change24h >= 0 ? "text-green-500" : "text-red-500"
@@ -365,6 +367,14 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
         <div className="bg-white rounded-t-3xl p-4 flex gap-4 border-b">
           <button
             className={`px-4 py-2 rounded-full ${
+              activeTab === "feed" ? "bg-[#0039C6] text-white" : "bg-gray-100"
+            }`}
+            onClick={() => setActiveTab("feed")}
+          >
+            Token Feed
+          </button>
+          <button
+            className={`px-4 py-2 rounded-full ${
               activeTab === "governance"
                 ? "bg-[#0039C6] text-white"
                 : "bg-gray-100"
@@ -372,14 +382,6 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
             onClick={() => setActiveTab("governance")}
           >
             Governance
-          </button>
-          <button
-            className={`px-4 py-2 rounded-full ${
-              activeTab === "feed" ? "bg-[#0039C6] text-white" : "bg-gray-100"
-            }`}
-            onClick={() => setActiveTab("feed")}
-          >
-            Token Feed
           </button>
           <button
             className={`px-4 py-2 rounded-full ${

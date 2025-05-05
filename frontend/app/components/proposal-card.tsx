@@ -1,90 +1,72 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import {
-  Check,
-  FileText,
-  MessageSquare,
-  ExternalLink,
-  ChevronDown,
-  Crown,
-  AlertCircle,
-} from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import { VoteNotification } from "./ui/vote-notification";
+import { useState } from "react"
+import { Check, FileText, MessageSquare, ExternalLink, ChevronDown } from "lucide-react"
+import Link from "next/link"
+import Image from "next/image"
+import {VoteNotification} from "@/components/ui/vote-notification";
 
 interface VoteOption {
-  label: string;
-  votes: number;
-  percentage: number;
-  isSelected?: boolean;
-  isWinning?: boolean;
+  label: string
+  votes: number
+  percentage: number
+  isSelected?: boolean
 }
 
 interface ProposalCardProps {
-  id: string;
-  title: string;
-  description: string;
-  status: "active" | "closed" | "upcoming";
-  endDate: string;
-  tokenSymbol: string;
-  tokenLogo: string;
-  options: VoteOption[];
-  tokenId: string;
+  id: string
+  title: string
+  description: string
+  status: "open" | "closed" | "upcoming"
+  endDate: string
+  tokenSymbol: string
+  tokenLogo: string
+  options: VoteOption[]
+  tokenId: string
+  onVote?: (choice: string) => Promise<void>
+  userVote?: string
+  winningOption?: string
+  isVoting?: boolean
 }
 
 export default function ProposalCard({
-  id,
-  title,
-  description,
-  status,
-  endDate,
-  tokenSymbol,
-  tokenLogo,
-  options,
-  tokenId,
-}: ProposalCardProps) {
+                                       id,
+                                       title,
+                                       description,
+                                       status,
+                                       endDate,
+                                       tokenSymbol,
+                                       tokenLogo,
+                                       options,
+                                       tokenId,
+                                       onVote,
+                                       userVote,
+                                       winningOption,
+                                       isVoting
+                                     }: ProposalCardProps) {
+  const [showAllOptions, setShowAllOptions] = useState(false)
   const [selectedOption, setSelectedOption] = useState<number | null>(
-    options.findIndex((option) => option.isSelected) !== -1
-      ? options.findIndex((option) => option.isSelected)
-      : null
-  );
-  const [showAllOptions, setShowAllOptions] = useState(false);
+    userVote ? options.findIndex(opt => opt.label === userVote) : null
+  )
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
 
-  const isVotable = status === "active";
-  const truncatedDescription =
-    description.length > 200
-      ? `${description.substring(0, 200)}...`
-      : description;
-  const hasMoreThanTwoOptions = options.length > 2;
-
-  // Find winning option for closed proposals
-  const winningOptionIndex =
-    status === "closed"
-      ? options.reduce(
-          (maxIndex, option, index, array) =>
-            option.percentage > array[maxIndex].percentage ? index : maxIndex,
-          0
-        )
-      : -1;
+  const isVotable = status === "open"
+  const truncatedDescription = description.length > 200 ? `${description.substring(0, 200)}...` : description
+  const hasMoreThanTwoOptions = options.length > 2
 
   // Sort options by percentage (highest first)
-  const sortedOptions = [...options].sort(
-    (a, b) => b.percentage - a.percentage
-  );
+  const sortedOptions = [...options].sort((a, b) => b.percentage - a.percentage)
 
   // Display only the first 2 options if not showing all and there are more than 2
   const displayedOptions = showAllOptions
     ? sortedOptions
     : hasMoreThanTwoOptions
-    ? sortedOptions.slice(0, 2)
-    : sortedOptions;
+      ? sortedOptions.slice(0, 2)
+      : sortedOptions
 
-  const handleVoteSelect = (index: number) => {
-    if (status !== "active") {
+  const handleVoteSelect = async (index: number) => {
+    if (status !== "open") {
       setNotificationMessage(
         "This proposal is no longer active. Voting has ended."
       );
@@ -100,9 +82,28 @@ export default function ProposalCard({
       setShowNotification(true);
       return;
     }
-
+    if (status !== "open" || userVote || isVoting) return;
     setSelectedOption(index);
-  };
+    if (onVote) {
+      await onVote(options[index].label);
+    }
+  }
+
+  const getOptionStyle = (option: VoteOption, isSelected: boolean) => {
+    if (winningOption === option.label) {
+      return "bg-green-500 bg-opacity-10 border-2 border-green-500 text-green-500"
+    }
+    if (userVote === option.label) {
+      return "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4] text-[#0046F4]"
+    }
+    if (isSelected) {
+      return "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4] text-[#0046F4]"
+    }
+    if (status === "open" && !userVote) {
+      return "bg-gray-50 border-2 border-gray-200 hover:bg-gray-100 hover:border-[#0046F4] hover:text-[#0046F4] transition-all duration-200"
+    }
+    return "bg-gray-50 border-2 border-gray-200"
+  }
 
   return (
     <div className="bg-white rounded-3xl overflow-hidden mb-6 border-2 border-black">
@@ -122,11 +123,11 @@ export default function ProposalCard({
         </div>
         <div
           className={`px-3 py-1 rounded-full text-xs font-bold border-2 border-black ${
-            status === "active"
+            status === "open"
               ? "bg-[#c0ff00] text-black"
               : status === "closed"
-              ? "bg-red-500 text-white"
-              : "bg-blue-200 text-blue-800"
+                ? "bg-red-500 text-white"
+                : "bg-blue-200 text-blue-800"
           }`}
         >
           {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -140,84 +141,46 @@ export default function ProposalCard({
         <p className="text-gray-800 mb-4">{truncatedDescription}</p>
       </div>
 
-      {/* Voting Information */}
-      {status === "active" && selectedOption === null && (
-        <div className="px-4 mb-3">
-          <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <AlertCircle size={18} className="text-blue-500" />
-            <p className="text-sm text-blue-700">
-              You can only vote once on this proposal.
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Voting Options */}
       <div className="px-4 pb-4 space-y-3">
         {displayedOptions.map((option, index) => {
-          // Find the original index of this option in the unsorted array
-          const originalIndex = options.findIndex(
-            (o) => o.label === option.label
-          );
-          const isSelected = selectedOption === originalIndex;
-          const isWinning =
-            status === "closed" && originalIndex === winningOptionIndex;
+          const isSelected = selectedOption === index
+          const isUserVote = userVote === option.label
+          const isWinning = winningOption === option.label
+          const optionStyle = getOptionStyle(option, isSelected)
+          const isInteractive = status === "open" && !userVote && !isWinning
 
           return (
             <div
               key={index}
-              className={`p-4 rounded-xl cursor-pointer ${
-                isWinning
-                  ? "bg-[#c0ff00] bg-opacity-10 border-2 border-[#c0ff00]"
-                  : isSelected
-                  ? "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4]"
-                  : "bg-gray-50 border-2 border-gray-200"
-              }`}
-              onClick={() => handleVoteSelect(originalIndex)}
+              className={`p-4 rounded-xl cursor-pointer transition-all duration-200 ${optionStyle} ${
+                isInteractive ? 'hover:scale-[1.02] hover:shadow-md' : ''
+              } ${isVoting ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={() => handleVoteSelect(index)}
             >
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  {isSelected && status === "active" && (
-                    <div className="w-5 h-5 rounded-full bg-[#0046F4] flex items-center justify-center">
+                  {(isSelected || isUserVote || isWinning) && (
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                      isWinning ? 'bg-green-500' : 'bg-[#0046F4]'
+                    }`}>
                       <Check className="text-white" size={14} />
                     </div>
                   )}
-                  {isWinning && (
-                    <div className="w-5 h-5 rounded-full bg-[#c0ff00] flex items-center justify-center">
-                      <Crown className="text-black" size={14} />
-                    </div>
+                  {isInteractive && !isSelected && !isUserVote && !isWinning && (
+                    <div className="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-[#0046F4] transition-colors duration-200" />
                   )}
-                  <span
-                    className={`font-medium ${
-                      isWinning
-                        ? "text-black"
-                        : isSelected
-                        ? "text-[#0046F4]"
-                        : ""
-                    }`}
-                  >
-                    {option.label}
-                  </span>
+                  <span className="font-medium">{option.label}</span>
                 </div>
                 <div className="text-right">
-                  <span
-                    className={`text-lg font-bold ${
-                      isWinning
-                        ? "text-black"
-                        : isSelected
-                        ? "text-[#0046F4]"
-                        : ""
-                    }`}
-                  >
+                  <span className="text-lg font-bold">
                     {option.percentage.toFixed(2)}%
                   </span>
                 </div>
               </div>
-              <div className="mt-1 text-sm text-gray-600">
-                {(option.votes / 1000000).toFixed(3)}M votes
-              </div>
+              <div className="mt-1 text-sm text-gray-600">{option.votes.toLocaleString()} votes</div>
             </div>
-          );
+          )
         })}
 
         {/* View All Button */}
@@ -227,12 +190,7 @@ export default function ProposalCard({
             onClick={() => setShowAllOptions(!showAllOptions)}
           >
             {showAllOptions ? "Show less" : "View all"}
-            <ChevronDown
-              className={`transition-transform ${
-                showAllOptions ? "rotate-180" : ""
-              }`}
-              size={16}
-            />
+            <ChevronDown className={`transition-transform ${showAllOptions ? "rotate-180" : ""}`} size={16} />
           </button>
         )}
       </div>
@@ -268,5 +226,5 @@ export default function ProposalCard({
         message={notificationMessage}
       />
     </div>
-  );
+  )
 }

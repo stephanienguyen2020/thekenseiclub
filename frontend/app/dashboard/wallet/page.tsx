@@ -342,7 +342,7 @@ export default function WalletPage() {
                       </div>
                     </td>
                     <td className="text-right py-4 px-2 font-medium">
-                      ${holding.price.toFixed(8)}
+                      ${holding?.price?.toFixed(8)}
                     </td>
                     <td className="text-right py-4 px-2">
                         <span
@@ -411,7 +411,7 @@ export default function WalletPage() {
                     <div className="bg-white p-2 rounded-lg border-2 border-black">
                       <p className="text-xs text-gray-500">Price</p>
                       <p className="font-medium truncate">
-                        ${holding.price.toFixed(8)}
+                        ${holding?.price?.toFixed(8)}
                       </p>
                     </div>
                     <div className="bg-white p-2 rounded-lg border-2 border-black">

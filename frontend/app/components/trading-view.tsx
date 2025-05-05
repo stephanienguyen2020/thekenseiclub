@@ -209,9 +209,9 @@ export default function TradingView({
       "SUI, Token:",
       coinName || "default"
     );
-    const parsedAmount = BigInt(buyAmount) * BigInt(1000000000);
+    const parsedAmount = parseFloat(buyAmount) * 1000000000;
     const tx = bondingCurveSdk.buildBuyTransaction({
-      amount: parsedAmount,
+      amount: BigInt(parsedAmount),
       minTokenRequired: BigInt(0),
       type: coinType,
       address: currentAccount?.address || "",
@@ -232,7 +232,10 @@ export default function TradingView({
                 },
               })
               .then((result) => {
+                if (result.data.message === "Migration successful") {
                 console.log("migration status", result.data.message);
+                  window.location.href = `/marketplace`;
+                }
               });
             console.log("Buy successfully", result);
             setTransactionHash(result.digest);
@@ -527,7 +530,7 @@ export default function TradingView({
                   </label>
                   <div className="bg-gray-100 p-3 rounded-xl border-4 border-black font-bold">
                     {amount
-                      ? (Number.parseFloat(amount) * suiPrice).toFixed(2)
+                      ? (Number.parseFloat(amount) * suiPrice).toFixed(15)
                       : "0.00"}
                   </div>
                 </div>

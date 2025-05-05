@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import {motion} from "framer-motion";
 import api from "@/lib/api";
-import {useCurrentAccount} from "@mysten/dapp-kit";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import {VoteNotification} from "@/components/ui/vote-notification";
 
 interface Token {
   id: string;
@@ -42,6 +43,9 @@ export default function EnhancedPostInput({
   );
   const [tokenSearchQuery, setTokenSearchQuery] = useState("");
   const [tokens, settokens] = useState<Token[]>([]);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+
   const currentAccount = useCurrentAccount();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -124,10 +128,16 @@ export default function EnhancedPostInput({
       if (!preselectedToken) {
         setSelectedToken(null);
       }
-
-      // You could add a success notification here
+      setNotificationMessage(
+        "Created post successfully."
+      );
+      setShowNotification(true);
+      window.location.reload();
     } catch (error) {
-      console.error("Failed to create post:", error);
+      setNotificationMessage(
+        "There was an error creating your post. Please try again."
+      );
+      setShowNotification(true);
       // You could add an error notification here
     }
   };
@@ -248,7 +258,7 @@ export default function EnhancedPostInput({
                 className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
                 title="Add location"
               >
-                <MapPin size={20}/>
+                <MapPin size={20} />
               </button>
 
               {/* Emoji */}
@@ -256,7 +266,7 @@ export default function EnhancedPostInput({
                 className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
                 title="Add emoji"
               >
-                <Smile size={20}/>
+                <Smile size={20} />
               </button>
 
               {/* Schedule */}
@@ -264,7 +274,7 @@ export default function EnhancedPostInput({
                 className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
                 title="Schedule post"
               >
-                <Calendar size={20}/>
+                <Calendar size={20} />
               </button>
 
               {/* AI Enhance */}
@@ -272,7 +282,7 @@ export default function EnhancedPostInput({
                 className="text-[#0046F4] hover:bg-blue-50 rounded-full p-2"
                 title="Enhance with AI"
               >
-                <BarChart2 size={20}/>
+                <BarChart2 size={20} />
               </button>
 
               {/* Token tagging - only show if not in token-specific feed */}
@@ -301,7 +311,7 @@ export default function EnhancedPostInput({
                     ) : (
                       <span>Tag a token</span>
                     )}
-                    <ChevronDown size={14}/>
+                    <ChevronDown size={14} />
                   </button>
 
                   {isTokenDropdownOpen && (
@@ -375,6 +385,13 @@ export default function EnhancedPostInput({
             </button>
           </div>
         </div>
+
+        {/* Vote Notification */}
+        <VoteNotification
+          isOpen={showNotification}
+          onClose={() => setShowNotification(false)}
+          message={notificationMessage}
+        />
       </div>
     </motion.div>
   );
