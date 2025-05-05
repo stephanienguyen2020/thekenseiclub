@@ -78,10 +78,9 @@ export default function LaunchTokenPage() {
 
       if (
         response.data &&
-        response.data.image &&
-        response.data.image.gatewayUrl
+        response.data.blobId
       ) {
-        setUploadedImageUrl(response.data.image.gatewayUrl);
+        setUploadedImageUrl(response.data.blobId);
       }
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -136,7 +135,7 @@ export default function LaunchTokenPage() {
       // Navigate to the new token's marketplace page
       const timer = setTimeout(() => {
         router.push(`/marketplace/${result.coin.id}`);
-      }, 2000);
+      }, 5000);
 
       return () => clearTimeout(timer);
     } catch (error) {
@@ -162,7 +161,7 @@ export default function LaunchTokenPage() {
 
       const timer = setTimeout(() => {
         router.push(`/marketplace/${result.coin.id}`);
-      }, 2000);
+      }, 5000);
 
       return () => clearTimeout(timer);
     } catch (error) {
