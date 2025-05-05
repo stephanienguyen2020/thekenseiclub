@@ -12,7 +12,7 @@ Meme coins often lack structure, transparency, and post-launch governance. They'
 - Facilitating discussions and updates through on-chain forums and polls
 - Allowing easy buying, selling, or swapping of tokens via a natural language chatbot
 
-
+## 🚀 Contract Address
 
 ## 🧱 Core Features
 
