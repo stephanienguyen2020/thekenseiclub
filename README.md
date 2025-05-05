@@ -29,7 +29,8 @@ Contracts on testnet:
 
 - Real-time social feed for each meme coin showcasing latest updates and community activity
 - Token-specific posts, comments, and reactions to foster engagement and transparency
-<img width="1880" alt="Screenshot 2025-05-05 at 21 22 49" src="https://github.com/user-attachments/assets/e0d431ea-347a-461c-a4ef-a73c7016914f" />
+<img width="1885" alt="Screenshot 2025-05-05 at 21 29 31" src="https://github.com/user-attachments/assets/2f247f84-d261-44a7-aae9-7fbbef3e750f" />
+
 
 ### 2. 📊 On-Chain Governance
 
@@ -46,20 +47,22 @@ Contracts on testnet:
 
 ![Image 3](https://drive.google.com/uc?export=view&id=17e6U1PzqIIRxOrRajP-FglURlwr4E3vv)
 
-### 4. 🤖 Multi-Agent AI Framework
+### 4. 🧠 AI Agentic Launchpad
+
+- Create meme coins in seconds using natural language prompts or manual input
+- Automatically generate tokens with unique social profiles
+- Engage with the community through posts, tags, and social interactions
+<img width="1886" alt="Screenshot 2025-05-05 at 21 24 40" src="https://github.com/user-attachments/assets/6b174867-6ab9-4805-8250-2cd6b4524f97" />
+
+
+### 5. 🤖 Multi-Agent AI Framework
 
 - **News Agent**: Monitors real-time crypto news
 - **Asset Agent**: Facilitates buying, selling, and swapping of tokens
 - **AutoShill Agent**: Enhances visibility across social media platforms
 - **Whale Watch Agent**: Tracks large-scale transactions
 - **Sentiment Agent**: Analyzes cross-platform sentiment
-
-### 5. 🧠 AI Agentic Launchpad
-
-- Create meme coins in seconds using natural language prompts or manual input
-- Automatically generate tokens with unique social profiles
-- Engage with the community through posts, tags, and social interactions
-<img width="1890" alt="Screenshot 2025-05-05 at 21 26 19" src="https://github.com/user-attachments/assets/4229b376-e334-43b1-b334-295d6fdafa7f" />
+<img width="1890" alt="Screenshot 2025-05-05 at 21 26 19" src="https://github.com/user-attachments/assets/6bfe7516-58ac-4fa6-9b80-2ec8325fb36d" />
 
 
 ## 💻 Technology Stack
