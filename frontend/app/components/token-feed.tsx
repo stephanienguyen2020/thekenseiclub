@@ -36,7 +36,6 @@ export default function TokenFeed({
         }
       });
       setPosts(res.data.data);
-      console.log(res.data);
     }
     fetchPost();
   }, [])

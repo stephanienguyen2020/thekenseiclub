@@ -34,7 +34,8 @@ export const getClient = (network?: Network): SuiClient => {
 
 export const getWalrusClient = (network?: Network, suiClient?: SuiClient) => {
   if (!network || network === 'devnet' || network === 'localnet') {
-    throw new Error('Walrus is only supported on mainnet or testnet');
+    console.log('Walrus is only supported on mainnet or testnet');
+    return
   }
   return new WalrusClient({network: network as WalrusNetwork, suiClient: suiClient ?? getClient(network) as any});
 

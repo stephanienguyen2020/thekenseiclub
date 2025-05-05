@@ -3,6 +3,7 @@
 import type React from "react"
 
 import {useState, useRef, useEffect} from "react"
+import "./markdown-styles.css"
 import {Send, Bot, User, Sparkles, Trash2, Download} from "lucide-react"
 import {processUserQuery} from "@/app/lib/agents";
 import {buildBuyTransaction, buildSellTransaction} from "@/services/coinService";
@@ -14,8 +15,107 @@ import {
 import api from "@/lib/api";
 import {Network} from "coin-sdk/dist/src/utils/sui-utils";
 
+// Enhanced function to convert Markdown to HTML
+const markdownToHtml = (markdown: string) => {
+  if (!markdown) return "";
+
+  // Process code blocks first to avoid interference with other formatting
+  let html = markdown.replace(/```(.*?)\n([\s\S]*?)```/g, '<pre class="bg-gray-800 text-gray-100 p-3 rounded-md my-2 overflow-x-auto"><code>$2</code></pre>');
+
+  // Process inline code
+  html = html.replace(/`([^`]+)`/g, '<code class="bg-gray-200 text-gray-800 px-1 rounded">$1</code>');
+
+  // Headers (h1, h2, h3)
+  html = html.replace(/^# (.*?)$/gm, '<h1 class="text-xl font-bold my-3">$1</h1>');
+  html = html.replace(/^## (.*?)$/gm, '<h2 class="text-lg font-bold my-2">$1</h2>');
+  html = html.replace(/^### (.*?)$/gm, '<h3 class="text-md font-bold my-2">$1</h3>');
+
+  // Bold: **text** to <strong>text</strong>
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // Italic: *text* to <em>text</em>
+  html = html.replace(/\*([^\*]+)\*/g, '<em>$1</em>');
+
+  // Links: [text](url) to <a href="url">text</a>
+  html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+  // Horizontal rule: --- to <hr>
+  html = html.replace(/^\-{3,}$/gm, '<hr class="my-4 border-t-2 border-gray-300">');
+
+  // Process lists
+  // First, identify list blocks (consecutive lines that are list items)
+  const listBlocks: {start: number, end: number, type: 'ol' | 'ul'}[] = [];
+  const lines = html.split('\n');
+  let inList = false;
+  let listStart = 0;
+  let listType: 'ol' | 'ul' = 'ul';
+
+  // Find list blocks
+  for (let i = 0; i < lines.length; i++) {
+    const isNumberedItem = /^\d+\.\s.+/.test(lines[i]);
+    const isBulletItem = /^-\s.+/.test(lines[i]);
+
+    if ((isNumberedItem || isBulletItem) && !inList) {
+      // Start of a new list
+      inList = true;
+      listStart = i;
+      listType = isNumberedItem ? 'ol' : 'ul';
+    } else if ((!isNumberedItem && !isBulletItem) && inList) {
+      // End of a list
+      inList = false;
+      listBlocks.push({start: listStart, end: i - 1, type: listType});
+    }
+  }
+
+  // If we're still in a list at the end, close it
+  if (inList) {
+    listBlocks.push({start: listStart, end: lines.length - 1, type: listType});
+  }
+
+  // Process each list block
+  for (let i = listBlocks.length - 1; i >= 0; i--) {
+    const block = listBlocks[i];
+    const listItems = lines.slice(block.start, block.end + 1);
+
+    // Process each list item
+    const processedItems = listItems.map(item => {
+      if (block.type === 'ol') {
+        // For ordered lists, preserve the original number
+        const match = item.match(/^(\d+)\.\s(.+)/);
+        if (match) {
+          return `<li value="${match[1]}">${match[2]}</li>`;
+        }
+      } else {
+        // For bullet lists
+        const match = item.match(/^-\s(.+)/);
+        if (match) {
+          return `<li>${match[1]}</li>`;
+        }
+      }
+      return item; // If not matched, return unchanged
+    });
+
+    // Replace the list items with the wrapped list
+    const listTag = block.type === 'ol' ? 'ol' : 'ul';
+    const listClass = block.type === 'ol' ? 'list-decimal' : 'list-disc';
+    const wrappedList = `<${listTag} class="${listClass} ml-5 my-2">${processedItems.join('')}</${listTag}>`;
+
+    // Replace the original lines with the wrapped list
+    lines.splice(block.start, block.end - block.start + 1, wrappedList);
+  }
+
+  // Join the lines back together
+  html = lines.join('\n');
+
+  // Convert line breaks to <br> (do this last to avoid interfering with other elements)
+  html = html.replace(/\n/g, '<br>');
+
+  return html;
+};
+
 export default function ChatbotPage() {
   const [message, setMessage] = useState("")
+  console.log(message)
   const [chatHistory, setChatHistory] = useState<{ role: "user" | "bot"; message: string; timestamp: string }[]>([
     {
       role: "bot",
@@ -310,7 +410,14 @@ export default function ChatbotPage() {
                           {chat.role === "user" ? "You" : "Kensei AI"}
                           <span className="text-xs font-normal ml-2 opacity-70">{chat.timestamp}</span>
                         </div>
-                        <div className="whitespace-pre-wrap">{chat.message}</div>
+                        {chat.role === "user" ? (
+                          <div className="whitespace-pre-wrap">{chat.message}</div>
+                        ) : (
+                          <div 
+                            className="markdown-content" 
+                            dangerouslySetInnerHTML={{ __html: markdownToHtml(chat.message) }}
+                          />
+                        )}
                       </div>
                     </div>
                   </div>

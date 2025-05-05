@@ -70,7 +70,7 @@ export default function LaunchTokenPage() {
       formData.append("type", "post");
       formData.append("userId", currentAccount?.address || "");
 
-      const response = await api.post("/images/walrus", formData, {
+      const response = await api.post("/images", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -135,7 +135,7 @@ export default function LaunchTokenPage() {
       // Navigate to the new token's marketplace page
       const timer = setTimeout(() => {
         router.push(`/marketplace/${result.coin.id}`);
-      }, 2000);
+      }, 5000);
 
       return () => clearTimeout(timer);
     } catch (error) {
@@ -161,7 +161,7 @@ export default function LaunchTokenPage() {
 
       const timer = setTimeout(() => {
         router.push(`/marketplace/${result.coin.id}`);
-      }, 2000);
+      }, 5000);
 
       return () => clearTimeout(timer);
     } catch (error) {

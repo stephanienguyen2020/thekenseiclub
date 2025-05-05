@@ -6,6 +6,7 @@ import {SuiClient} from "@mysten/sui/client";
 import type {WalletAccount} from "@mysten/wallet-standard";
 
 export const getHoldingToken = async (currentAccount: WalletAccount | null) => {
+  if (!currentAccount) return [];
   const response = await api.get(
     `/holding-coins/${currentAccount?.address}`
   );
@@ -52,9 +53,9 @@ export const buildBuyTransaction = async (tokenName: string, buyAmount: string, 
 
   const {coinType, packageId, bondingCurveSdk} = await retrieveBondingCurveData(client, tokenId, bondingCurveId);
   // Convert to string first to avoid precision issues, then parse as float and multiply
-  const parsedAmount = BigInt(buyAmount) * BigInt(1000000000);
+  const parsedAmount = parseFloat(buyAmount) * 1000000000;
   const tx = bondingCurveSdk.buildBuyTransaction({
-    amount: parsedAmount,
+    amount: BigInt(parsedAmount),
     minTokenRequired: BigInt(0),
     type: coinType,
     address: currentAccount?.address || "",
