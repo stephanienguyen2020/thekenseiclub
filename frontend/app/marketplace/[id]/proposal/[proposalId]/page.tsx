@@ -236,7 +236,7 @@ export default function ProposalDetailPage({
                 </div>
                 <div
                   className={`px-3 py-1 rounded-full text-xs font-bold border-2 border-black ${
-                    proposal.status === "active"
+                    proposal.status === "open"
                       ? "bg-[#c0ff00] text-black"
                       : proposal.status === "closed"
                         ? "bg-red-500 text-white"
@@ -300,92 +300,94 @@ export default function ProposalDetailPage({
               </div>
 
               {/* Voting Section */}
-              <div className="border-t-2 border-black p-6 bg-gray-50">
-                <h3 className="text-xl font-bold mb-4">Cast your vote</h3>
+              {proposal.status !== "closed" && (
+                <div className="border-t-2 border-black p-6 bg-gray-50">
+                  <h3 className="text-xl font-bold mb-4">Cast your vote</h3>
 
-                {/* No voting power message */}
-                <div className="bg-[#2A2522] text-[#F0B90B] p-4 rounded-xl mb-6">
-                  <div className="flex items-start gap-2">
-                    <Info size={20} />
-                    <div>
-                      <p className="font-bold">No voting power</p>
-                      <p className="text-sm">
-                        Voting power is determined based on the snapshot of {coin.symbol} tokens (including those held
-                        in LPs and Staking).
-                      </p>
-                      <Link href="#" className="text-sm underline flex items-center gap-1 mt-1">
-                        More details
-                        <ExternalLink size={12} />
-                      </Link>
+                  {/* No voting power message */}
+                  <div className="bg-[#2A2522] text-[#F0B90B] p-4 rounded-xl mb-6">
+                    <div className="flex items-start gap-2">
+                      <Info size={20} />
+                      <div>
+                        <p className="font-bold">No voting power</p>
+                        <p className="text-sm">
+                          Voting power is determined based on the snapshot of {coin.symbol} tokens (including those held
+                          in LPs and Staking).
+                        </p>
+                        <Link href="#" className="text-sm underline flex items-center gap-1 mt-1">
+                          More details
+                          <ExternalLink size={12} />
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Voting Options */}
-                <div className="space-y-4 mb-6">
-                  {displayedOptions.map((option, index) => {
-                    // Find the original index of this option in the unsorted array
-                    const originalIndex = proposal.options.findIndex((o) => o.label === option.label)
-                    const isSelected = selectedOption === originalIndex
+                  {/* Voting Options */}
+                  <div className="space-y-4 mb-6">
+                    {displayedOptions.map((option, index) => {
+                      // Find the original index of this option in the unsorted array
+                      const originalIndex = proposal.options.findIndex((o) => o.label === option.label)
+                      const isSelected = selectedOption === originalIndex
 
-                    return (
-                      <div
-                        key={index}
-                        className={`p-4 rounded-xl cursor-pointer ${
-                          isSelected
-                            ? "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4]"
-                            : "bg-white border-2 border-gray-200"
-                        }`}
-                        onClick={() => proposal.status === "active" && setSelectedOption(originalIndex)}
-                      >
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            {proposal.status === "active" && (
-                              <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                  isSelected ? "bg-[#0046F4]" : "border-2 border-gray-300"
-                                }`}
-                              >
-                                {isSelected && <Check className="text-white" size={16} />}
-                              </div>
-                            )}
-                            <label className={`font-medium ${isSelected ? "text-[#0046F4]" : ""}`}>
-                              {option.label}
-                            </label>
+                      return (
+                        <div
+                          key={index}
+                          className={`p-4 rounded-xl cursor-pointer ${
+                            isSelected
+                              ? "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4]"
+                              : "bg-white border-2 border-gray-200"
+                          }`}
+                          onClick={() => proposal.status === "open" && setSelectedOption(originalIndex)}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                              {proposal.status === "open" && (
+                                <div
+                                  className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                    isSelected ? "bg-[#0046F4]" : "border-2 border-gray-300"
+                                  }`}
+                                >
+                                  {isSelected && <Check className="text-white" size={16} />}
+                                </div>
+                              )}
+                              <label className={`font-medium ${isSelected ? "text-[#0046F4]" : ""}`}>
+                                {option.label}
+                              </label>
+                            </div>
+                            <span className={`font-bold ${isSelected ? "text-[#0046F4]" : ""}`}>
+                              {option.percentage.toFixed(2)}%
+                            </span>
                           </div>
-                          <span className={`font-bold ${isSelected ? "text-[#0046F4]" : ""}`}>
-                            {option.percentage.toFixed(2)}%
-                          </span>
+                          <div className="mt-2 text-sm text-gray-600">{option.votes} votes</div>
                         </div>
-                        <div className="mt-2 text-sm text-gray-600">{option.votes} votes</div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
 
-                  {/* View All Button */}
-                  {hasMoreThanTwoOptions && (
-                    <button
-                      className="w-full py-3 text-center text-[#0046F4] font-medium flex items-center justify-center gap-1 border-2 border-gray-200 rounded-xl hover:bg-gray-50"
-                      onClick={() => setShowAllOptions(!showAllOptions)}
-                    >
-                      {showAllOptions ? "Show less" : "View all"}
-                      <ChevronDown className={`transition-transform ${showAllOptions ? "rotate-180" : ""}`} size={16} />
-                    </button>
+                    {/* View All Button */}
+                    {hasMoreThanTwoOptions && (
+                      <button
+                        className="w-full py-3 text-center text-[#0046F4] font-medium flex items-center justify-center gap-1 border-2 border-gray-200 rounded-xl hover:bg-gray-50"
+                        onClick={() => setShowAllOptions(!showAllOptions)}
+                      >
+                        {showAllOptions ? "Show less" : "View all"}
+                        <ChevronDown className={`transition-transform ${showAllOptions ? "rotate-180" : ""}`} size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  {proposal.status === "open" && (
+                    <div className="flex justify-end">
+                      <button
+                        className="bg-[#c0ff00] text-black px-6 py-2 rounded-full font-bold border-2 border-black hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={selectedOption === null || isVoting}
+                        onClick={handleVote}
+                      >
+                        {isVoting ? "Voting..." : "Vote"}
+                      </button>
+                    </div>
                   )}
                 </div>
-
-                {proposal.status === "active" && (
-                  <div className="flex justify-end">
-                    <button
-                      className="bg-[#c0ff00] text-black px-6 py-2 rounded-full font-bold border-2 border-black hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={selectedOption === null || isVoting}
-                      onClick={handleVote}
-                    >
-                      {isVoting ? "Voting..." : "Vote"}
-                    </button>
-                  </div>
-                )}
-              </div>
+              )}
 
               {/* Results Section */}
               <div className="border-t-2 border-black p-6">
