@@ -300,7 +300,7 @@ export default function ProposalsPage() {
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-sm font-medium">
-                        Voting Progress
+                        Time Progress
                       </span>
                       <span className="text-sm font-bold">
                         {proposal.voteCount > 0
@@ -316,17 +316,30 @@ export default function ProposalsPage() {
                       <div
                         className="bg-[#c0ff00] h-full rounded-full"
                         style={{
-                          width: `${
-                            proposal.voteCount > 0
-                              ? (proposal.votePoint / proposal.voteCount) * 100
-                              : 0
-                          }%`,
+                          width: `${(() => {
+                            const startDate = new Date(proposal.createdAt);
+                            const endDate = new Date(proposal.endDate);
+                            const now = new Date();
+                            
+                            // Calculate total duration in milliseconds
+                            const totalDuration = endDate.getTime() - startDate.getTime();
+                            // Calculate elapsed time in milliseconds
+                            const elapsedTime = now.getTime() - startDate.getTime();
+                            
+                            // Calculate percentage
+                            let percentage = (elapsedTime / totalDuration) * 100;
+                            
+                            // Clamp percentage between 0 and 100
+                            percentage = Math.min(Math.max(percentage, 0), 100);
+                            
+                            return percentage;
+                          })()}%`,
                         }}
                       ></div>
                     </div>
                     <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>{proposal.votePoint} votes</span>
-                      <span>{proposal.voteCount} total</span>
+                      <span>Started {new Date(proposal.createdAt).toLocaleDateString()}</span>
+                      <span>Ends {new Date(proposal.endDate).toLocaleDateString()}</span>
                     </div>
                   </div>
                 )}
