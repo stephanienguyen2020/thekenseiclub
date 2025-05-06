@@ -91,8 +91,8 @@ export default function ProposalDetailPage({
         // Set coin data (using token address as ID)
         setCoin({
           id: params.id,
-          name: params.id.charAt(0).toUpperCase() + params.id.slice(1),
-          symbol: params.id.toUpperCase(),
+          name: tokenName,
+          symbol: tokenName.toUpperCase(),
           logo: `/placeholder.svg?height=64&width=64&query=${params.id} logo`,
           treasury: 0, // Not provided in API
           holders: 0, // Not provided in API
@@ -257,7 +257,7 @@ export default function ProposalDetailPage({
                 <h1 className="text-3xl font-bold mb-6">{proposal.title}</h1>
 
                 <div className="prose max-w-none mb-6">
-                  {proposal.fullDescription.split("\n\n").map((paragraph: string, idx: number) => {
+                  {proposal.fullDescription.split("\n\n").map((paragraph, idx) => {
                     // Handle headings
                     if (paragraph.startsWith("##")) {
                       const headingText = paragraph.replace(/^## /, "")

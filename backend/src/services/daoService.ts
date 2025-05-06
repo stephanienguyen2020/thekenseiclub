@@ -19,6 +19,10 @@ export class DaoService {
         return await proposal.save();
     }
 
+    // update proposal's blob id
+    
+
+
     // Get all proposals
     async getAllProposals(): Promise<IProposal[]> {
         return await Proposal.find().sort({ createdAt: -1 });

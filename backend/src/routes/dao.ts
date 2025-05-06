@@ -93,4 +93,6 @@ router.get('/proposals/:proposalId/votes/user/:wallet', async (req: any, res: an
     }
 });
 
+// upload proposal
+
 export default router; 
