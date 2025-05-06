@@ -5,12 +5,40 @@ import Link from "next/link"
 import Image from "next/image"
 import { FileText, Check, ChevronDown, ExternalLink, Info, Send } from "lucide-react"
 import Navbar from "@/components/navbar"
+import React from "react"
+import { getObject } from "@/lib/utils"
+
+interface Option {
+  option: string;
+  votes: number;
+  points: number;
+  _id: string;
+}
+
+interface ProposalResponse {
+  _id: string;
+  title: string;
+  description: string;
+  options: Option[];
+  createdBy: string;
+  tokenAddress: string;
+  startDate: string;
+  endDate: string;
+  ipfsHash: string;
+  contentHash: string;
+  voteCount: number;
+  votePoint: number;
+  status: string;
+  createdAt: string;
+  winningOption: string;
+}
 
 export default function ProposalDetailPage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { id: string; proposalId: string }
+  params: Promise<{ id: string; proposalId: string }>
 }) {
+  const params = React.use(paramsPromise);
   const [loading, setLoading] = useState(true)
   const [proposal, setProposal] = useState<any>(null)
   const [coin, setCoin] = useState<any>(null)
@@ -22,212 +50,93 @@ export default function ProposalDetailPage({
   const [comments, setComments] = useState<any[]>([])
 
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      setCoin({
-        id: params.id,
-        name:
-          params.id === "pepe"
-            ? "Pepe"
-            : params.id === "doge"
-              ? "Doge"
-              : params.id.charAt(0).toUpperCase() + params.id.slice(1),
-        symbol: params.id.toUpperCase(),
-        logo:
-          params.id === "pepe"
-            ? "/happy-frog-on-a-lilypad.png"
-            : params.id === "doge"
-              ? "/alert-shiba.png"
-              : params.id === "shib"
-                ? "/stylized-shiba-inu.png"
-                : params.id === "wojak"
-                  ? "/Distressed-Figure.png"
-                  : params.id === "moon"
-                    ? "/crescent-moon-silhouette.png"
-                    : params.id === "cat"
-                      ? "/playful-calico.png"
-                      : `/placeholder.svg?height=64&width=64&query=${params.id} logo`,
-        treasury: 5000000,
-        holders: 5432,
-      })
+    const fetchProposal = async () => {
+      try {
+        const response = await fetch(`/api/daos/${params.proposalId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch proposal');
+        }
+        const { data } = await response.json() as { data: ProposalResponse };
 
-      // Find the proposal by ID
-      const proposalId = params.proposalId
-      const mockProposals = [
-        {
-          id: "prop-1",
-          title: `${params.id.toUpperCase()}01: Incorporation of ${params.id.toUpperCase()} DAO LLC as a Non-Profit DAO LLC`,
-          description: `The ${params.id.toUpperCase()} community should implement this proposal to provide a robust governance and legal structure that aligns with the decentralized ethos of the DAO, ensures compliance with a fit-for-purpose jurisdiction, protects members, and fosters ecosystem growth.`,
-          fullDescription: `
-Background
-Our token has shown strong growth in the past months, and we need to establish a proper legal structure to ensure compliance and protect our community members.
+        // Fetch token metadata
+        const coinMetadata = (await getObject(data.tokenAddress)) as any;
+        const tokenName = coinMetadata?.data?.content?.fields?.name || data.tokenAddress;
 
-## Scope of Change:
+        // Map API data to match the expected structure
+        const mappedProposal = {
+          id: data._id,
+          title: data.title,
+          description: data.description,
+          fullDescription: data.description, // Using description as fullDescription since it's not provided
+          status: data.status,
+          endDate: new Date(data.endDate).toLocaleString(),
+          startDate: new Date(data.startDate).toLocaleString(),
+          proposer: data.createdBy,
+          options: data.options.map((opt: Option) => ({
+            label: opt.option,
+            votes: opt.votes,
+            percentage: (opt.points / data.votePoint) * 100 || 0,
+            isSelected: opt.option === data.winningOption
+          })),
+          quorum: 0, // Not provided in API
+          totalVotes: data.voteCount,
+          votingSystem: "Single choice", // Not provided in API
+          snapshot: new Date(data.startDate).toLocaleString(),
+          commentCount: 0, // Not provided in API
+          votes: [], // Not provided in API
+        };
 
-- Incorporation of ${params.id.toUpperCase()} DAO LLC: Establish ${params.id.toUpperCase()} DAO LLC as a non-profit decentralized autonomous organization limited liability company (DAO LLC) under the laws of the Republic of the Marshall Islands.
+        setProposal(mappedProposal);
 
-- Adoption of the Operating Agreement: Formally adopt the ${params.id.toUpperCase()} DAO LLC Operating Agreement to define the DAO structure, rights, and responsibilities of the DAO members.
+        // Set coin data (using token address as ID)
+        setCoin({
+          id: params.id,
+          name: tokenName,
+          symbol: tokenName.toUpperCase(),
+          logo: `/placeholder.svg?height=64&width=64&query=${params.id} logo`,
+          treasury: 0, // Not provided in API
+          holders: 0, // Not provided in API
+        });
 
-- Appointment of Registered Agent and Funding Allocation: Designate MIDAO as the registered agent to facilitate incorporation and ongoing compliance. Allocate an initial funding amount of $9,500 as a one-time incorporation fee and an annual budget of $5,000 for maintenance and operational costs.
+        // Set the selected option based on the proposal data
+        const selectedIndex = mappedProposal.options.findIndex((option) => option.isSelected);
+        setSelectedOption(selectedIndex !== -1 ? selectedIndex : null);
 
-- Adoption of Updated Governance Process: Implement the updated Governance Process, which defines the rules and procedures by which members of the ${params.id.toUpperCase()} DAO, may propose, vote on, implement ${params.id.toUpperCase()} Improvement Proposals ("MIPs") and exercise their right to participate in the governance of ${params.id.toUpperCase()} DAO LLC.
-
-- Appointment of ${params.id.toUpperCase()} Labs as Initial Managing Member.
-
-- Transfer of DAO Assets to the DAO LLC: Upon formation of the ${params.id.toUpperCase()} DAO LLC, transfer DAO assets to the entity as initial contributions. This includes the DAO treasury and other resources.
-
-## Implementation Timeline
-If approved, implementation will begin immediately with the incorporation process starting within 1 week.
-          `,
-          status: "active",
-          endDate: "2025-05-01 05:00 GMT-4",
-          startDate: "2025-04-15 05:00 GMT-4",
-          proposer: "0x1a2b3c4d5e6f7g8h9i0j",
-          options: [
-            { label: "Yes, pass this Proposal", votes: 147602000, percentage: 98.67, isSelected: true },
-            { label: "No, do not pass this Proposal", votes: 1985000, percentage: 1.33 },
-          ],
-          quorum: 112496000,
-          totalVotes: 149587000,
-          votingSystem: "Single choice",
-          snapshot: "2025-04-15 05:00 GMT-4",
-          commentCount: 24,
-          votes: [
-            { address: "0x1a2b...3c4d", vote: "Yes, pass this Proposal", power: 14705000 },
-            { address: "0x4e5f...6g7h", vote: "Yes, pass this Proposal", power: 2251000 },
-            { address: "0x8i9j...0k1l", vote: "Yes, pass this Proposal", power: 83471000 },
-            { address: "0x2m3n...4o5p", vote: "Yes, pass this Proposal", power: 670625000 },
-            { address: "0x6q7r...8s9t", vote: "Yes, pass this Proposal", power: 50018000 },
-            { address: "0x0u1v...2w3x", vote: "Yes, pass this Proposal", power: 29259000 },
-            { address: "0x4y5z...6a7b", vote: "Yes, pass this Proposal", power: 25500000 },
-            { address: "0x8c9d...0e1f", vote: "Yes, pass this Proposal", power: 33321000 },
-            { address: "0x2g3h...4i5j", vote: "Yes, pass this Proposal", power: 1425000 },
-            { address: "0x6k7l...8m9n", vote: "Yes, pass this Proposal", power: 1237000 },
-            { address: "0x0o1p...2q3r", vote: "No, do not pass this Proposal", power: 1985000 },
-          ],
-        },
-        {
-          id: "prop-2",
-          title: `${params.id.toUpperCase()}02: Revisiting The ${params.id.toUpperCase()} Staking Mechanism`,
-          description:
-            "After the first set of staking contracts expire, we need to decide on the future staking model. This proposal presents multiple options for the community to vote on, ranging from keeping the current system to implementing new hybrid solutions.",
-          fullDescription: `
-Background
-On June 28th the ${params.id.toUpperCase()} staking program saw its first set of 9-month staking contracts expire. A few weeks later, ${params.id.toUpperCase()} V2 started rolling out and there is a high expectancy for higher rewards to stakers thanks to the newly implemented features. Looking back at how the staking model has performed we have identified areas for improvement.
-
-## Proposal
-This proposal presents four different options for the community to vote on:
-
-### Option 1: Keep ${params.id.toUpperCase()} Staking as is (No Changes)
-Continue with the current staking model without any modifications.
-
-### Option 2: Solution #1 - Tiered Staking with Early Redemption Penalties
-Implement a tiered staking system with different reward levels based on lock-up periods. Early withdrawals would incur penalties.
-
-### Option 3: Solution #2 - One Liquid Staking option without Early Redemptions
-Create a liquid staking solution where users receive a liquid token representing their staked assets, but without the ability to redeem early.
-
-### Option 4: Solution #3 Hybrid - Two contracts
-Implement two separate staking contracts:
-- A Liquid Staking option with bound APR
-- A 9-month Tiered Staking option with Early Redemption Penalties
-
-## Implementation Timeline
-The winning option will be implemented within 30 days of the proposal passing.
-          `,
-          status: "closed",
-          endDate: "2025-04-01 05:00 GMT-4",
-          startDate: "2025-03-15 05:00 GMT-4",
-          proposer: "0x2b3c4d5e6f7g8h9i0j1a",
-          options: [
-            {
-              label: "Option 1: Keep Staking as is (No Changes)",
-              votes: 7378000,
-              percentage: 6.43,
+        // Mock comments (keeping this for now since it's not provided by API)
+        setComments([
+          {
+            id: "comment-1",
+            user: {
+              name: "TokenWhale",
+              handle: "whale.sui",
+              avatar: "/pixel-cool-cat.png",
             },
-            {
-              label: "Option 2: Solution #1 - Tiered Staking with Early Redemption Penalties",
-              votes: 2450000,
-              percentage: 2.14,
-            },
-            {
-              label: "Option 3: Solution #2 - One Liquid Staking option without Early Redemptions",
-              votes: 6130000,
-              percentage: 5.34,
-            },
-            {
-              label: "Option 4: Solution #3 Hybrid - Two contracts: Liquid Staking and Tiered Staking",
-              votes: 98650000,
-              percentage: 86.07,
-              isSelected: true,
-            },
-          ],
-          quorum: 100000000,
-          totalVotes: 114608000,
-          votingSystem: "Single choice",
-          snapshot: "2025-03-15 05:00 GMT-4",
-          commentCount: 18,
-          votes: [
-            { address: "0x1a2b...3c4d", vote: "Option 4", power: 14705000 },
-            { address: "0x4e5f...6g7h", vote: "Option 4", power: 2251000 },
-            { address: "0x8i9j...0k1l", vote: "Option 4", power: 83471000 },
-            { address: "0x2m3n...4o5p", vote: "Option 1", power: 7378000 },
-            { address: "0x6q7r...8s9t", vote: "Option 3", power: 6130000 },
-            { address: "0x0u1v...2w3x", vote: "Option 2", power: 2450000 },
-          ],
-        },
-      ]
-
-      const foundProposal = mockProposals.find((p) => p.id === proposalId) || mockProposals[0]
-      setProposal(foundProposal)
-
-      // Set the selected option based on the proposal data
-      const selectedIndex = foundProposal.options.findIndex((option) => option.isSelected)
-      setSelectedOption(selectedIndex !== -1 ? selectedIndex : null)
-
-      // Mock comments
-      setComments([
-        {
-          id: "comment-1",
-          user: {
-            name: "TokenWhale",
-            handle: "whale.sui",
-            avatar: "/pixel-cool-cat.png",
+            content: "I strongly support this proposal. The legal structure will help us reach new audiences and grow our community.",
+            timestamp: "2 days ago",
+            votes: 24,
           },
-          content:
-            "I strongly support this proposal. The legal structure will help us reach new audiences and grow our community.",
-          timestamp: "2 days ago",
-          votes: 24,
-        },
-        {
-          id: "comment-2",
-          user: {
-            name: "CryptoSage",
-            handle: "sage.sui",
-            avatar: "/stylized-shiba-inu.png",
+          {
+            id: "comment-2",
+            user: {
+              name: "CryptoSage",
+              handle: "sage.sui",
+              avatar: "/stylized-shiba-inu.png",
+            },
+            content: "While I agree with the intent, I think we should clarify the governance process more. How will voting power be calculated?",
+            timestamp: "1 day ago",
+            votes: 18,
           },
-          content:
-            "While I agree with the intent, I think we should clarify the governance process more. How will voting power be calculated?",
-          timestamp: "1 day ago",
-          votes: 18,
-        },
-        {
-          id: "comment-3",
-          user: {
-            name: "MemeGuru",
-            handle: "guru.sui",
-            avatar: "/happy-frog-on-a-lilypad.png",
-          },
-          content:
-            "Has anyone considered the tax implications? I think we should get a legal opinion on this before proceeding.",
-          timestamp: "12 hours ago",
-          votes: 9,
-        },
-      ])
+        ]);
 
-      setLoading(false)
-    }, 800)
-  }, [params.id, params.proposalId])
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching proposal:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchProposal();
+  }, [params.id, params.proposalId]);
 
   const handleVote = () => {
     if (selectedOption === null) return
@@ -332,7 +241,7 @@ The winning option will be implemented within 30 days of the proposal passing.
                 </div>
                 <div
                   className={`px-3 py-1 rounded-full text-xs font-bold border-2 border-black ${
-                    proposal.status === "active"
+                    proposal.status === "open"
                       ? "bg-[#c0ff00] text-black"
                       : proposal.status === "closed"
                         ? "bg-red-500 text-white"
@@ -396,92 +305,94 @@ The winning option will be implemented within 30 days of the proposal passing.
               </div>
 
               {/* Voting Section */}
-              <div className="border-t-2 border-black p-6 bg-gray-50">
-                <h3 className="text-xl font-bold mb-4">Cast your vote</h3>
+              {proposal.status !== "closed" && (
+                <div className="border-t-2 border-black p-6 bg-gray-50">
+                  <h3 className="text-xl font-bold mb-4">Cast your vote</h3>
 
-                {/* No voting power message */}
-                <div className="bg-[#2A2522] text-[#F0B90B] p-4 rounded-xl mb-6">
-                  <div className="flex items-start gap-2">
-                    <Info size={20} />
-                    <div>
-                      <p className="font-bold">No voting power</p>
-                      <p className="text-sm">
-                        Voting power is determined based on the snapshot of {coin.symbol} tokens (including those held
-                        in LPs and Staking).
-                      </p>
-                      <Link href="#" className="text-sm underline flex items-center gap-1 mt-1">
-                        More details
-                        <ExternalLink size={12} />
-                      </Link>
+                  {/* No voting power message */}
+                  <div className="bg-[#2A2522] text-[#F0B90B] p-4 rounded-xl mb-6">
+                    <div className="flex items-start gap-2">
+                      <Info size={20} />
+                      <div>
+                        <p className="font-bold">No voting power</p>
+                        <p className="text-sm">
+                          Voting power is determined based on the snapshot of {coin.symbol} tokens (including those held
+                          in LPs and Staking).
+                        </p>
+                        <Link href="#" className="text-sm underline flex items-center gap-1 mt-1">
+                          More details
+                          <ExternalLink size={12} />
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Voting Options */}
-                <div className="space-y-4 mb-6">
-                  {displayedOptions.map((option, index) => {
-                    // Find the original index of this option in the unsorted array
-                    const originalIndex = proposal.options.findIndex((o) => o.label === option.label)
-                    const isSelected = selectedOption === originalIndex
+                  {/* Voting Options */}
+                  <div className="space-y-4 mb-6">
+                    {displayedOptions.map((option, index) => {
+                      // Find the original index of this option in the unsorted array
+                      const originalIndex = proposal.options.findIndex((o) => o.label === option.label)
+                      const isSelected = selectedOption === originalIndex
 
-                    return (
-                      <div
-                        key={index}
-                        className={`p-4 rounded-xl cursor-pointer ${
-                          isSelected
-                            ? "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4]"
-                            : "bg-white border-2 border-gray-200"
-                        }`}
-                        onClick={() => proposal.status === "active" && setSelectedOption(originalIndex)}
-                      >
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            {proposal.status === "active" && (
-                              <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                  isSelected ? "bg-[#0046F4]" : "border-2 border-gray-300"
-                                }`}
-                              >
-                                {isSelected && <Check className="text-white" size={16} />}
-                              </div>
-                            )}
-                            <label className={`font-medium ${isSelected ? "text-[#0046F4]" : ""}`}>
-                              {option.label}
-                            </label>
+                      return (
+                        <div
+                          key={index}
+                          className={`p-4 rounded-xl cursor-pointer ${
+                            isSelected
+                              ? "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4]"
+                              : "bg-white border-2 border-gray-200"
+                          }`}
+                          onClick={() => proposal.status === "open" && setSelectedOption(originalIndex)}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                              {proposal.status === "open" && (
+                                <div
+                                  className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                    isSelected ? "bg-[#0046F4]" : "border-2 border-gray-300"
+                                  }`}
+                                >
+                                  {isSelected && <Check className="text-white" size={16} />}
+                                </div>
+                              )}
+                              <label className={`font-medium ${isSelected ? "text-[#0046F4]" : ""}`}>
+                                {option.label}
+                              </label>
+                            </div>
+                            <span className={`font-bold ${isSelected ? "text-[#0046F4]" : ""}`}>
+                              {option.percentage.toFixed(2)}%
+                            </span>
                           </div>
-                          <span className={`font-bold ${isSelected ? "text-[#0046F4]" : ""}`}>
-                            {option.percentage.toFixed(2)}%
-                          </span>
+                          <div className="mt-2 text-sm text-gray-600">{option.votes} votes</div>
                         </div>
-                        <div className="mt-2 text-sm text-gray-600">{(option.votes / 1000000).toFixed(3)}M votes</div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
 
-                  {/* View All Button */}
-                  {hasMoreThanTwoOptions && (
-                    <button
-                      className="w-full py-3 text-center text-[#0046F4] font-medium flex items-center justify-center gap-1 border-2 border-gray-200 rounded-xl hover:bg-gray-50"
-                      onClick={() => setShowAllOptions(!showAllOptions)}
-                    >
-                      {showAllOptions ? "Show less" : "View all"}
-                      <ChevronDown className={`transition-transform ${showAllOptions ? "rotate-180" : ""}`} size={16} />
-                    </button>
+                    {/* View All Button */}
+                    {hasMoreThanTwoOptions && (
+                      <button
+                        className="w-full py-3 text-center text-[#0046F4] font-medium flex items-center justify-center gap-1 border-2 border-gray-200 rounded-xl hover:bg-gray-50"
+                        onClick={() => setShowAllOptions(!showAllOptions)}
+                      >
+                        {showAllOptions ? "Show less" : "View all"}
+                        <ChevronDown className={`transition-transform ${showAllOptions ? "rotate-180" : ""}`} size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  {proposal.status === "open" && (
+                    <div className="flex justify-end">
+                      <button
+                        className="bg-[#c0ff00] text-black px-6 py-2 rounded-full font-bold border-2 border-black hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={selectedOption === null || isVoting}
+                        onClick={handleVote}
+                      >
+                        {isVoting ? "Voting..." : "Vote"}
+                      </button>
+                    </div>
                   )}
                 </div>
-
-                {proposal.status === "active" && (
-                  <div className="flex justify-end">
-                    <button
-                      className="bg-[#c0ff00] text-black px-6 py-2 rounded-full font-bold border-2 border-black hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={selectedOption === null || isVoting}
-                      onClick={handleVote}
-                    >
-                      {isVoting ? "Voting..." : "Vote"}
-                    </button>
-                  </div>
-                )}
-              </div>
+              )}
 
               {/* Results Section */}
               <div className="border-t-2 border-black p-6">
@@ -492,7 +403,7 @@ The winning option will be implemented within 30 days of the proposal passing.
                       <div className="flex justify-between items-center">
                         <span className="font-medium">{option.label}</span>
                         <div className="flex items-center gap-3">
-                          <span className="text-gray-600">{(option.votes / 1000000).toFixed(3)}M votes</span>
+                          <span className="text-gray-600">{option.votes} votes</span>
                           <span className="font-bold">{option.percentage.toFixed(2)}%</span>
                         </div>
                       </div>

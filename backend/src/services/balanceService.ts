@@ -32,15 +32,25 @@ export class BalanceService {
   // Get all coin balances for a wallet address
   async getAllCoinBalances(walletAddress: string) {
     try {
-      const allCoins = await getClientFromResolver().getAllCoins({
-        owner: walletAddress,
-      });
+      let cursor : string | null | undefined = '0x'
+      const allCoins = []
+      while (cursor !== null) {
+        const data = await getClientFromResolver().getAllCoins({
+          owner: walletAddress,
+          cursor: cursor === '0x' ? null : cursor,
+        });
+        allCoins.push(...data.data)
+        cursor = data.nextCursor
+      }
+
+      console.log(allCoins)
+
 
       // Group coins by coin type
       const coinsByType = new Map();
 
       // First pass: group coins by type and accumulate balances
-      allCoins.data.forEach((coin) => {
+      allCoins.forEach((coin) => {
         if (coinsByType.has(coin.coinType)) {
           // Add to existing balance
           const existingCoin = coinsByType.get(coin.coinType);

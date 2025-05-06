@@ -1,12 +1,11 @@
 import express, {Request, Response} from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 import {db} from "../db/database";
 import {PinataSDK} from "pinata";
 import "dotenv/config";
 import {getWalrusClient, ACTIVE_NETWORK} from "../utils";
 import {getFundedKeypair} from "../funded-keypair";
+import {fileService} from "../services/fileService";
 
 const router = express.Router();
 console.log("gateway", process.env.GATEWAY_URL);
@@ -16,25 +15,8 @@ const pinata = new PinataSDK({
   pinataGateway: process.env.GATEWAY_URL,
 });
 
-// Create temporary uploads directory if it doesn't exist
-const tempUploadDir = path.join(__dirname, "../../temp-uploads");
-if (!fs.existsSync(tempUploadDir)) {
-  fs.mkdirSync(tempUploadDir, {recursive: true});
-}
-
-// Configure multer storage for temporary storage
-const storage = multer.diskStorage({
-  destination: function (req: any, file: any, cb: any) {
-    cb(null, tempUploadDir);
-  },
-  filename: function (req: any, file: any, cb: any) {
-    // Create a unique filename to avoid collisions
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    const filename = `${uniqueSuffix}${ext}`;
-    cb(null, filename);
-  },
-});
+// Use memory storage instead of disk storage to avoid creating temporary files
+const storage = multer.memoryStorage();
 
 // File filter to accept only jpg, jpeg, png
 const fileFilter = (
@@ -78,8 +60,8 @@ router.post("/images", upload.single("file"), async (req: any, res: any) => {
     const userId = req.body.userId;
     const imageType = req.body.type || "post"; // Default to 'post', can be 'post', 'profile', or 'coin'
 
-    // Read file into a buffer
-    const fileBuffer = fs.readFileSync(req.file.path);
+    // Use the buffer directly from multer's memory storage
+    const fileBuffer = req.file.buffer;
 
     const options = {
       metadata: {
@@ -98,10 +80,7 @@ router.post("/images", upload.single("file"), async (req: any, res: any) => {
     // Upload to Pinata using the upload.file method
     const pinataResult = await pinata.upload.public.file(file, options);
 
-    // Clean up temporary file after upload
-    if (req.file.path) {
-      fs.unlinkSync(req.file.path);
-    }
+    // No need to clean up temporary files when using memory storage
 
     if (!pinataResult.cid) {
       return res.status(500).json({error: "Failed to upload to Pinata"});
@@ -176,40 +155,6 @@ router.get("/images/:imageName", async (req: any, res: any) => {
 });
 
 /**
- * Get image information by its name
- * @route GET /images/info/:imageName
- * @param {Request} req - Express request object with imageName in params
- * @param {Response} res - Express response object
- * @returns {Response} 200 with image information
- */
-router.get("/images/info/:imageName", async (req: any, res: any) => {
-  try {
-    const {imageName} = req.params;
-
-    // Find the image in the database
-    const image = await db
-      .selectFrom("images")
-      .where("imageName", "=", imageName)
-      .select(["imageName", "imagePath"])
-      .executeTakeFirst();
-
-    if (!image) {
-      return res.status(404).json({error: "Image not found"});
-    }
-
-    return res.status(200).json({
-      image,
-    });
-  } catch (error) {
-    console.error("Error retrieving image info:", error);
-    return res.status(500).json({
-      error: "Failed to retrieve image information",
-      details: error instanceof Error ? error.message : "Unknown error",
-    });
-  }
-});
-
-/**
  * Upload an image to Walrus storage
  * @route POST /images/walrus
  * @param {Request} req - Express request object with file in files
@@ -225,23 +170,10 @@ router.post("/images/walrus", upload.single("file"), async (req: any, res: any) 
         .json({error: "No file uploaded or file type not supported"});
     }
 
-    // Read file into a buffer
-    const fileBuffer = fs.readFileSync(req.file.path);
+    // Use the buffer directly from multer's memory storage
+    const fileBuffer = req.file.buffer;
 
-    // Get Walrus client
-    const walrusClient = getWalrusClient(ACTIVE_NETWORK);
-
-    const keypair = await getFundedKeypair();
-
-    // Upload to Walrus
-    const { blobId } = await walrusClient.writeBlob({
-      blob: fileBuffer,
-      deletable: false,
-      epochs: 3,
-      signer: keypair,
-    });
-
-    console.log("blobId", blobId);
+    const {blobId} = await fileService.writeWalrusBlob(fileBuffer);
 
     return res.status(201).json({
       message: "Image uploaded successfully to Walrus",
@@ -266,18 +198,7 @@ router.post("/images/walrus", upload.single("file"), async (req: any, res: any) 
 router.get("/images/walrus/info/:blobId", async (req: Request, res: Response) => {
   try {
     const { blobId } = req.params;
-    const walrusClient = getWalrusClient(ACTIVE_NETWORK);
-
-    // Retrieve blob data
-    const blobBytes = await walrusClient.readBlob({ blobId });
-
-    // Convert to Blob object
-    const blob = new Blob([new Uint8Array(blobBytes)]);
-
-    // Convert blob to buffer for response
-    const arrayBuffer = await blob.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
+    const buffer = await fileService.getWalrusBuffer(blobId)
     // Set appropriate content type (assuming image/jpeg, but could be determined dynamically)
     res.setHeader('Content-Type', 'image/jpeg');
     res.setHeader('Content-Length', buffer.length);
