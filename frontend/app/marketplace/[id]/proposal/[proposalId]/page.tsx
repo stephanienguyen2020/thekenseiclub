@@ -6,6 +6,7 @@ import Image from "next/image"
 import { FileText, Check, ChevronDown, ExternalLink, Info, Send } from "lucide-react"
 import Navbar from "@/components/navbar"
 import React from "react"
+import { getObject } from "@/lib/utils"
 
 interface Option {
   option: string;
@@ -56,6 +57,10 @@ export default function ProposalDetailPage({
           throw new Error('Failed to fetch proposal');
         }
         const { data } = await response.json() as { data: ProposalResponse };
+
+        // Fetch token metadata
+        const coinMetadata = (await getObject(data.tokenAddress)) as any;
+        const tokenName = coinMetadata?.data?.content?.fields?.name || data.tokenAddress;
 
         // Map API data to match the expected structure
         const mappedProposal = {
@@ -252,7 +257,7 @@ export default function ProposalDetailPage({
                 <h1 className="text-3xl font-bold mb-6">{proposal.title}</h1>
 
                 <div className="prose max-w-none mb-6">
-                  {proposal.fullDescription.split("\n\n").map((paragraph, idx) => {
+                  {proposal.fullDescription.split("\n\n").map((paragraph: string, idx: number) => {
                     // Handle headings
                     if (paragraph.startsWith("##")) {
                       const headingText = paragraph.replace(/^## /, "")

@@ -303,13 +303,29 @@ export default function ProposalsPage() {
                         Time Progress
                       </span>
                       <span className="text-sm font-bold">
-                        {proposal.voteCount > 0
-                          ? (
-                              (proposal.votePoint / proposal.voteCount) *
-                              100
-                            ).toFixed(1)
-                          : 0}
-                        %
+                        {(() => {
+                          const startDate = new Date(proposal.createdAt);
+                          const endDate = new Date(proposal.endDate);
+                          const now = new Date();
+                          
+                          // If current time has passed end date, return 100%
+                          if (now > endDate) {
+                            return "100.0";
+                          }
+                          
+                          // Calculate total duration in milliseconds
+                          const totalDuration = endDate.getTime() - startDate.getTime();
+                          // Calculate elapsed time in milliseconds
+                          const elapsedTime = now.getTime() - startDate.getTime();
+                          
+                          // Calculate percentage
+                          let percentage = (elapsedTime / totalDuration) * 100;
+                          
+                          // Clamp percentage between 0 and 100
+                          percentage = Math.min(Math.max(percentage, 0), 100);
+                          
+                          return percentage.toFixed(1);
+                        })()}%
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-4 border-2 border-black overflow-hidden">
@@ -320,6 +336,11 @@ export default function ProposalsPage() {
                             const startDate = new Date(proposal.createdAt);
                             const endDate = new Date(proposal.endDate);
                             const now = new Date();
+                            
+                            // If current time has passed end date, return 100%
+                            if (now > endDate) {
+                              return 100;
+                            }
                             
                             // Calculate total duration in milliseconds
                             const totalDuration = endDate.getTime() - startDate.getTime();
