@@ -1,6 +1,15 @@
 import { db } from "../db/database";
 import { sql } from "kysely";
 import { ACTIVE_NETWORK, getClient } from "../utils";
+import BigNumber from 'bignumber.js';
+
+// Configure BigNumber
+const DECIMALS = 9;
+BigNumber.config({
+  DECIMAL_PLACES: DECIMALS,
+  ROUNDING_MODE: BigNumber.ROUND_DOWN,
+  EXPONENTIAL_AT: [-DECIMALS, DECIMALS]
+});
 
 // Cache for SUI to USD rate to avoid frequent API calls
 interface RateCache {
@@ -87,8 +96,10 @@ export async function getMarketData(
     // Get SUI to USD conversion rate
     const suiToUsdRate = await getSuiToUsdRate();
 
-    // Calculate USD price
-    const usdPrice = suiPrice * suiToUsdRate;
+    // Calculate USD price using BigNumber
+    const bnSuiPrice = new BigNumber(suiPrice);
+    const bnSuiToUsdRate = new BigNumber(suiToUsdRate);
+    const usdPrice = bnSuiPrice.times(bnSuiToUsdRate).toNumber();
 
     // Calculate 24h price change based on USD price
     const change24h = await calculate24hChange(bondingCurveId, suiPrice, suiToUsdRate);
@@ -143,15 +154,20 @@ async function calculate24hChange(
       .executeTakeFirst();
 
     if (currentSuiPrice && price24hAgo) {
-      // Convert current SUI price to USD
-      const currentUsdPrice = currentSuiPrice * suiToUsdRate;
+      // Convert prices to BigNumber for precise calculations
+      const bnCurrentSuiPrice = new BigNumber(currentSuiPrice);
+      const bnSuiToUsdRate = new BigNumber(suiToUsdRate);
+      const bnPastSuiPrice = new BigNumber(price24hAgo.price);
 
-      // Parse and adjust past SUI price, then convert to USD
-      const pastSuiPrice = price24hAgo.price;
-      const pastUsdPrice = pastSuiPrice * suiToUsdRate;
+      // Calculate USD prices
+      const currentUsdPrice = bnCurrentSuiPrice.times(bnSuiToUsdRate);
+      const pastUsdPrice = bnPastSuiPrice.times(bnSuiToUsdRate);
 
-      if (pastUsdPrice > 0) {
-        return ((currentUsdPrice - pastUsdPrice) / pastUsdPrice) * 100;
+      if (pastUsdPrice.gt(0)) {
+        return currentUsdPrice.minus(pastUsdPrice)
+          .dividedBy(pastUsdPrice)
+          .times(100)
+          .toNumber();
       }
     }
 
@@ -188,15 +204,13 @@ async function calculate24hVolume(bondingCurveId: string): Promise<string> {
       .where("timestamp", ">", oneDayAgo)
       .executeTakeFirst();
 
-    const buyVolume = resultBuy?.volume
-      ? parseFloat(resultBuy.volume.toString())
-      : 0;
-    const sellVolume = resultSell?.volume
-      ? parseFloat(resultSell.volume.toString())
-      : 0;
-    const totalVolume = (buyVolume + sellVolume) / Math.pow(10, 9);
+    const bnBuyVolume = new BigNumber(resultBuy?.volume?.toString() || '0');
+    const bnSellVolume = new BigNumber(resultSell?.volume?.toString() || '0');
+    const totalVolume = bnBuyVolume.plus(bnSellVolume)
+      .dividedBy(new BigNumber(10).pow(9))
+      .toString();
 
-    return totalVolume.toString();
+    return totalVolume;
   } catch (error) {
     console.error("Error calculating 24h volume:", error);
     return "0";
@@ -210,12 +224,15 @@ async function estimateMarketCap(
   try {
     if (currentUsdPrice) {
       const rawSupply = await getCirculatingSupply(bondingCurveId);
-      console.log("currentUsdPrice", currentUsdPrice);
+      const bnSupply = new BigNumber(rawSupply);
+      const bnPrice = new BigNumber(currentUsdPrice);
 
-      // Calculate market cap using the USD price and supply
-      const marketCap = (rawSupply * currentUsdPrice) / Math.pow(10, 9);
+      // Calculate market cap using BigNumber
+      const marketCap = bnSupply.times(bnPrice)
+        .dividedBy(new BigNumber(10).pow(9))
+        .toString();
 
-      return marketCap.toString();
+      return marketCap;
     }
 
     return "0";

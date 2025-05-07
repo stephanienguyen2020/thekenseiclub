@@ -13,6 +13,7 @@ import { Coin } from "@/app/marketplace/types";
 import { AxiosResponse } from "axios";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useParams } from "next/navigation";
+import { formatPrice, formatPercentage, formatLargeNumber } from '@/lib/priceUtils';
 type ProposalStatus = "open" | "closed" | "upcoming";
 
 interface OptionObject {
@@ -46,24 +47,9 @@ export default function TokenDetailPage() {
   const [governanceFilter, setGovernanceFilter] = useState<
     "all" | ProposalStatus
   >("all");
-  const { id } = useParams();
-  const [coin, setCoin] = useState<Coin>({
-    id: "",
-    name: "",
-    symbol: "",
-    logo: "/placeholder.svg",
-    price: 0,
-    change24h: 0,
-    marketCap: 0,
-    holders: 0,
-    description: "",
-    website: "",
-    twitter: "",
-    telegram: "",
-    proposals: 0,
-    bondingCurveId: "",
-    suiPrice: 0,
-  });
+  const params = useParams();
+  const id = typeof params.id === 'string' ? params.id : '';
+  const [coin, setCoin] = useState<Coin | null>(null);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -157,14 +143,18 @@ export default function TokenDetailPage() {
         setLoading(true);
         // Fetch coin data
         const coinResponse: AxiosResponse<Coin> = await api.get(`/coin/${id}`);
-        setCoin({
-          ...coinResponse.data,
-          website: "https://example.com",
-          twitter: "https://twitter.com/example",
-          telegram: "https://t.me/example",
-        });
+        const data = coinResponse.data;
+        const coinData: Coin = {
+          ...data,
+          volume24h: data.volume24h || 0,
+          createdAt: data.createdAt || new Date().toISOString(),
+          updatedAt: data.updatedAt || new Date().toISOString(),
+          image: data.logo,
+          value: data.price * (data.holdings || 0)
+        };
+        setCoin(coinData);
 
-        console.log("coin: ", coinResponse.data);
+        console.log("coin: ", coinData);
 
         // Fetch proposals
         const proposalsResponse = await fetch(
@@ -252,40 +242,37 @@ export default function TokenDetailPage() {
         <div className="bg-white rounded-3xl p-6 mb-8">
           <div className="flex flex-col md:flex-row gap-6 items-start">
             <Image
-              src={coin.logo || "/placeholder.svg"}
+              src={coin?.logo || "/placeholder.svg"}
               width={80}
               height={80}
-              alt={coin.name}
+              alt={coin?.name || ""}
               className="rounded-full"
             />
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <h1 className="text-2xl font-bold">{coin.name}</h1>
+                <h1 className="text-2xl font-bold">{coin?.name}</h1>
                 <span className="bg-gray-100 px-2 py-1 rounded-full text-sm">
-                  {coin.symbol}
+                  {coin?.symbol}
                 </span>
               </div>
-              <p className="text-gray-600 mb-4">{coin.description}</p>
+              <p className="text-gray-600 mb-4">{coin?.description}</p>
               <div className="flex flex-wrap gap-4">
                 <div className="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
                   <LineChart size={16} />
-                  <span>${coin.price?.toFixed(15)}</span>
-                  <span
-                    className={
-                      coin.change24h >= 0 ? "text-green-500" : "text-red-500"
-                    }
-                  >
-                    {coin.change24h >= 0 ? "+" : ""}
-                    {coin.change24h}%
-                  </span>
+                  <div>
+                    {formatPrice(coin?.price || 0, { minDecimals: 2, maxDecimals: 8 })}
+                  </div>
+                  <div className={`text-sm ${(coin?.change24h || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {(coin?.change24h || 0) >= 0 ? '+' : ''}{formatPercentage(coin?.change24h || 0)}
+                  </div>
                 </div>
                 <div className="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
                   <Building size={16} />
-                  <span>Market Cap: ${coin.marketCap}M</span>
+                  <span>Market Cap: {formatLargeNumber(coin?.marketCap || 0, { suffix: 'M' })}</span>
                 </div>
                 <div className="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
                   <Users size={16} />
-                  <span>{coin.holders.toLocaleString()} holders</span>
+                  <span>{coin?.holders.toLocaleString() || 0} holders</span>
                 </div>
               </div>
             </div>
@@ -293,7 +280,7 @@ export default function TokenDetailPage() {
               <button className="bg-[#c0ff00] text-black px-4 py-2 rounded-full text-sm font-bold border-2 border-black">
                 Follow
               </button>
-              {coin.website && (
+              {coin?.website && (
                 <a
                   href={coin.website}
                   target="_blank"
@@ -314,7 +301,7 @@ export default function TokenDetailPage() {
                   </svg>
                 </a>
               )}
-              {coin.twitter && (
+              {coin?.twitter && (
                 <a
                   href={coin.twitter}
                   target="_blank"
@@ -339,7 +326,7 @@ export default function TokenDetailPage() {
                   </svg>
                 </a>
               )}
-              {coin.telegram && (
+              {coin?.telegram && (
                 <a
                   href={coin.telegram}
                   target="_blank"
@@ -466,8 +453,8 @@ export default function TokenDetailPage() {
                       description={proposal.description}
                       status={proposal.status}
                       endDate={formatDate(proposal.endDate)}
-                      tokenSymbol={coin.symbol}
-                      tokenLogo={coin.logo}
+                      tokenSymbol={coin?.symbol || ""}
+                      tokenLogo={coin?.logo || "/placeholder.svg"}
                       options={proposal.options.map(option => ({
                         label: option.option,
                         votes: option.points,
@@ -512,21 +499,21 @@ export default function TokenDetailPage() {
           {activeTab === "feed" && (
             <TokenFeed
               tokenId={id}
-              tokenName={coin.name}
-              tokenSymbol={coin.symbol}
-              tokenLogo={coin.logo}
+              tokenName={coin?.name || ""}
+              tokenSymbol={coin?.symbol || ""}
+              tokenLogo={coin?.logo || "/placeholder.svg"}
             />
           )}
           {activeTab === "trading" && (
             <TradingView
-              tokenSymbol={coin.symbol}
-              tokenName={coin.name}
-              tokenLogo={coin.logo}
-              currentPrice={coin.price}
-              change24h={coin.change24h}
-              bondingCurveId={coin.bondingCurveId}
-              tokenId={coin.id}
-              suiPrice={coin.suiPrice}
+              tokenSymbol={coin?.symbol || ""}
+              tokenName={coin?.name || ""}
+              tokenLogo={coin?.logo || "/placeholder.svg"}
+              currentPrice={coin?.price || 0}
+              change24h={coin?.change24h || 0}
+              bondingCurveId={coin?.bondingCurveId || ""}
+              tokenId={coin?.id || ""}
+              suiPrice={coin?.suiPrice || 0}
             />
           )}
         </div>

@@ -1,16 +1,26 @@
 import {getClient, Network} from "coin-sdk/dist/src/utils/sui-utils";
 import BondingCurveSDK from "coin-sdk/dist/src/bonding_curve";
-import {Coin, CoinList} from "@/app/marketplace/types";
-import api from "@/lib/api";
+import { Coin, CoinList } from '@/app/marketplace/types';
+import api from '@/lib/api';
 import {SuiClient} from "@mysten/sui/client";
-import type {WalletAccount} from "@mysten/wallet-standard";
+import type { WalletAccount } from "@mysten/wallet-standard";
+import { toBlockchainAmount, fromBlockchainAmount, safeMultiply } from '../lib/priceUtils';
 
-export const getHoldingToken = async (currentAccount: WalletAccount | null) => {
+export const getHoldingToken = async (currentAccount: WalletAccount | null): Promise<Coin[]> => {
   if (!currentAccount) return [];
-  const response = await api.get(
-    `/holding-coins/${currentAccount?.address}`
-  );
-  return response.data;
+  try {
+    const response = await api.get(`/holding-coins/${currentAccount.address}`);
+    const data = response.data.data;
+    
+    // Calculate value for each coin
+    return data.map((coin: Coin) => ({
+      ...coin,
+      value: safeMultiply(coin.price, coin.holdings || 0)
+    }));
+  } catch (error) {
+    console.error('Error fetching holdings:', error);
+    return [];
+  }
 };
 
 export const getCreatedToken = async (currentAccount: WalletAccount | null) => {
@@ -52,10 +62,9 @@ export const buildBuyTransaction = async (tokenName: string, buyAmount: string, 
   const {id: tokenId, bondingCurveId} = coin;
 
   const {coinType, packageId, bondingCurveSdk} = await retrieveBondingCurveData(client, tokenId, bondingCurveId);
-  // Convert to string first to avoid precision issues, then parse as float and multiply
-  const parsedAmount = parseFloat(buyAmount) * 1000000000;
+  const parsedAmount = toBlockchainAmount(buyAmount);
   const tx = bondingCurveSdk.buildBuyTransaction({
-    amount: BigInt(parsedAmount),
+    amount: parsedAmount,
     minTokenRequired: BigInt(0),
     type: coinType,
     address: currentAccount?.address || "",
@@ -76,7 +85,7 @@ export const buildSellTransaction = async (tokenName: string, sellAmount: string
   const {id: tokenId, bondingCurveId} = coin;
 
   const {coinType, packageId, bondingCurveSdk} = await retrieveBondingCurveData(client, tokenId, bondingCurveId);
-  const parsedAmount = BigInt(sellAmount) * BigInt(1000000000);
+  const parsedAmount = toBlockchainAmount(sellAmount);
   const tx = await bondingCurveSdk.buildSellTransaction({
     amount: parsedAmount,
     minSuiRequired: BigInt(0),

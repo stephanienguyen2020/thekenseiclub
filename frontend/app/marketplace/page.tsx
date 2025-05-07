@@ -17,6 +17,7 @@ import Navbar from "@/components/navbar";
 import api from "@/lib/api";
 import { Coin, CoinList } from "@/app/marketplace/types";
 import { AxiosResponse } from "axios";
+import { formatPrice, formatPercentage, formatLargeNumber } from '@/lib/priceUtils';
 
 export default function MarketplacePage() {
   const [sortBy, setSortBy] = useState("trending");
@@ -227,7 +228,7 @@ export default function MarketplacePage() {
                         </div>
                       </td>
                       <td className="text-right py-4 px-2">
-                        ${coin.price.toFixed(8)}
+                        {formatPrice(coin.price, { minDecimals: 2, maxDecimals: 8 })}
                       </td>
                       <td className="text-right py-4 px-2">
                         <span
@@ -242,11 +243,11 @@ export default function MarketplacePage() {
                           ) : (
                             <ChevronDown size={16} />
                           )}
-                          {Math.abs(coin.change24h)}%
+                          {formatPercentage(coin.change24h)}
                         </span>
                       </td>
                       <td className="text-right py-4 px-2">
-                        ${coin.marketCap}M
+                        {formatLargeNumber(coin.marketCap, { suffix: 'M' })}
                       </td>
                       <td className="text-right py-4 px-2">
                         {coin.holders.toLocaleString()}
@@ -313,7 +314,7 @@ export default function MarketplacePage() {
                         <div className="bg-gray-50 p-2 rounded-lg">
                           <p className="text-xs text-gray-500">Price</p>
                           <p className="font-medium truncate">
-                            ${coin.price.toFixed(8)}
+                            {formatPrice(coin.price, { minDecimals: 2, maxDecimals: 8 })}
                           </p>
                         </div>
                         <div className="bg-gray-50 p-2 rounded-lg">
@@ -330,13 +331,13 @@ export default function MarketplacePage() {
                             ) : (
                               <ChevronDown size={14} />
                             )}
-                            {Math.abs(coin.change24h)}%
+                            {formatPercentage(coin.change24h)}
                           </p>
                         </div>
                         <div className="bg-gray-50 p-2 rounded-lg">
                           <p className="text-xs text-gray-500">Market Cap</p>
                           <p className="font-medium">
-                            ${(coin.marketCap / 1000000).toFixed(1)}M
+                            {formatLargeNumber(coin.marketCap, { suffix: 'M' })}
                           </p>
                         </div>
                         <div className="bg-gray-50 p-2 rounded-lg">
