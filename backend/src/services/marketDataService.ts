@@ -281,12 +281,21 @@ export const getCurrentPrice = async (bondingCurveId: string) => {
       return 0;
     }
 
-    // Calculate raw price
-    const rawPrice =
-      (parseFloat(bondingCurveField.virtual_sui_amt) +
-        parseFloat(bondingCurveField.sui_balance)) /
-      parseFloat(bondingCurveField.token_balance);
-    // Round to a reasonable number of decimal places (e.g., 6)
+    // Calculate raw price using BigNumber
+    const virtualSuiAmt = new BigNumber(bondingCurveField.virtual_sui_amt);
+    const suiBalance = new BigNumber(bondingCurveField.sui_balance);
+    const tokenBalance = new BigNumber(bondingCurveField.token_balance);
+
+    if (tokenBalance.isZero()) {
+      console.error("Token balance is zero");
+      return 0;
+    }
+
+    const rawPrice = virtualSuiAmt
+      .plus(suiBalance)
+      .dividedBy(tokenBalance)
+      .toNumber();
+
     return rawPrice;
   } catch (error) {
     console.error("Error getting current price:", error);

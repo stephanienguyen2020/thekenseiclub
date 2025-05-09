@@ -1,8 +1,9 @@
-import fs, { readFileSync, writeFileSync } from "fs";
+import * as fs from "fs";
+import { readFileSync, writeFileSync } from "fs";
 
 import { execSync } from "child_process";
 import { homedir } from "os";
-import path from "path";
+import * as path from "path";
 import {
   getFullnodeUrl,
   SuiClient,

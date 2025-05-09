@@ -1,8 +1,9 @@
-import fs, { readFileSync, writeFileSync } from "fs";
+import * as fs from "fs";
+import { readFileSync, writeFileSync } from "fs";
 
 import { execSync } from "child_process";
 import { homedir } from "os";
-import path from "path";
+import * as path from "path";
 import {
   getFullnodeUrl,
   SuiClient,
@@ -58,6 +59,7 @@ export const signAndExecute = async (
   network: Network,
   address: string
 ) => {
+  console.log("signAndExecute", txb, network, address);
   const signer = getSigner(address);
 
   const client = getClient(network);

@@ -15,7 +15,7 @@ import {
 } from "./utils/sui-utils";
 import BondingCurveSDK from "./bonding_curve";
 import {BONDING_CURVE_MODULE_PACKAGE_ID} from "./constant";
-import path from "path";
+import path from 'path';
 
 class CoinSDK {
     private treasuryCap: string;
@@ -53,8 +53,8 @@ class CoinSDK {
         }
     ): Promise<CoinSDK> {
         name = name.toLowerCase();
-        const templatePath = path.resolve(__dirname, 'template.txt');
-        const movePath = path.resolve(__dirname, '../coin-create/sources', `${name}.move`);
+        const templatePath = path.join(process.cwd(), 'src', 'template.txt');
+        const movePath = path.join(process.cwd(), 'coin-create', 'sources', `${name}.move`);
 
         generateToMoveFile(templatePath, movePath, {
             coin_module: name,

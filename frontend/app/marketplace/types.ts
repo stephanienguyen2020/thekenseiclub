@@ -22,6 +22,7 @@ export interface Coin {
   bondingCurveId: string;
   holdings?: number;
   suiPrice: number;
+  balance: string;
 }
 
 export interface CoinList {

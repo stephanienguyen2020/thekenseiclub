@@ -17,7 +17,7 @@
     "@mysten/walrus": "^0.0.21",
     "@types/bignumber.js": "^5.0.4",
     "bignumber.js": "^9.3.0",
-    "coin-sdk": "^1.0.14",
+    "coin-sdk": "^1.0.17",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.18.2",

@@ -18,15 +18,15 @@ const coinMetadata =
 
 // const coinSdk = new CoinSDK(treasuryCap, client, coinCreationPackageId, coinMetadata);
 const coinType =
-  "0xc65e94f58fcbfcb155e01899eae9df1eac50c530d5644e6f0780720dd50c51d9::taykeke::TAYKEKE";
+  "0xd4a551f38a666ca732df26307eb2cb0e78884b49de23d0c405b1e2b5f264a5ce::jeje::JEJE";
 
 const suiCoinId =
   "0x99a122a72ed9c1130b5f9583ee7357f4784c898b9e732ddac96f59283cf0fae4";
 const suiCoinType = "0x2::coin::Coin<0x2::sui::SUI>";
 
-const bondingCurvePackageId = process.env.PACKAGE_ID || "";
+const bondingCurvePackageId = "0xf3af30c3092f5fea656292e0d3c87ce674948c63dcf2788dc756b379015dac1e";
 const bondingCurveObjectId =
-  "0x85134877ccc37eadc28d852588350f116a981ef4ee6d842726d14bc4b0ec917e";
+  "0x42a8bbcb808987d142782a655c5ea4ad79f259a8e91bfc7c8daf8948554b9a61";
 
 //Publish new coin
 //
@@ -55,15 +55,16 @@ const bondingCurveSdk = new BondingCurveSDK(
   client,
   bondingCurvePackageId
 );
+
 // bondingCurveSdk.buy({
-//   amount: 1000000000,
-//   minTokenRequired: 0,
+//   amount: 100000000n,
+//   minTokenRequired: 0n,
 //   type: coinType,
 //   address: address,
 // });
 
 bondingCurveSdk.sell({
-  amount: 24600191533825785n,
+  amount: 412469n,
   minSuiRequired: 0n,
   type: coinType,
   address: address,

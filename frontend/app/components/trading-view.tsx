@@ -17,6 +17,8 @@ import { tradeAgent } from "@/app/lib/tradingBot";
 import { SuiClient } from "@mysten/sui/client";
 import axios from "axios";
 import { TransactionSuccess } from "./ui/transaction-success";
+import { safeDivide, safeMultiply } from "@/lib/priceUtils";
+import BigNumber from 'bignumber.js';
 
 interface TradingViewProps {
   tokenSymbol: string;
@@ -75,7 +77,6 @@ export default function TradingView({
       }),
   });
 
-  const [digest, setDigest] = useState("");
   const [transactionHash, setTransactionHash] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [lastAction, setLastAction] = useState<"buy" | "sell" | "swap" | null>(
@@ -233,7 +234,7 @@ export default function TradingView({
               })
               .then((result) => {
                 if (result.data.message === "Migration successful") {
-                console.log("migration status", result.data.message);
+                  console.log("migration status", result.data.message);
                   window.location.href = `/marketplace`;
                 }
               });
@@ -257,7 +258,8 @@ export default function TradingView({
     const client = getClient(network);
     const { coinType, packageId, bondingCurveSdk } =
       await retrieveBondingCurveData(client);
-
+    console.log("sellAmount", sellAmount)
+    console.log("coinType", coinType)
     const parsedAmount = BigInt(sellAmount) * BigInt(1000000000);
     const tx = await bondingCurveSdk.buildSellTransaction({
       amount: parsedAmount,
@@ -300,7 +302,6 @@ export default function TradingView({
     // Clear input
     setChatMessage("");
     const result = await tradeAgent(chatMessage);
-    console.log("result", result);
     if (result.action === "BUY") {
       setAmount(result.amount); // Update state for UI consistency
       handleBuy(result.amount, result.coinName); // Pass amount and coinName directly to avoid async state issues
@@ -311,6 +312,9 @@ export default function TradingView({
       setAmount("");
     }
   };
+
+  // The backend/event price is an integer scaled by 1e9 (fixed-point math). Divide by 1e9 for display.
+  const displayPrice = currentPrice / 1e9;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -339,9 +343,8 @@ export default function TradingView({
                 ${currentPrice.toFixed(15)}
               </div>
               <div
-                className={`flex items-center justify-end ${
-                  change24h >= 0 ? "text-green-500" : "text-red-500"
-                }`}
+                className={`flex items-center justify-end ${change24h >= 0 ? "text-green-500" : "text-red-500"
+                  }`}
               >
                 {change24h >= 0 ? (
                   <ArrowUp size={16} />
@@ -371,11 +374,10 @@ export default function TradingView({
             ].map((time) => (
               <button
                 key={time[0]}
-                className={`px-4 py-2 rounded-xl font-bold border-4 border-black ${
-                  timeframe === time[1]
-                    ? "bg-[#c0ff00] text-black"
-                    : "bg-white text-black"
-                }`}
+                className={`px-4 py-2 rounded-xl font-bold border-4 border-black ${timeframe === time[1]
+                  ? "bg-[#c0ff00] text-black"
+                  : "bg-white text-black"
+                  }`}
                 onClick={() => setTimeframe(time[1])}
               >
                 {time[0]}
@@ -413,41 +415,37 @@ export default function TradingView({
           {/* Tab Selector */}
           <div className="flex border-b-4 border-black">
             <button
-              className={`flex-1 py-3 font-black text-lg ${
-                activeTradeTab === "buy"
-                  ? "bg-[#c0ff00] text-black"
-                  : "bg-white text-gray-500"
-              }`}
+              className={`flex-1 py-3 font-black text-lg ${activeTradeTab === "buy"
+                ? "bg-[#c0ff00] text-black"
+                : "bg-white text-gray-500"
+                }`}
               onClick={() => setActiveTradeTab("buy")}
             >
               BUY
             </button>
             <button
-              className={`flex-1 py-3 font-black text-lg ${
-                activeTradeTab === "sell"
-                  ? "bg-red-500 text-white"
-                  : "bg-white text-gray-500"
-              }`}
+              className={`flex-1 py-3 font-black text-lg ${activeTradeTab === "sell"
+                ? "bg-red-500 text-white"
+                : "bg-white text-gray-500"
+                }`}
               onClick={() => setActiveTradeTab("sell")}
             >
               SELL
             </button>
             <button
-              className={`flex-1 py-3 font-black text-lg ${
-                activeTradeTab === "swap"
-                  ? "bg-[#0039C6] text-white"
-                  : "bg-white text-gray-500"
-              }`}
+              className={`flex-1 py-3 font-black text-lg ${activeTradeTab === "swap"
+                ? "bg-[#0039C6] text-white"
+                : "bg-white text-gray-500"
+                }`}
               onClick={() => setActiveTradeTab("swap")}
             >
               SWAP
             </button>
             <button
-              className={`flex-1 py-3 font-black text-lg ${
-                activeTradeTab === "assistant"
-                  ? "bg-purple-500 text-white"
-                  : "bg-white text-gray-500"
-              }`}
+              className={`flex-1 py-3 font-black text-lg ${activeTradeTab === "assistant"
+                ? "bg-purple-500 text-white"
+                : "bg-white text-gray-500"
+                }`}
               onClick={() => setActiveTradeTab("assistant")}
             >
               ASSIST
@@ -482,7 +480,7 @@ export default function TradingView({
                   </label>
                   <div className="bg-gray-100 p-3 rounded-xl border-4 border-black font-bold">
                     {amount
-                      ? (Number.parseFloat(amount) / suiPrice).toFixed(2)
+                      ? safeDivide(amount, suiPrice).toFixed(9)
                       : "0.00"}
                   </div>
                 </div>
@@ -530,7 +528,7 @@ export default function TradingView({
                   </label>
                   <div className="bg-gray-100 p-3 rounded-xl border-4 border-black font-bold">
                     {amount
-                      ? (Number.parseFloat(amount) * suiPrice).toFixed(15)
+                      ? safeMultiply(amount, suiPrice).toFixed(9)
                       : "0.00"}
                   </div>
                 </div>
@@ -588,9 +586,7 @@ export default function TradingView({
                       placeholder="0.00"
                       value={
                         amount
-                          ? (Number.parseFloat(amount) / currentPrice).toFixed(
-                              8
-                            )
+                          ? safeDivide(amount, currentPrice).toFixed(8)
                           : ""
                       }
                       readOnly
@@ -606,7 +602,8 @@ export default function TradingView({
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Rate</span>
                     <span className="font-bold">
-                      1 {tokenSymbol} = ${currentPrice.toFixed(8)}
+                      1 {tokenSymbol} = ${displayPrice.toFixed(9)}
+                      {/* This is the canonical marginal price from the contract event, scaled to 9 decimals */}
                     </span>
                   </div>
                   <div className="flex justify-between mt-1">
@@ -641,11 +638,10 @@ export default function TradingView({
                   {chatHistory.map((msg, index) => (
                     <div
                       key={index}
-                      className={`p-3 rounded-xl border-2 border-black max-w-[80%] ${
-                        msg.role === "user"
-                          ? "bg-[#c0ff00] ml-auto"
-                          : "bg-gray-100"
-                      }`}
+                      className={`p-3 rounded-xl border-2 border-black max-w-[80%] ${msg.role === "user"
+                        ? "bg-[#c0ff00] ml-auto"
+                        : "bg-gray-100"
+                        }`}
                     >
                       <p className="text-sm font-medium">{msg.message}</p>
                     </div>
@@ -689,6 +685,8 @@ export default function TradingView({
             setAmount("");
             setActiveTradeTab(lastAction || "buy");
           }}
+          recipient={currentAccount?.address || ""}
+
         />
       )}
     </div>

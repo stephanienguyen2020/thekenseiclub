@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Check, Copy, ExternalLink, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {formatAddress} from "@mysten/sui/utils";
 
 interface TransactionSuccessProps {
   open: boolean;
@@ -31,7 +32,7 @@ export function TransactionSuccess({
   fee = "$0.25",
   slippage = "0.5%",
   gasUsed = "0.00123",
-  estimatedTime = "1-2 min",
+  estimatedTime = "0-1 min",
   onNewTransaction,
   autoDismiss = true,
   dismissDuration = 7000,
@@ -89,12 +90,7 @@ export function TransactionSuccess({
             <div className="flex items-center justify-between">
               <span className="font-bold text-black">Transaction Hash</span>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">{`${transactionHash.substring(
-                  0,
-                  8
-                )}...${transactionHash.substring(
-                  transactionHash.length - 8
-                )}`}</span>
+                <span className="text-sm font-medium text-gray-700">{formatAddress(transactionHash)}</span>
                 <button className="rounded-md border-2 border-black p-1 hover:bg-gray-100">
                   <Copy className="h-4 w-4 text-black" />
                 </button>
@@ -103,7 +99,7 @@ export function TransactionSuccess({
 
             <div className="flex items-center justify-between border-t-2 border-gray-200 pt-2">
               <span className="font-bold text-black">Recipient Address</span>
-              <span className="font-medium text-gray-700">{recipient}</span>
+              <span className="font-medium text-gray-700">{formatAddress(recipient)}</span>
             </div>
 
             <div className="flex items-center justify-between border-t-2 border-gray-200 pt-2">

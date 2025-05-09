@@ -1,10 +1,11 @@
 import {getClient, Network} from "coin-sdk/dist/src/utils/sui-utils";
 import BondingCurveSDK from "coin-sdk/dist/src/bonding_curve";
-import { Coin, CoinList } from '@/app/marketplace/types';
+import { Coin } from '@/app/marketplace/types';
 import api from '@/lib/api';
 import {SuiClient} from "@mysten/sui/client";
 import type { WalletAccount } from "@mysten/wallet-standard";
-import { toBlockchainAmount, fromBlockchainAmount, safeMultiply } from '../lib/priceUtils';
+import { toBlockchainAmount, fromBlockchainAmount, safeMultiply, safeAdd } from '../lib/priceUtils';
+import BigNumber from 'bignumber.js';
 
 export const getHoldingToken = async (currentAccount: WalletAccount | null): Promise<Coin[]> => {
   if (!currentAccount) return [];
@@ -106,27 +107,28 @@ const getCoinsByName = async (coinName: string) => {
 }
 
 export const getTotalValue = (holdings: Coin[] | undefined) => {
-  return holdings
-    ? holdings
-      .reduce((sum, coin: any) => {
-        // Use any type to bypass TypeScript's strict checking
-        return sum + (coin.balance || 0) * (coin.price || 0);
-      }, 0)
-      .toFixed(2)
-    : "0.00";
+  if (!holdings) return "0.00";
+  console.log("holdings", holdings)
+  
+  return holdings.reduce((sum, coin) => {
+    const bnBalance = new BigNumber(coin.balance || 0);
+    const bnPrice = new BigNumber(coin.price || 0);
+    const value = bnBalance.times(bnPrice);
+    return sum.plus(value);
+  }, new BigNumber(0)).toFixed(2);
 }
 
 export const getChanges24h = (holdings: Coin[] | undefined) => {
-  return holdings
-    ? holdings.length > 0
-      ? holdings
-        .reduce((sum, coin: any) => {
-          // Use any type to bypass TypeScript's strict checking
-          const coinValue = (coin.balance || 0) * (coin.price || 0);
-          const coinChange = coinValue * ((coin.change24h || 0) / 100);
-          return sum + coinChange;
-        }, 0)
-        .toFixed(2)
-      : "0.00"
-    : "0.00";
+  if (!holdings || holdings.length === 0) return "0.00";
+  
+  return holdings.reduce((sum, coin) => {
+    const bnBalance = new BigNumber(coin.balance || 0);
+    const bnPrice = new BigNumber(coin.price || 0);
+    const bnChange = new BigNumber(coin.change24h || 0);
+    
+    const coinValue = bnBalance.times(bnPrice);
+    const coinChange = coinValue.times(bnChange.dividedBy(100));
+    
+    return sum.plus(coinChange);
+  }, new BigNumber(0)).toFixed(2);
 }
