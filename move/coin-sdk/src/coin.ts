@@ -53,8 +53,8 @@ class CoinSDK {
         }
     ): Promise<CoinSDK> {
         name = name.toLowerCase();
-        const templatePath = path.join(process.cwd(), 'src', 'template.txt');
-        const movePath = path.join(process.cwd(), 'coin-create', 'sources', `${name}.move`);
+        const templatePath = path.resolve(__dirname, 'template.txt');
+        const movePath = path.resolve(__dirname, '../coin-create/sources', `${name}.move`);
 
         generateToMoveFile(templatePath, movePath, {
             coin_module: name,
