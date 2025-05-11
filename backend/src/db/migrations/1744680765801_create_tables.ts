@@ -143,23 +143,6 @@ export async function up(db: Kysely<any>): Promise<void> {
   await sql`SELECT add_compression_policy('raw_prices', INTERVAL '5 seconds')`.execute(
     db
   );
-
-  // await sql`CREATE MATERIALIZED VIEW secondly_prices_stats
-  // WITH (timescaledb.continuous) AS
-  // SELECT
-  //     time_bucket('5 seconds', timestamp) AS bucket,
-  //     'bonding_curve_id',
-  //     MAX(price) AS high,
-  //     FIRST(price, timestamp) AS open,
-  //     LAST(price, timestamp) AS close,
-  //     MIN(price) AS low
-  // FROM raw_prices
-  // GROUP BY bucket;`.execute(db);
-
-  // await sql`SELECT add_continuous_aggregate_policy('secondly_prices_stats',
-  //     start_offset => INTERVAL '10 seconds',
-  //     end_offset => INTERVAL '5 seconds',
-  //     schedule_interval => INTERVAL '5 seconds')`.execute(db);
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
@@ -169,8 +152,8 @@ export async function down(db: Kysely<any>): Promise<void> {
   await db.schema.dropTable("comments").execute();
   await db.schema.dropTable("images").execute();
   await db.schema.dropTable("likes").execute();
-  await db.schema.dropTable("reTweets").execute();
-  await db.schema.dropTable("savePosts").execute();
+  await db.schema.dropTable("re_tweets").execute();
+  await db.schema.dropTable("save_posts").execute();
   await db.schema.dropTable("posts").execute();
   await db.schema.dropTable("users").execute();
   await db.schema.dropTable("bonding_curve").execute();

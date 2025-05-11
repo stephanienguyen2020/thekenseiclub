@@ -5,10 +5,10 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:300
 // Get a specific proposal
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = params.id;
+        const { id } = await params;
         const response = await fetch(`${BACKEND_URL}/api/proposals/${id}`);
         if (!response.ok) {
             throw new Error('Failed to fetch proposal');

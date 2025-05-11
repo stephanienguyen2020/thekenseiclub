@@ -45,7 +45,7 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
   useEffect(() => {
     // Only redirect to dashboard if we're on the home page
     if (currentAccount && pathname === "/") {
-      router.push("/dashboard");
+      router.push("/marketplace");
     }
   }, [currentAccount, router, pathname]);
 

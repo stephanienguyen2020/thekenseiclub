@@ -14,9 +14,15 @@ importers:
       '@mysten/walrus':
         specifier: ^0.0.21
         version: 0.0.21(typescript@5.8.3)
+      '@types/bignumber.js':
+        specifier: ^5.0.4
+        version: 5.0.4
+      bignumber.js:
+        specifier: ^9.3.0
+        version: 9.3.0
       coin-sdk:
-        specifier: ^1.0.14
-        version: 1.0.14(graphql@16.10.0)(typescript@5.8.3)
+        specifier: ^1.0.19
+        version: 1.0.19(graphql@16.10.0)(typescript@5.8.3)
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -229,6 +235,10 @@ packages:
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
 
+  '@types/bignumber.js@5.0.4':
+    resolution: {integrity: sha512-y/nRKmgKRakrBZ4B3/1mhZOEHrKcf6BniqxVlsVrmaG6fN6WzzUlXfsD+KX+Ii4C+093A7h1p6LkOsXktOfQnQ==}
+    deprecated: This is a stub types definition. bignumber.js provides its own type definitions, so you do not need this installed.
+
   '@types/body-parser@1.19.5':
     resolution: {integrity: sha512-fB3Zu92ucau0iQ0JMCFQE7b/dv8Ot07NI3KaZIkIUNXq82k4eBAqUaneXfleGY9JWskeS9y+u0nXMyspcuQrCg==}
 
@@ -424,8 +434,8 @@ packages:
     resolution: {integrity: sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==}
     engines: {node: '>=0.8'}
 
-  coin-sdk@1.0.14:
-    resolution: {integrity: sha512-x5RcMO79reovDQF603Wv5dnJISepSDbzBGhKwSh54s9F2dQlQhpySPEtht9NXorchsXXgUQKTdG0JcsTk55cHg==}
+  coin-sdk@1.0.19:
+    resolution: {integrity: sha512-/HjNCBd0LpgsEy34r2NWfShuSix6jftpvLV369TpRH9YoLmair04ivUmI2OryvBGn8hJIHjoKu0H3WJnmJPpPA==}
 
   color-convert@1.9.3:
     resolution: {integrity: sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg==}
@@ -1818,6 +1828,10 @@ snapshots:
 
   '@tsconfig/node16@1.0.4': {}
 
+  '@types/bignumber.js@5.0.4':
+    dependencies:
+      bignumber.js: 9.3.0
+
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
@@ -2046,11 +2060,12 @@ snapshots:
 
   clone@2.1.2: {}
 
-  coin-sdk@1.0.14(graphql@16.10.0)(typescript@5.8.3):
+  coin-sdk@1.0.19(graphql@16.10.0)(typescript@5.8.3):
     dependencies:
       '@flowx-finance/sdk': 1.2.2-3(graphql@16.10.0)(typescript@5.8.3)
-      '@mysten/sui': 1.28.2(typescript@5.8.3)
+      '@mysten/sui': 1.29.1(typescript@5.8.3)
       axios: 1.9.0
+      bignumber.js: 9.3.0
       dotenv: 16.5.0
     transitivePeerDependencies:
       - '@gql.tada/svelte-support'

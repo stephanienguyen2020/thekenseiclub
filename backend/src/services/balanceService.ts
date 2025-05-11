@@ -3,6 +3,17 @@ import { getClient } from "@mysten/sui/dist/cjs/transactions/json-rpc-resolver";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
 import { Network } from "coin-sdk/dist/src";
 import { getClient as getClientFromResolver } from "../utils";
+import BigNumber from 'bignumber.js';
+
+// Configure BigNumber
+const DECIMALS = 9;
+const DECIMAL_MULTIPLIER = new BigNumber(10).pow(DECIMALS);
+
+BigNumber.config({
+  DECIMAL_PLACES: DECIMALS,
+  ROUNDING_MODE: BigNumber.ROUND_DOWN,
+  EXPONENTIAL_AT: [-DECIMALS, DECIMALS]
+});
 
 export class BalanceService {
   private client: SuiClient;
@@ -22,7 +33,9 @@ export class BalanceService {
         coinType: "0x2::sui::SUI",
       });
 
-      return Number(totalBalance) / Number(MIST_PER_SUI);
+      return new BigNumber(totalBalance)
+        .dividedBy(new BigNumber(MIST_PER_SUI))
+        .toNumber();
     } catch (error) {
       console.error("Error fetching SUI balance:", error);
       throw new Error("Failed to fetch SUI balance");
@@ -43,9 +56,6 @@ export class BalanceService {
         cursor = data.nextCursor
       }
 
-      console.log(allCoins)
-
-
       // Group coins by coin type
       const coinsByType = new Map();
 
@@ -54,9 +64,9 @@ export class BalanceService {
         if (coinsByType.has(coin.coinType)) {
           // Add to existing balance
           const existingCoin = coinsByType.get(coin.coinType);
-          existingCoin.balance = (
-            BigInt(existingCoin.balance) + BigInt(coin.balance)
-          ).toString();
+          existingCoin.balance = new BigNumber(existingCoin.balance)
+            .plus(new BigNumber(coin.balance))
+            .toString();
         } else {
           // First time seeing this coin type
           coinsByType.set(coin.coinType, {
@@ -76,15 +86,17 @@ export class BalanceService {
             coinType: coin.coinType,
           });
 
+          const divisor = coin.coinType === "0x2::sui::SUI" 
+            ? new BigNumber(MIST_PER_SUI)
+            : new BigNumber(10).pow(9);
+
           return {
             id: coinMetadata?.id,
             coinType: coin.coinType,
             symbol: symbol,
-            balance:
-              Number(coin.balance) /
-              (coin.coinType === "0x2::sui::SUI"
-                ? Number(MIST_PER_SUI)
-                : Math.pow(10, 9)),
+            balance: new BigNumber(coin.balance)
+              .dividedBy(divisor)
+              .toNumber(),
             address: coin.coinObjectId,
             createdAt: new Date(),
           };

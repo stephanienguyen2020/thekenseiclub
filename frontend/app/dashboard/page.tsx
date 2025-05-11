@@ -28,7 +28,7 @@ export default function DashboardPage() {
     if (currentAccount?.address) {
       const fetchTopHoldings = async () => {
         const topHoldings = await getHoldingToken(currentAccount);
-        setTopHoldings(topHoldings.data);
+        setTopHoldings(topHoldings);
       }
       fetchTopHoldings()
     }

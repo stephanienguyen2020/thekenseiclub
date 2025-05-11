@@ -1,6 +1,6 @@
 "use client";
 
-import {CoinList} from "@/app/marketplace/types";
+import {Coin, CoinList} from "@/app/marketplace/types";
 import api from "@/lib/api";
 import {useCurrentAccount} from "@mysten/dapp-kit";
 import {
@@ -17,6 +17,7 @@ import Link from "next/link";
 import {useEffect, useState} from "react";
 import {getChanges24h, getCreatedToken, getHoldingToken, getTotalValue} from "@/services/coinService";
 import {fetchUserByAddress} from "@/app/api/users/route";
+import { formatPrice, formatPercentage, formatLargeNumber, formatAddress } from '@/lib/priceUtils';
 
 export default function WalletPage() {
   const [activeTab, setActiveTab] = useState<"holdings" | "created">(
@@ -26,16 +27,16 @@ export default function WalletPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [holdings, setHoldings] = useState<CoinList>();
+  const [holdings, setHoldings] = useState<Coin[]>();
   const [createdTokens, setCreatedTokens] = useState<CoinList>();
   const [user, setUser] = useState<{username: string}>({username: ""});
 
   const currentAccount = useCurrentAccount();
 
   // Calculate total value and 24h change from holdings
-  const totalValue = getTotalValue(holdings?.data);
+  const totalValue = getTotalValue(holdings);
 
-  const change = getChanges24h(holdings?.data)
+  const change = getChanges24h(holdings);
 
   const changeIsPositive = parseFloat(change) >= 0;
 
@@ -60,7 +61,11 @@ export default function WalletPage() {
     async function fetchUserData() {
       if (currentAccount?.address) {
         const userData = await fetchUserByAddress(currentAccount?.address);
-        setUser(userData);
+        if (typeof userData.username === 'string' && userData.username.startsWith('0x')) {
+          setUser({ username: formatAddress(userData.username) });
+        } else {
+          setUser(userData);
+        }
       }
     }
     fetchUserData();
@@ -68,7 +73,7 @@ export default function WalletPage() {
 
   // Filter and sort holdings
   const filteredHoldings =
-    holdings?.data.filter(
+    holdings?.filter(
       (holding) =>
         holding.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         holding.symbol.toLowerCase().includes(searchQuery.toLowerCase())
@@ -341,31 +346,31 @@ export default function WalletPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="text-right py-4 px-2 font-medium">
-                      ${holding?.price?.toFixed(8)}
+                    <td className="text-right py-4 px-2">
+                      {formatPrice(holding.price, { minDecimals: 2, maxDecimals: 8 })}
                     </td>
                     <td className="text-right py-4 px-2">
-                        <span
-                          className={`flex items-center justify-end gap-1 ${
-                            holding.change24h >= 0
-                              ? "text-green-500"
-                              : "text-red-500"
-                          }`}
-                        >
-                          {holding.change24h >= 0 ? (
-                            <ArrowUp size={16}/>
-                          ) : (
-                            <ArrowDown size={16}/>
-                          )}
-                          {Math.abs(holding.change24h)}%
-                        </span>
+                      <span
+                        className={`flex items-center justify-end gap-1 ${
+                          holding.change24h >= 0
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {holding.change24h >= 0 ? (
+                          <ChevronUp size={16} />
+                        ) : (
+                          <ChevronDown size={16} />
+                        )}
+                        {formatPercentage(holding.change24h)}
+                      </span>
                     </td>
                     <td className="text-right py-4 px-2 font-medium">
                       {holding.holdings?.toLocaleString() || "0"}
                     </td>
-                    {/* <td className="text-right py-4 px-2 font-bold">
-                        ${holding.value.toLocaleString()}
-                      </td> */}
+                    <td className="text-right py-4 px-2">
+                      {formatPrice(String(holding.value || 0), { minDecimals: 2, maxDecimals: 2 })}
+                    </td>
                     <td className="text-right py-4 px-2">
                       <div className="flex gap-2 justify-end">
                         <Link
@@ -408,13 +413,19 @@ export default function WalletPage() {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2 mb-4">
-                    <div className="bg-white p-2 rounded-lg border-2 border-black">
+                    <div className="bg-gray-50 p-2 rounded-lg">
                       <p className="text-xs text-gray-500">Price</p>
                       <p className="font-medium truncate">
-                        ${holding?.price?.toFixed(8)}
+                        {formatPrice(String(holding.price || 0), { minDecimals: 2, maxDecimals: 8 })}
                       </p>
                     </div>
-                    <div className="bg-white p-2 rounded-lg border-2 border-black">
+                    <div className="bg-gray-50 p-2 rounded-lg">
+                      <p className="text-xs text-gray-500">Value</p>
+                      <p className="font-medium">
+                        {formatPrice(String(holding.value || 0), { minDecimals: 2, maxDecimals: 2 })}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded-lg">
                       <p className="text-xs text-gray-500">24h</p>
                       <p
                         className={`font-medium flex items-center ${
@@ -424,21 +435,15 @@ export default function WalletPage() {
                         }`}
                       >
                         {holding.change24h >= 0 ? (
-                          <ArrowUp size={14}/>
+                          <ChevronUp size={14} />
                         ) : (
-                          <ArrowDown size={14}/>
+                          <ChevronDown size={14} />
                         )}
-                        {Math.abs(holding.change24h)}%
+                        {formatPercentage(holding.change24h)}
                       </p>
                     </div>
-                    <div className="bg-white p-2 rounded-lg border-2 border-black">
+                    <div className="bg-gray-50 p-2 rounded-lg">
                       <p className="text-xs text-gray-500">Holdings</p>
-                      <p className="font-medium">
-                        {holding.holdings?.toLocaleString() || "0"}
-                      </p>
-                    </div>
-                    <div className="bg-white p-2 rounded-lg border-2 border-black">
-                      <p className="text-xs text-gray-500">Value</p>
                       <p className="font-medium">
                         {holding.holdings?.toLocaleString() || "0"}
                       </p>
@@ -599,9 +604,8 @@ export default function WalletPage() {
                   <div className="grid grid-cols-2 gap-2 mb-4">
                     <div className="bg-white p-2 rounded-lg border-2 border-black">
                       <p className="text-xs text-gray-500">Price</p>
-                      <p className="font-medium">${token.price.toFixed(4)}</p>
-                      <p className="text-xs text-green-500">
-                        +{token.change24h}%
+                      <p className="font-medium truncate">
+                        ${token.price.toFixed(4)}
                       </p>
                     </div>
                     <div className="bg-white p-2 rounded-lg border-2 border-black">

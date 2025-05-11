@@ -4,10 +4,10 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
 export async function GET(
     request: Request,
-    { params }: { params: { tokenAddress: string } }
+    { params }: { params: Promise<{ tokenAddress: string }> }
 ) {
     try {
-        const tokenAddress = params.tokenAddress;
+        const { tokenAddress } = await params;
         const response = await fetch(`${BACKEND_URL}/api/proposals/token/${tokenAddress}`);
         if (!response.ok) {
             throw new Error('Failed to fetch proposals');
