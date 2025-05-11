@@ -268,7 +268,7 @@ export default function TokenDetailPage() {
                 </div>
                 <div className="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
                   <Building size={16} />
-                  <span>Market Cap: {formatLargeNumber(coin?.marketCap || 0, { suffix: 'M' })}</span>
+                  <span>Market Cap: {formatLargeNumber(coin?.marketCap || 0, { suffix: '' })}</span>
                 </div>
                 <div className="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
                   <Users size={16} />
@@ -457,7 +457,7 @@ export default function TokenDetailPage() {
                       tokenLogo={coin?.logo || "/placeholder.svg"}
                       options={proposal.options.map(option => ({
                         label: option.option,
-                        votes: option.points,
+                        votes: option.votes,
                         percentage: proposal.voteCount > 0 ? (option.points / proposal.votePoint) * 100 : 0,
                         isSelected: option.option === proposal.winningOption || option.option === userVotes[proposal._id]
                       }))}

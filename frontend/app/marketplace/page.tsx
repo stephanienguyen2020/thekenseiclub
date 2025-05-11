@@ -247,7 +247,7 @@ export default function MarketplacePage() {
                         </span>
                       </td>
                       <td className="text-right py-4 px-2">
-                        {formatLargeNumber(coin.marketCap, { suffix: 'M' })}
+                        {formatLargeNumber(coin.marketCap, { suffix: '' })}
                       </td>
                       <td className="text-right py-4 px-2">
                         {coin.holders.toLocaleString()}
@@ -337,7 +337,7 @@ export default function MarketplacePage() {
                         <div className="bg-gray-50 p-2 rounded-lg">
                           <p className="text-xs text-gray-500">Market Cap</p>
                           <p className="font-medium">
-                            {formatLargeNumber(coin.marketCap, { suffix: 'M' })}
+                            {formatLargeNumber(coin.marketCap, { suffix: '' })}
                           </p>
                         </div>
                         <div className="bg-gray-50 p-2 rounded-lg">

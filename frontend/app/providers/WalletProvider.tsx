@@ -83,7 +83,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
 
         // Redirect to dashboard after successful connection
         if (window.location.pathname === "/") {
-          router.push("/dashboard");
+          router.push("/marketplace");
         }
       }
     } else if (!isConnected && wallet.isConnected) {

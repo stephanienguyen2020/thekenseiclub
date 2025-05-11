@@ -340,7 +340,7 @@ export default function TradingView({
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold">
-                ${currentPrice.toFixed(15)}
+                ${currentPrice.toFixed(9)}
               </div>
               <div
                 className={`flex items-center justify-end ${change24h >= 0 ? "text-green-500" : "text-red-500"
