@@ -13,7 +13,7 @@ import {AddLiquidityV2} from "@flowx-finance/sdk";
 import {SUI_COIN_TYPE} from "./constant";
 import {Network} from "../sui-utils";
 import BigNumber from 'bignumber.js';
-import { toBlockchainAmount, fromBlockchainAmount, safeDivide, safeMultiply } from './utils/number-utils';
+import {toBlockchainAmount, fromBlockchainAmount, safeDivide, safeMultiply} from './utils/number-utils';
 
 interface BondingCurveFields {
   virtual_sui_amt: string;
@@ -69,19 +69,23 @@ class BondingCurveSDK {
   }
 
   buildBuyTransaction({
-    amount,
-    minTokenRequired,
-    type,
-    address,
-  }: {
+                        amount,
+                        minTokenRequired,
+                        type,
+                        address,
+                        transaction
+                      }: {
     amount: bigint;
     minTokenRequired: bigint;
     type: string;
     address: string;
+    transaction?: Transaction;
   }): Transaction {
-    const tx = new Transaction();
+    console.log("Brfore transaction:", transaction)
+    const tx = transaction ? transaction : new Transaction();
+    console.log("After transaction:", tx)
     const [suiCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(amount)]);
-
+    console.log("After split:", tx)
     tx.moveCall({
       target: `${this.packageId}::bonding_curve::buy`,
       typeArguments: [type],
@@ -166,19 +170,21 @@ class BondingCurveSDK {
                                type,
                                address,
                                network,
+                               transaction
                              }: {
     amount: bigint;
     minSuiRequired: bigint;
     type: string;
     address: string;
     network: Network;
+    transaction?: Transaction;
   }): Promise<Transaction> {
 
     const coins = await getCoinsByType(address, type, network);
     if (coins.length === 0) {
       throw new Error(`No coin of type ${type} found in wallet`);
     }
-    const tx = new Transaction();
+    const tx = transaction ? transaction : new Transaction();
     const [coin] = tx.splitCoins(tx.gas, [tx.pure.u64(0)]);
     tx.transferObjects([coin], tx.pure.address(address));
 
@@ -389,7 +395,7 @@ class BondingCurveSDK {
   async getExpectedBuySlippage(suiAmount: number | string): Promise<number> {
     const bondingCurveObj = await this.client.getObject({
       id: this.bondingCurveId,
-      options: { showType: true, showContent: true },
+      options: {showType: true, showContent: true},
     });
     if (!bondingCurveObj.data?.content) throw new Error("Failed to retrieve bonding curve data");
     const fields = (bondingCurveObj.data.content as any).fields as BondingCurveFields;
@@ -417,7 +423,7 @@ class BondingCurveSDK {
   async getExpectedSellSlippage(tokenAmount: number | string): Promise<number> {
     const bondingCurveObj = await this.client.getObject({
       id: this.bondingCurveId,
-      options: { showType: true, showContent: true },
+      options: {showType: true, showContent: true},
     });
     if (!bondingCurveObj.data?.content) throw new Error("Failed to retrieve bonding curve data");
     const fields = (bondingCurveObj.data.content as any).fields as BondingCurveFields;
@@ -445,7 +451,7 @@ class BondingCurveSDK {
   async getExpectedBuyPriceImpact(suiAmount: number | string): Promise<number> {
     const bondingCurveObj = await this.client.getObject({
       id: this.bondingCurveId,
-      options: { showType: true, showContent: true },
+      options: {showType: true, showContent: true},
     });
     if (!bondingCurveObj.data?.content) throw new Error("Failed to retrieve bonding curve data");
     const fields = (bondingCurveObj.data.content as any).fields as BondingCurveFields;
@@ -469,7 +475,7 @@ class BondingCurveSDK {
   async getExpectedSellPriceImpact(tokenAmount: number | string): Promise<number> {
     const bondingCurveObj = await this.client.getObject({
       id: this.bondingCurveId,
-      options: { showType: true, showContent: true },
+      options: {showType: true, showContent: true},
     });
     if (!bondingCurveObj.data?.content) throw new Error("Failed to retrieve bonding curve data");
     const fields = (bondingCurveObj.data.content as any).fields as BondingCurveFields;
