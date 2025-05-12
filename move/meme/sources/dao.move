@@ -25,6 +25,7 @@ module meme::dao {
         options: vector<string::String>,
         created_by: address,
         created_at: u64,
+        start_time: u64,
         end_time: u64,
         status: u8, // 0: open, 1: closed
         winning_option: option::Option<string::String>,
@@ -78,15 +79,26 @@ module meme::dao {
         title: vector<u8>,
         description: vector<u8>,
         options: vector<vector<u8>>,
-        duration_days: u64,
+        created_at: u64,
+        start_time: u64,
+        end_time: u64,
         clock: &Clock,
         ctx: &mut tx_context::TxContext
     ) {
         let proposal_id = dao.next_proposal_id;
         dao.next_proposal_id = proposal_id + 1;
 
+        // Validate timestamps using the clock
         let current_time = clock::timestamp_ms(clock);
-        let end_time = current_time + (duration_days * 24 * 60 * 60 * 1000);
+        
+        // Created at should be in the past or present
+        assert!(created_at <= current_time, EInvalidOption);
+        
+        // End time should be in the future
+        assert!(end_time > current_time, EInvalidOption);
+        
+        // Start time should be before end time
+        assert!(start_time < end_time, EInvalidOption);
 
         let mut proposal = Proposal {
             id: proposal_id,
@@ -94,7 +106,8 @@ module meme::dao {
             description: string::utf8(description),
             options: vector::empty(),
             created_by: tx_context::sender(ctx),
-            created_at: current_time,
+            created_at,
+            start_time,
             end_time,
             status: 0,
             winning_option: option::none(),

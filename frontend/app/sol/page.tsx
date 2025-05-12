@@ -7,7 +7,7 @@ import WormholeConnect, {
 
 const config: WormholeConnectConfig =  {
   // You can use Connect with testnet chains by specifying "network":
-  network: 'Mainnet',
+  network: 'Testnet',
   routes: [...DEFAULT_ROUTES,  MayanRouteSWIFT],
   eventHandler: event => {
     console.log("eventt", event);

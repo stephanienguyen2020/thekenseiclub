@@ -1,5 +1,6 @@
 import { getClient } from "../src/utils/sui-utils";
 import { DaoSDK } from "../src";
+import { Network } from "../src/utils/sui-utils";
 import "dotenv/config";
 
 // Configuration (replace with your actual values from the package deployment)
@@ -12,8 +13,11 @@ const daoObjectId = process.env.DAO_OBJECT_ID || "0x456";
 // Check if we have valid IDs
 const isValidSetup = daoPackageId.length >= 66 && daoObjectId.length >= 66;
 
-// Use testnet for consistent testing
-const client = getClient("devnet");
+// Use the specified network or default to testnet
+const network = (process.env.NETWORK || "testnet") as Network;
+const client = getClient(network);
+
+console.log(`Using network: ${network}`);
 
 const daoSdk = new DaoSDK(daoObjectId, client, daoPackageId);
 
@@ -26,11 +30,19 @@ async function testCreateProposal() {
 
     try {
         console.log("Creating a new proposal...");
+        
+        // Create dates for the proposal
+        const now = new Date();
+        const endDate = new Date();
+        endDate.setDate(now.getDate() + 3); // End date is 3 days from now
+        
         const result = await daoSdk.createProposal({
             title: "Test Proposal",
             description: "This is a test proposal created by the SDK",
             options: ["Yes", "No", "Abstain"],
-            durationDays: 3,
+            createdAt: now,
+            startDate: now,
+            endDate: endDate,
             address,
         });
 
@@ -149,6 +161,57 @@ async function getAllProposals() {
     }
 }
 
+async function testBuildTransactions() {
+    if (!isValidSetup) {
+        console.log("Skipping test: Please set valid package ID and DAO object ID values.");
+        return;
+    }
+
+    try {
+        console.log("\n=== Testing Transaction Building ===");
+        
+        // Create dates for the proposal
+        const now = new Date();
+        const endDate = new Date();
+        endDate.setDate(now.getDate() + 3); // End date is 3 days from now
+        
+        // Build a create proposal transaction
+        console.log("Building create proposal transaction...");
+        const createTx = daoSdk.buildCreateProposalTransaction({
+            title: "Test Proposal",
+            description: "This is a test proposal built with the SDK",
+            options: ["Yes", "No", "Abstain"],
+            createdAt: now,
+            startDate: now,
+            endDate: endDate,
+        });
+        
+        console.log("Create proposal transaction built successfully");
+        
+        // Build a vote transaction
+        console.log("Building vote transaction...");
+        const voteTx = daoSdk.buildVoteTransaction({
+            proposalId: 0,
+            optionIndex: 0,
+            votingPower: 10,
+        });
+        
+        console.log("Vote transaction built successfully");
+        
+        // Build a close proposal transaction
+        console.log("Building close proposal transaction...");
+        const closeTx = daoSdk.buildCloseProposalTransaction({
+            proposalId: 0,
+        });
+        
+        console.log("Close proposal transaction built successfully");
+        
+        console.log("All transactions built successfully. These can be used with custom transaction execution flows.");
+    } catch (error) {
+        console.error("Error building transactions:", error);
+    }
+}
+
 // Uncomment the function you want to run
 // testCreateProposal();
 // testVoting();
@@ -167,11 +230,10 @@ async function runAllTests() {
     }
 
     // await testCreateProposal();
-    // testVoting();
-    // testCloseProposal();
-    getAllProposals();
-
-    // Other tests...
+    await testVoting();
+    // await testCloseProposal();
+    // await getAllProposals();
+    // await testBuildTransactions();
 }
 
 runAllTests();

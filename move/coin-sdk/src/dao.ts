@@ -23,8 +23,9 @@ interface ProposalFields {
     options: string[];
     created_by: string;
     created_at: string;
+    start_time: string;
     end_time: string;
-    status: string; // "0" for open, "1" for closed
+    status: number; // 0 for open, 1 for closed
     winning_option: { vec: string[] } | null;
     votes: { keys: string[], values: string[] };
     vote_points: string[];
@@ -39,6 +40,7 @@ interface ProposalInfo {
     options: string[];
     createdBy: string;
     createdAt: Date;
+    startTime: Date;
     endTime: Date;
     status: 'open' | 'closed';
     winningOption: string | null;
@@ -62,21 +64,23 @@ class DaoSDK {
     }
 
     /**
-     * Create a new proposal
+     * Build a transaction to create a new proposal
      */
-    async createProposal({
+    buildCreateProposalTransaction({
         title,
         description,
         options,
-        durationDays,
-        address,
+        createdAt,
+        startDate,
+        endDate,
     }: {
         title: string;
         description: string;
         options: string[];
-        durationDays: number;
-        address: string;
-    }): Promise<SuiTransactionBlockResponse> {
+        createdAt?: Date;
+        startDate?: Date;
+        endDate: Date;
+    }): Transaction {
         const tx = new Transaction();
 
         // Convert strings to UTF-8 byte arrays for Move
@@ -84,9 +88,18 @@ class DaoSDK {
         const descBytes = new TextEncoder().encode(description);
 
         // Convert options to array of Uint8Arrays
-        const optionsBytes = options.map(option =>
+        const optionsBytes = options.map(option => 
             new TextEncoder().encode(option)
         );
+
+        // Use current timestamp if createdAt is not provided
+        const currentTime = createdAt ? createdAt.getTime() : Date.now();
+        
+        // Use current timestamp as start date if not provided
+        const startTime = startDate ? startDate.getTime() : currentTime;
+        
+        // End date is required
+        const endTime = endDate.getTime();
 
         tx.moveCall({
             target: `${this.packageId}::dao::create_proposal`,
@@ -95,12 +108,81 @@ class DaoSDK {
                 tx.pure.vector('u8', Array.from(titleBytes)),
                 tx.pure.vector('u8', Array.from(descBytes)),
                 tx.pure.vector('vector<u8>', optionsBytes.map(bytes => Array.from(bytes))),
-                tx.pure.u64(durationDays),
+                tx.pure.u64(currentTime),
+                tx.pure.u64(startTime),
+                tx.pure.u64(endTime),
                 tx.object("0x6"), // Clock object
             ],
         });
 
+        return tx;
+    }
+
+    /**
+     * Create a new proposal
+     */
+    async createProposal({
+        title,
+        description,
+        options,
+        createdAt,
+        startDate,
+        endDate,
+        address,
+    }: {
+        title: string;
+        description: string;
+        options: string[];
+        createdAt?: Date;
+        startDate?: Date;
+        endDate: Date;
+        address: string;
+    }): Promise<SuiTransactionBlockResponse> {
+        const tx = this.buildCreateProposalTransaction({
+            title,
+            description,
+            options,
+            createdAt,
+            startDate,
+            endDate
+        });
+
         return await signAndExecute(tx, ACTIVE_NETWORK, address);
+    }
+
+    /**
+     * Build a transaction to vote on a proposal
+     */
+    buildVoteTransaction({
+        proposalId,
+        optionIndex,
+        votingPower,
+    }: {
+        proposalId: number;
+        optionIndex: number;
+        votingPower: number; // In human-readable units
+    }): Transaction {
+        const tx = new Transaction();
+
+        try {
+            // Convert to blockchain amount - handle conversion directly to avoid scientific notation issues
+            const bnAmount = BigInt(Math.floor(votingPower * 1_000_000_000)); // 9 decimals
+
+            tx.moveCall({
+                target: `${this.packageId}::dao::vote`,
+                arguments: [
+                    tx.object(this.daoId),
+                    tx.pure.u64(proposalId),
+                    tx.pure.u64(optionIndex),
+                    tx.pure.u64(bnAmount),
+                ],
+            });
+
+            return tx;
+        } catch (error) {
+            console.error("Error in buildVoteTransaction:", error);
+            throw error;
+        }
     }
 
     /**
@@ -117,28 +199,35 @@ class DaoSDK {
         votingPower: number; // In human-readable units
         address: string;
     }): Promise<SuiTransactionBlockResponse> {
+        const tx = this.buildVoteTransaction({
+            proposalId,
+            optionIndex,
+            votingPower
+        });
+
+        return await signAndExecute(tx, ACTIVE_NETWORK, address);
+    }
+
+    /**
+     * Build a transaction to close a proposal that has reached its end time
+     */
+    buildCloseProposalTransaction({
+        proposalId,
+    }: {
+        proposalId: number;
+    }): Transaction {
         const tx = new Transaction();
 
-        try {
-            // Convert to blockchain amount - handle conversion directly to avoid scientific notation issues
-            // Compute the amount with decimals but avoid scientific notation when converting to string
-            const bnAmount = BigInt(Math.floor(votingPower * 1_000_000_000)); // 9 decimals
+        tx.moveCall({
+            target: `${this.packageId}::dao::close_proposal`,
+            arguments: [
+                tx.object(this.daoId),
+                tx.pure.u64(proposalId),
+                tx.object("0x6"), // Clock object
+            ],
+        });
 
-            tx.moveCall({
-                target: `${this.packageId}::dao::vote`,
-                arguments: [
-                    tx.object(this.daoId),
-                    tx.pure.u64(proposalId),
-                    tx.pure.u64(optionIndex),
-                    tx.pure.u64(bnAmount),
-                ],
-            });
-
-            return await signAndExecute(tx, ACTIVE_NETWORK, address);
-        } catch (error) {
-            console.error("Error in vote function:", error);
-            throw error;
-        }
+        return tx;
     }
 
     /**
@@ -151,15 +240,8 @@ class DaoSDK {
         proposalId: number;
         address: string;
     }): Promise<SuiTransactionBlockResponse> {
-        const tx = new Transaction();
-
-        tx.moveCall({
-            target: `${this.packageId}::dao::close_proposal`,
-            arguments: [
-                tx.object(this.daoId),
-                tx.pure.u64(proposalId),
-                tx.object("0x6"), // Clock object
-            ],
+        const tx = this.buildCloseProposalTransaction({
+            proposalId
         });
 
         return await signAndExecute(tx, ACTIVE_NETWORK, address);
@@ -226,6 +308,9 @@ class DaoSDK {
             }
 
             const proposalFields = (dynamicFieldResult.data.content as any).fields.value.fields as ProposalFields;
+            
+            console.log("Raw proposal fields:", JSON.stringify(proposalFields, null, 2));
+            console.log("Status value:", proposalFields.status, "Type:", typeof proposalFields.status);
 
             // Convert votes map to object
             const votes: { [address: string]: number } = {};
@@ -241,6 +326,11 @@ class DaoSDK {
                 winningOption = proposalFields.winning_option.vec[0];
             }
 
+            // Handle potential missing start_time field for backward compatibility
+            const startTime = proposalFields.start_time 
+                ? new Date(parseInt(proposalFields.start_time))
+                : new Date(parseInt(proposalFields.created_at)); // Fallback to created_at
+
             return {
                 id: parseInt(proposalFields.id),
                 title: proposalFields.title,
@@ -248,8 +338,9 @@ class DaoSDK {
                 options: proposalFields.options,
                 createdBy: proposalFields.created_by,
                 createdAt: new Date(parseInt(proposalFields.created_at)),
+                startTime,
                 endTime: new Date(parseInt(proposalFields.end_time)),
-                status: proposalFields.status === "0" ? "open" : "closed",
+                status: proposalFields.status === 0 ? "open" : "closed",
                 winningOption,
                 votes,
                 votePoints: proposalFields.vote_points.map(p => parseInt(p)),
@@ -298,7 +389,7 @@ class DaoSDK {
      */
     async getActiveProposals(): Promise<ProposalInfo[]> {
         const allProposals = await this.getAllProposals();
-        return allProposals;
+        return allProposals.filter(p => p.status === 'open');
     }
 
     /**
