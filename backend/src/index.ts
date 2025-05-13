@@ -10,6 +10,7 @@ import commentRouter from "./routes/comments";
 import likesRouter from "./routes/interact";
 import daoRouter from "./routes/dao";
 import balanceRouter from "./routes/balance";
+import portfolioRouter from "./routes/portfolio";
 import cors from "cors"
 import { connectMongoDB } from './db/mongodb';
 import { scheduledTasks } from './scheduledTasks';
@@ -69,6 +70,7 @@ app.use(likesRouter);
 app.use(userRouter);
 app.use('/api', daoRouter);
 app.use('/api', balanceRouter);
+app.use('/api', portfolioRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
