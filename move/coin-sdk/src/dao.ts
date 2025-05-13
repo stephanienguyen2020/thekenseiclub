@@ -31,6 +31,7 @@ interface ProposalFields {
     vote_points: string[];
     total_votes: string;
     total_points: string;
+    token_type: string;
 }
 
 interface ProposalInfo {
@@ -50,6 +51,7 @@ interface ProposalInfo {
     votePoints: number[];
     totalVotes: number;
     totalPoints: number;
+    tokenType: string;
 }
 
 class DaoSDK {
@@ -70,6 +72,7 @@ class DaoSDK {
         title,
         description,
         options,
+        tokenType,
         createdAt,
         startDate,
         endDate,
@@ -77,6 +80,7 @@ class DaoSDK {
         title: string;
         description: string;
         options: string[];
+        tokenType: string;
         createdAt?: Date;
         startDate?: Date;
         endDate: Date;
@@ -86,6 +90,7 @@ class DaoSDK {
         // Convert strings to UTF-8 byte arrays for Move
         const titleBytes = new TextEncoder().encode(title);
         const descBytes = new TextEncoder().encode(description);
+        const tokenTypeBytes = new TextEncoder().encode(tokenType);
 
         // Convert options to array of Uint8Arrays
         const optionsBytes = options.map(option => 
@@ -108,6 +113,7 @@ class DaoSDK {
                 tx.pure.vector('u8', Array.from(titleBytes)),
                 tx.pure.vector('u8', Array.from(descBytes)),
                 tx.pure.vector('vector<u8>', optionsBytes.map(bytes => Array.from(bytes))),
+                tx.pure.vector('u8', Array.from(tokenTypeBytes)),
                 tx.pure.u64(currentTime),
                 tx.pure.u64(startTime),
                 tx.pure.u64(endTime),
@@ -125,6 +131,7 @@ class DaoSDK {
         title,
         description,
         options,
+        tokenType,
         createdAt,
         startDate,
         endDate,
@@ -133,6 +140,7 @@ class DaoSDK {
         title: string;
         description: string;
         options: string[];
+        tokenType: string;
         createdAt?: Date;
         startDate?: Date;
         endDate: Date;
@@ -142,6 +150,7 @@ class DaoSDK {
             title,
             description,
             options,
+            tokenType,
             createdAt,
             startDate,
             endDate
@@ -213,16 +222,30 @@ class DaoSDK {
      */
     buildCloseProposalTransaction({
         proposalId,
+        voterBalances = [],
     }: {
         proposalId: number;
+        voterBalances?: { address: string; balance: number }[];
     }): Transaction {
         const tx = new Transaction();
+        
+        // Prepare voter addresses and balances for transaction
+        const addresses: string[] = [];
+        const balances: bigint[] = [];
+        
+        for (const voterBalance of voterBalances) {
+            addresses.push(voterBalance.address);
+            // Convert to blockchain amount (9 decimals)
+            balances.push(BigInt(Math.floor(voterBalance.balance * 1_000_000_000)));
+        }
 
         tx.moveCall({
             target: `${this.packageId}::dao::close_proposal`,
             arguments: [
                 tx.object(this.daoId),
                 tx.pure.u64(proposalId),
+                tx.pure.vector('address', addresses),
+                tx.pure.vector('u64', balances),
                 tx.object("0x6"), // Clock object
             ],
         });
@@ -231,17 +254,20 @@ class DaoSDK {
     }
 
     /**
-     * Close a proposal that has reached its end time
+     * Close a proposal that has reached its end time and calculate token-weighted votes
      */
     async closeProposal({
         proposalId,
+        voterBalances = [],
         address,
     }: {
         proposalId: number;
+        voterBalances?: { address: string; balance: number }[];
         address: string;
     }): Promise<SuiTransactionBlockResponse> {
         const tx = this.buildCloseProposalTransaction({
-            proposalId
+            proposalId,
+            voterBalances
         });
 
         return await signAndExecute(tx, ACTIVE_NETWORK, address);
@@ -346,6 +372,7 @@ class DaoSDK {
                 votePoints: proposalFields.vote_points.map(p => parseInt(p)),
                 totalVotes: parseInt(proposalFields.total_votes),
                 totalPoints: parseInt(proposalFields.total_points),
+                tokenType: proposalFields.token_type,
             };
         } catch (error) {
             console.error("Error getting proposal:", error);

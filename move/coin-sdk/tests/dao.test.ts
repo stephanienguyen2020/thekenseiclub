@@ -40,6 +40,7 @@ async function testCreateProposal() {
             title: "Test Proposal",
             description: "This is a test proposal created by the SDK",
             options: ["Yes", "No", "Abstain"],
+            tokenType: "0x2::sui::SUI", // Use SUI as the voting token
             createdAt: now,
             startDate: now,
             endDate: endDate,
@@ -74,7 +75,7 @@ async function testVoting() {
             return;
         }
 
-        const proposalToVote = activeProposals[0];
+        const proposalToVote = activeProposals[1];
         console.log("Voting on proposal:", proposalToVote.id);
 
         // Vote for the first option with 10 SUI voting power
@@ -117,8 +118,30 @@ async function testCloseProposal() {
         const proposalToClose = expiredProposals[0];
         console.log("Closing proposal:", proposalToClose.id);
 
+        // Get all voters who participated in this proposal
+        const voters = Object.keys(proposalToClose.votes);
+        console.log(`Found ${voters.length} voters for this proposal`);
+
+        // In a real implementation, you would fetch the token balances for each voter
+        // For testing purposes, we'll create mock balances
+        const voterBalances = await Promise.all(
+            voters.map(async (voterAddress) => {
+                // Mock implementation - in a real app, you would fetch actual balances
+                // from the blockchain for the specific token type
+                const tokenBalance = Math.random() * 100; // Random balance between 0-100 tokens
+                
+                return {
+                    address: voterAddress,
+                    balance: tokenBalance
+                };
+            })
+        );
+
+        console.log("Voter balances:", voterBalances);
+
         const result = await daoSdk.closeProposal({
             proposalId: proposalToClose.id,
+            voterBalances,
             address,
         });
 
@@ -181,6 +204,7 @@ async function testBuildTransactions() {
             title: "Test Proposal",
             description: "This is a test proposal built with the SDK",
             options: ["Yes", "No", "Abstain"],
+            tokenType: "0x2::sui::SUI", // Use SUI as the voting token
             createdAt: now,
             startDate: now,
             endDate: endDate,
@@ -202,6 +226,10 @@ async function testBuildTransactions() {
         console.log("Building close proposal transaction...");
         const closeTx = daoSdk.buildCloseProposalTransaction({
             proposalId: 0,
+            voterBalances: [
+                { address: "0x123", balance: 10 },
+                { address: "0x456", balance: 20 }
+            ]
         });
         
         console.log("Close proposal transaction built successfully");
@@ -230,9 +258,9 @@ async function runAllTests() {
     }
 
     // await testCreateProposal();
-    await testVoting();
+    // await testVoting();
     // await testCloseProposal();
-    // await getAllProposals();
+    await getAllProposals();
     // await testBuildTransactions();
 }
 
