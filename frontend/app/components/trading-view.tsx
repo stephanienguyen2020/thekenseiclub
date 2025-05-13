@@ -199,133 +199,65 @@ export default function TradingView({
     return { coinType, packageId, bondingCurveSdk };
   }
 
-  const handleBuy = async (buyAmount = amount, coinName?: string, tokenType: string = "0x2::sui::SUI") => {
+  const handleBuy = async (buyAmount = amount, coinName?: string) => {
     const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
 
-    try {
-      // First execute the 7kprotocol transaction
-      const quoteResponse = await getQuote({
-        tokenIn: "0xb7844e289a8410e50fb3ca48d69eb9cf29e27d223ef90353fe1bd8e27ff8f3f8::coin::COIN",
-        tokenOut: "0x2::sui::SUI",
-        amountIn: toBlockchainAmount(buyAmount).toString(),
-      });
-      console.log("Quote Response:", {
-        amountIn: toBlockchainAmount(buyAmount).toString(),
-        amountOut: quoteResponse.amountOut,
-        minAmountOut: quoteResponse.minAmountOut,
-        priceImpact: quoteResponse.priceImpact,
-      });
+    const client = getClient(network);
+    const { coinType, packageId, bondingCurveSdk } =
+      await retrieveBondingCurveData(client);
 
-      const result = await buildTx({
-        quoteResponse,
-        accountAddress: currentAccount?.address || "",
-        slippage: 0.5, // 1% slippage
-        commission: {
-          partner: currentAccount?.address || "",
-          commissionBps: 0,
+    console.log(
+      "Buy operation - Amount:",
+      buyAmount,
+      "SUI, Token:",
+      coinName || "default"
+    );
+    const parsedAmount = parseFloat(buyAmount) * 1000000000;
+    const bondingTx = bondingCurveSdk.buildBuyTransaction({
+      amount: BigInt(parsedAmount),
+      minTokenRequired: BigInt(0),
+      type: coinType,
+      address: currentAccount?.address || "",
+    });
+
+    // Execute the bonding curve transaction with explicit gas budget
+    signAndExecuteTransaction(
+      {
+        transaction: bondingTx,
+        chain: `sui:${network}`,
+        options: {
+          showEffects: true,
+          showEvents: true,
+          gasBudget: 100000000, // Set a higher gas budget (0.1 SUI)
         },
-      });
-      const { tx: sevenKTransaction, coinOut } = result;
-      console.log("7k Transaction Details:", {
-        transaction: JSON.stringify(sevenKTransaction, null, 2),
-        coinOut,
-        amountIn: toBlockchainAmount(buyAmount).toString(),
-        accountAddress: currentAccount?.address,
-        slippage: "1%",
-      });
-
-      // Execute the 7k transaction first with explicit gas budget
-      const sevenKResult = await signAndExecuteTransaction(
-        {
-          transaction: sevenKTransaction,
-          chain: `sui:${network}`,
-          options: {
-            showEffects: true,
-            showEvents: true,
-            showInput: true,
-            gasBudget: 100000000,
-          },
-        },
-        {
-          onSuccess: async (result: any) => {
-            console.log("7k Transaction Success Details:", {
-              digest: result.digest,
-              effects: result.effects,
-              events: result.events,
-              input: result.input,
-              status: result.status,
-            });
-
-            // After 7k transaction is successful, proceed with bonding curve transaction
-            const client = getClient(network);
-            const { coinType, packageId, bondingCurveSdk } =
-              await retrieveBondingCurveData(client);
-
-            console.log(
-              "Buy operation - Amount:",
-              buyAmount,
-              "SUI, Token:",
-              coinName || "default"
-            );
-            const parsedAmount = parseFloat(buyAmount) * 1000000000;
-            const bondingTx = bondingCurveSdk.buildBuyTransaction({
-              amount: BigInt(parsedAmount),
-              minTokenRequired: BigInt(0),
-              type: coinType,
-              address: currentAccount?.address || "",
-            });
-
-            // Execute the bonding curve transaction with explicit gas budget
-            signAndExecuteTransaction(
-              {
-                transaction: bondingTx,
-                chain: `sui:${network}`,
-                options: {
-                  showEffects: true,
-                  showEvents: true,
-                  gasBudget: 100000000, // Set a higher gas budget (0.1 SUI)
-                },
+      },
+      {
+        onSuccess: (result: any) => {
+          api
+            .get<{ message: string }>(`/migrate`, {
+              params: {
+                bondingCurveId,
+                packageId,
               },
-              {
-                onSuccess: (result: any) => {
-                  api
-                    .get<{ message: string }>(`/migrate`, {
-                      params: {
-                        bondingCurveId,
-                        packageId,
-                      },
-                    })
-                    .then((result) => {
-                      if (result.data.message === "Migration successful") {
-                        console.log("migration status", result.data.message);
-                        window.location.href = `/marketplace`;
-                      }
-                    });
-                  console.log("Buy successfully", result);
-                  setTransactionHash(result.digest);
-                  setLastAction("buy");
-                  setShowSuccess(true);
-                },
-                onError: (error: any) => {
-                  console.log("Bonding curve transaction error:", error);
-                  // Add user-friendly error message
-                  alert("Failed to execute bonding curve transaction. Please try again.");
-                },
+            })
+            .then((result) => {
+              if (result.data.message === "Migration successful") {
+                console.log("migration status", result.data.message);
+                window.location.href = `/marketplace`;
               }
-            );
-          },
-          onError: (error: any) => {
-            console.log("7k transaction error:", error);
-            // Add user-friendly error message
-            alert("Failed to execute 7k protocol transaction. Please try again.");
-          },
-        }
-      );
-    } catch (e) {
-      console.log("Error in transaction sequence:", e);
-      // Add user-friendly error message
-      alert("An error occurred while processing the transaction. Please try again.");
-    }
+            });
+          console.log("Buy successfully", result);
+          setTransactionHash(result.digest);
+          setLastAction("buy");
+          setShowSuccess(true);
+        },
+        onError: (error: any) => {
+          console.log("Bonding curve transaction error:", error);
+          // Add user-friendly error message
+          alert("Failed to execute bonding curve transaction. Please try again.");
+        },
+      }
+    );
   };
 
   const handleSell = async (sellAmount = amount, coinName?: string) => {
