@@ -26,8 +26,19 @@ interface ProposalFields {
     start_time: string;
     end_time: string;
     status: number; // 0 for open, 1 for closed
-    winning_option: { vec: string[] } | null;
-    votes: { keys: string[], values: string[] };
+    winning_option: string | null;
+    votes: {
+        type: string;
+        fields: {
+            contents: Array<{
+                type: string;
+                fields: {
+                    key: string;
+                    value: string;
+                }
+            }>;
+        };
+    };
     vote_points: string[];
     total_votes: string;
     total_points: string;
@@ -340,16 +351,22 @@ class DaoSDK {
 
             // Convert votes map to object
             const votes: { [address: string]: number } = {};
-            if (proposalFields.votes.keys?.length > 0) {
-                for (let i = 0; i < proposalFields.votes.keys.length; i++) {
-                    votes[proposalFields.votes.keys[i]] = parseInt(proposalFields.votes.values[i]);
+            if (proposalFields.votes?.fields?.contents) {
+                const contents = proposalFields.votes.fields.contents;
+                if (Array.isArray(contents)) {
+                    for (let i = 0; i < contents.length; i++) {
+                        const entry = contents[i];
+                        if (entry && entry.fields) {
+                            votes[entry.fields.key] = parseInt(entry.fields.value);
+                        }
+                    }
                 }
             }
 
             // Convert winning option
             let winningOption: string | null = null;
-            if (proposalFields.winning_option && proposalFields.winning_option.vec.length > 0) {
-                winningOption = proposalFields.winning_option.vec[0];
+            if (proposalFields.winning_option) {
+                winningOption = proposalFields.winning_option;
             }
 
             // Handle potential missing start_time field for backward compatibility
@@ -357,11 +374,16 @@ class DaoSDK {
                 ? new Date(parseInt(proposalFields.start_time))
                 : new Date(parseInt(proposalFields.created_at)); // Fallback to created_at
 
+            // Ensure vote_points is an array
+            const votePoints = Array.isArray(proposalFields.vote_points) 
+                ? proposalFields.vote_points.map(p => parseInt(p))
+                : [];
+
             return {
                 id: parseInt(proposalFields.id),
                 title: proposalFields.title,
                 description: proposalFields.description,
-                options: proposalFields.options,
+                options: Array.isArray(proposalFields.options) ? proposalFields.options : [],
                 createdBy: proposalFields.created_by,
                 createdAt: new Date(parseInt(proposalFields.created_at)),
                 startTime,
@@ -369,10 +391,10 @@ class DaoSDK {
                 status: proposalFields.status === 0 ? "open" : "closed",
                 winningOption,
                 votes,
-                votePoints: proposalFields.vote_points.map(p => parseInt(p)),
+                votePoints,
                 totalVotes: parseInt(proposalFields.total_votes),
                 totalPoints: parseInt(proposalFields.total_points),
-                tokenType: proposalFields.token_type,
+                tokenType: proposalFields.token_type || "",
             };
         } catch (error) {
             console.error("Error getting proposal:", error);

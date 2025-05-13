@@ -117,27 +117,35 @@ async function testCloseProposal() {
 
         const proposalToClose = expiredProposals[0];
         console.log("Closing proposal:", proposalToClose.id);
+        console.log("Proposal details:", proposalToClose);
 
         // Get all voters who participated in this proposal
         const voters = Object.keys(proposalToClose.votes);
         console.log(`Found ${voters.length} voters for this proposal`);
 
-        // In a real implementation, you would fetch the token balances for each voter
-        // For testing purposes, we'll create mock balances
-        const voterBalances = await Promise.all(
-            voters.map(async (voterAddress) => {
-                // Mock implementation - in a real app, you would fetch actual balances
-                // from the blockchain for the specific token type
-                const tokenBalance = Math.random() * 100; // Random balance between 0-100 tokens
-                
-                return {
-                    address: voterAddress,
-                    balance: tokenBalance
-                };
-            })
-        );
+        // Create intentional vote weights to ensure a specific winner
+        // For testing, we'll make the second option win
+        const voterBalances = [];
+        
+        for (let i = 0; i < voters.length; i++) {
+            const voterAddress = voters[i];
+            const optionVotedFor = proposalToClose.votes[voterAddress];
+            
+            // Give higher balances to voters who voted for option 1 to make it win
+            let tokenBalance = 10; // Default balance
+            
+            if (optionVotedFor === 1) { // If they voted for option 1
+                tokenBalance = 100; // Give them 10x more tokens
+            }
+            
+            voterBalances.push({
+                address: voterAddress,
+                balance: tokenBalance
+            });
+        }
 
-        console.log("Voter balances:", voterBalances);
+        console.log("Voter balances for testing:", voterBalances);
+        console.log("Current vote points before closing:", proposalToClose.votePoints);
 
         const result = await daoSdk.closeProposal({
             proposalId: proposalToClose.id,
@@ -154,7 +162,23 @@ async function testCloseProposal() {
         // Get closed proposal details
         const closedProposal = await daoSdk.getProposal(proposalToClose.id);
         console.log("Closed proposal status:", closedProposal?.status);
+        console.log("Vote points after closing:", closedProposal?.votePoints);
         console.log("Winning option:", closedProposal?.winningOption);
+        
+        // Verify if our intended winner (option 1) was chosen
+        // Get the index of the maximum vote points
+        const winningIndex = closedProposal?.votePoints.indexOf(
+            Math.max(...(closedProposal?.votePoints || []))
+        );
+        
+        console.log("Winning option index:", winningIndex);
+        console.log("Option at winning index:", closedProposal?.options[winningIndex || 0]);
+        
+        if (winningIndex === 1) {
+            console.log("TEST PASSED: Option 1 won as expected due to higher token weight");
+        } else {
+            console.log("TEST FAILED: Expected option 1 to win");
+        }
     } catch (error) {
         console.error("Error closing proposal:", error);
     }
@@ -240,6 +264,143 @@ async function testBuildTransactions() {
     }
 }
 
+/**
+ * Test the full token-weighted voting workflow
+ */
+async function testTokenWeightedVoting() {
+    if (!isValidSetup) {
+        console.log("Skipping test: Please set valid package ID and DAO object ID values.");
+        return;
+    }
+
+    try {
+        console.log("\n=== Testing Token-Weighted Voting ===");
+        
+        // 1. Create a proposal with a short voting period
+        console.log("1. Creating a test proposal with short voting period...");
+        
+        const now = new Date();
+        const endDate = new Date();
+        endDate.setMinutes(now.getMinutes() + 2); // End date is just 2 minutes from now for testing
+        
+        const createResult = await daoSdk.createProposal({
+            title: "Token-Weighted Test",
+            description: "Testing the token-weighted voting mechanism",
+            options: ["Option A", "Option B", "Option C"],
+            tokenType: "0x2::sui::SUI", // Use SUI as the voting token
+            createdAt: now,
+            startDate: now,
+            endDate: endDate,
+            address,
+        });
+        
+        console.log("Proposal created successfully:", createResult.digest);
+        
+        // Get the proposal ID of the newly created proposal
+        const daoInfo = await daoSdk.getDAOInfo();
+        const proposalId = daoInfo.nextProposalId - 1;
+        console.log(`Created proposal with ID: ${proposalId}`);
+        
+        // 2. Vote on the proposal with different options
+        console.log("\n2. Voting on the proposal with different addresses...");
+        
+        // For this test, we'll just use the same address for all votes
+        // In a real test, you would use different addresses
+        
+        // Vote for Option A with default voting power
+        await daoSdk.vote({
+            proposalId,
+            optionIndex: 0, // Option A
+            votingPower: 1, // Default voting power
+            address,
+        });
+        
+        console.log("Voted for Option A");
+        
+        // In a real scenario, you would have multiple addresses voting
+        // For this test, we'll simulate the different votes in the closing phase
+        
+        // 3. Wait for the proposal to expire
+        console.log("\n3. Waiting for proposal to expire...");
+        console.log(`Current time: ${new Date().toISOString()}`);
+        console.log(`End time: ${endDate.toISOString()}`);
+        console.log("Waiting for 2 minutes 30 seconds...");
+        
+        await new Promise(resolve => setTimeout(resolve, 2 * 60 * 1000 + 30 * 1000));
+        
+        console.log("Time elapsed, checking if proposal is expired...");
+        const expiredProposals = await daoSdk.getExpiredOpenProposals();
+        const targetProposal = expiredProposals.find(p => p.id === proposalId);
+        
+        if (!targetProposal) {
+            console.log("Proposal not found in expired list. Test cannot continue.");
+            return;
+        }
+        
+        // 4. Close the proposal with simulated token balances
+        console.log("\n4. Closing proposal with simulated token balances...");
+        
+        // Create simulated token balances to make Option B the winner
+        // Since we can't actually modify the proposal's votes map in Move,
+        // we'll just simulate token weights by giving your existing vote much higher weight
+        
+        // Get the address that voted (in this case, your address)
+        const voterAddress = address;
+        
+        // We assign a high balance to make it the clear winner
+        const voterBalances = [
+            {
+                address: voterAddress, // The address that voted for Option A
+                balance: 10000        // Give it a high token balance
+            }
+        ];
+        
+        console.log("Voter balances for closing:", voterBalances);
+        
+        // Close the proposal
+        const closeResult = await daoSdk.closeProposal({
+            proposalId: targetProposal.id,
+            voterBalances,
+            address,
+        });
+        
+        console.log("Proposal closed successfully:", closeResult.digest);
+        
+        // 5. Verify the winner
+        console.log("\n5. Verifying the winner...");
+        
+        // Wait a moment for the transaction to be processed
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        try {
+            const closedProposal = await daoSdk.getProposal(targetProposal.id);
+            
+            if (!closedProposal) {
+                console.log("Could not fetch closed proposal. Test failed.");
+                return;
+            }
+            
+            console.log("Closed proposal status:", closedProposal.status);
+            console.log("Vote points after closing:", closedProposal.votePoints);
+            console.log("Options:", closedProposal.options);
+            console.log("Winning option:", closedProposal.winningOption);
+            
+            // If the proposal was successfully closed, Option A should win since it's the only one with votes
+            if (closedProposal.status === "closed" && closedProposal.winningOption === "Option A") {
+                console.log("✅ TEST PASSED: Option A won as expected since it's the only option with votes");
+            } else {
+                console.log("❌ TEST FAILED: Expected Option A to win and proposal to be closed");
+            }
+        } catch (error) {
+            console.log("Error fetching closed proposal:", error);
+            console.log("This may be due to the transaction still processing. Please check the proposal manually.");
+        }
+        
+    } catch (error) {
+        console.error("Error in token-weighted voting test:", error);
+    }
+}
+
 // Uncomment the function you want to run
 // testCreateProposal();
 // testVoting();
@@ -249,7 +410,6 @@ async function testBuildTransactions() {
 // Or run a sequence of operations - uncomment to run all tests in sequence
 // /*
 async function runAllTests() {
-
     if (!isValidSetup) {
         console.log("Tests cannot run without valid package ID and DAO object ID.");
         console.log("Please deploy the Move contract first and update the test file with the correct IDs.");
@@ -259,9 +419,12 @@ async function runAllTests() {
 
     // await testCreateProposal();
     // await testVoting();
+    // await getAllProposals();
     // await testCloseProposal();
-    await getAllProposals();
     // await testBuildTransactions();
+    
+    // To run the full token-weighted voting test, uncomment the line below
+    await testTokenWeightedVoting();
 }
 
 runAllTests();
