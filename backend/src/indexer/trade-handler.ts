@@ -141,6 +141,7 @@ export const handleBondingCurveEvent = async (
     // Use the price field from the event payload (marginal price emitted by the contract)
     const price = Number(payload.price);
 
+    // Insert raw price data
     await db
       .insertInto("rawPrices")
       .values({
@@ -151,6 +152,34 @@ export const handleBondingCurveEvent = async (
         amountOut: amountOut.toNumber(),
         direction: payload.direction,
         sender: event.sender,
+      })
+      .execute();
+
+    // Update portfolio data
+    const portfolioChange = payload.direction === "BUY" ? amountOut.toNumber() : -amountIn.toNumber();
+    
+    // Get the latest portfolio entry for this user and bonding curve
+    const latestPortfolio = await db
+      .selectFrom("portfolios")
+      .select(["amount"])
+      .where("user_address", "=", event.sender)
+      .where("bonding_curve_id", "=", payload.bonding_curve_id)
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .executeTakeFirst();
+
+    // Calculate new amount
+    const currentAmount = latestPortfolio?.amount || 0;
+    const newAmount = currentAmount + portfolioChange;
+
+    // Insert new portfolio entry
+    await db
+      .insertInto("portfolios")
+      .values({
+        user_address: event.sender,
+        bonding_curve_id: payload.bonding_curve_id,
+        amount: newAmount,
+        timestamp: timestamp,
       })
       .execute();
   }

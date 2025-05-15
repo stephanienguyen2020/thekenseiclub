@@ -17,8 +17,9 @@ import { tradeAgent } from "@/app/lib/tradingBot";
 import { SuiClient } from "@mysten/sui/client";
 import axios from "axios";
 import { TransactionSuccess } from "./ui/transaction-success";
-import { safeDivide, safeMultiply } from "@/lib/priceUtils";
+import { safeDivide, safeMultiply, toBlockchainAmount } from "@/lib/priceUtils";
 import BigNumber from 'bignumber.js';
+import { buildTx, getQuote } from "@7kprotocol/sdk-ts";
 
 interface TradingViewProps {
   tokenSymbol: string;
@@ -62,6 +63,9 @@ export default function TradingView({
   const chartRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const client = useSuiClient();
+
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
 
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
     execute: async ({ bytes, signature }) =>
@@ -200,6 +204,7 @@ export default function TradingView({
 
   const handleBuy = async (buyAmount = amount, coinName?: string) => {
     const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
+
     const client = getClient(network);
     const { coinType, packageId, bondingCurveSdk } =
       await retrieveBondingCurveData(client);
@@ -211,46 +216,55 @@ export default function TradingView({
       coinName || "default"
     );
     const parsedAmount = parseFloat(buyAmount) * 1000000000;
-    const tx = bondingCurveSdk.buildBuyTransaction({
+    const bondingTx = bondingCurveSdk.buildBuyTransaction({
       amount: BigInt(parsedAmount),
       minTokenRequired: BigInt(0),
       type: coinType,
       address: currentAccount?.address || "",
     });
-    try {
-      signAndExecuteTransaction(
-        {
-          transaction: tx,
-          chain: `sui:${network}`,
+
+    // Execute the bonding curve transaction with explicit gas budget
+    signAndExecuteTransaction(
+      {
+        transaction: bondingTx,
+        chain: `sui:${network}`,
+        options: {
+          showEffects: true,
+          showEvents: true,
+          gasBudget: 100000000, // Set a higher gas budget (0.1 SUI)
         },
-        {
-          onSuccess: (result: any) => {
-            api
-              .get<{ message: string }>(`/migrate`, {
-                params: {
-                  bondingCurveId,
-                  packageId,
-                },
-              })
-              .then((result) => {
-                if (result.data.message === "Migration successful") {
-                  console.log("migration status", result.data.message);
-                  window.location.href = `/marketplace`;
-                }
-              });
-            console.log("Buy successfully", result);
-            setTransactionHash(result.digest);
-            setLastAction("buy");
-            setShowSuccess(true);
-          },
-          onError: (error: any) => {
-            console.log("error", error);
-          },
-        }
-      );
-    } catch (e) {
-      console.log("error", e);
-    }
+      },
+      {
+        onSuccess: (result: any) => {
+          api
+            .get<{ message: string }>(`/migrate`, {
+              params: {
+                bondingCurveId,
+                packageId,
+              },
+            })
+            .then((result) => {
+              if (result.data.message === "Migration successful") {
+                console.log("migration status", result.data.message);
+                setNotificationMessage(
+                  "Migration successful"
+                );
+                setShowNotification(true);
+                window.location.href = `/marketplace`;
+              }
+            });
+          console.log("Buy successfully", result);
+          setTransactionHash(result.digest);
+          setLastAction("buy");
+          setShowSuccess(true);
+        },
+        onError: (error: any) => {
+          console.log("Bonding curve transaction error:", error);
+          // Add user-friendly error message
+          alert("Failed to execute bonding curve transaction. Please try again.");
+        },
+      }
+    );
   };
 
   const handleSell = async (sellAmount = amount, coinName?: string) => {
@@ -383,7 +397,8 @@ export default function TradingView({
                 {time[0]}
               </button>
             ))}
-            <button className="ml-auto px-4 py-2 rounded-xl font-bold border-4 border-black bg-white text-black flex items-center gap-2">
+            <button
+              className="ml-auto px-4 py-2 rounded-xl font-bold border-4 border-black bg-white text-black flex items-center gap-2">
               <RefreshCw size={16} />
               <span>Refresh</span>
             </button>
@@ -394,13 +409,15 @@ export default function TradingView({
         <div className="bg-white rounded-xl border-4 border-black p-4 h-[400px] relative">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 border-4 border-t-[#c0ff00] border-r-[#c0ff00] border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+              <div
+                className="w-12 h-12 border-4 border-t-[#c0ff00] border-r-[#c0ff00] border-b-transparent border-l-transparent rounded-full animate-spin"></div>
               <p className="ml-3 font-bold">Loading chart...</p>
             </div>
           ) : (
             <div ref={chartRef} className="w-full h-full">
               {/* This would be replaced with an actual trading chart library in a real implementation */}
-              <div className="w-full h-full flex items-center justify-center bg-[#131722] text-white rounded-lg overflow-hidden">
+              <div
+                className="w-full h-full flex items-center justify-center bg-[#131722] text-white rounded-lg overflow-hidden">
                 <CryptoChart data={chartData} />
               </div>
             </div>
@@ -564,7 +581,8 @@ export default function TradingView({
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                     />
-                    <div className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
+                    <div
+                      className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
                       USD
                       <ChevronDown size={16} />
                     </div>
@@ -591,7 +609,8 @@ export default function TradingView({
                       }
                       readOnly
                     />
-                    <div className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
+                    <div
+                      className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
                       {tokenSymbol}
                       <ChevronDown size={16} />
                     </div>

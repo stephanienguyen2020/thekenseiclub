@@ -344,6 +344,13 @@ export interface Likes {
   userId: string;
 }
 
+export interface Portfolios {
+  amount: number;
+  bondingCurveId: string;
+  timestamp: Timestamp;
+  userAddress: string;
+}
+
 export interface Posts {
   coinId: string | null;
   content: string;
@@ -580,6 +587,7 @@ export interface DB {
   cursors: Cursors;
   images: Images;
   likes: Likes;
+  portfolios: Portfolios;
   posts: Posts;
   rawPrices: RawPrices;
   reTweets: ReTweets;

@@ -77,7 +77,7 @@ router.get("/coins", async (req: any, res: any) => {
       .orderBy("c.createdAt", "desc")
       .limit(limit)
       .offset(offset);
-    console.log("coinsQuery");
+
     if (userId) {
       countQuery = countQuery.where("address", "=", userId);
       coinsQuery = coinsQuery.where("address", "=", userId);
