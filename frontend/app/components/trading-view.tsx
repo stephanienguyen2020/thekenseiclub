@@ -64,6 +64,9 @@ export default function TradingView({
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const client = useSuiClient();
 
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
     execute: async ({ bytes, signature }) =>
       await client.executeTransactionBlock({
@@ -243,6 +246,10 @@ export default function TradingView({
             .then((result) => {
               if (result.data.message === "Migration successful") {
                 console.log("migration status", result.data.message);
+                setNotificationMessage(
+                  "Migration successful"
+                );
+                setShowNotification(true);
                 window.location.href = `/marketplace`;
               }
             });

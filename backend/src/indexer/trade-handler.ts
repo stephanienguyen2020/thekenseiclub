@@ -156,7 +156,7 @@ export const handleBondingCurveEvent = async (
       .execute();
 
     // Update portfolio data
-    const portfolioChange = payload.direction === "BUY" ? amountOut.toNumber() : -amountOut.toNumber();
+    const portfolioChange = payload.direction === "BUY" ? amountOut.toNumber() : -amountIn.toNumber();
     
     // Get the latest portfolio entry for this user and bonding curve
     const latestPortfolio = await db

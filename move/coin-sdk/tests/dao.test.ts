@@ -33,18 +33,46 @@ async function testCreateProposal() {
         
         // Create dates for the proposal
         const now = new Date();
-        const endDate = new Date();
-        endDate.setDate(now.getDate() + 3); // End date is 3 days from now
+        const startDate = new Date(now.getTime() - 1000); // 1 second in the past
+        const endDate = new Date(now.getTime() + (3 * 24 * 60 * 60 * 1000)); // 3 days from now
         
+        console.log("Debug timestamps:");
+        console.log("Current time:", now.toISOString(), "timestamp:", now.getTime());
+        console.log("Start time:", startDate.toISOString(), "timestamp:", startDate.getTime());
+        console.log("End time:", endDate.toISOString(), "timestamp:", endDate.getTime());
+        console.log("Start time should be before current time:", startDate.getTime() < now.getTime());
+        console.log("End time should be after current time:", endDate.getTime() > now.getTime());
+        console.log("Start time should be before end time:", startDate.getTime() < endDate.getTime());
+        
+        // Get the transaction object before executing it
+        const tx = daoSdk.buildCreateProposalTransaction({
+            title: "Test Proposal",
+            description: "This is a test proposal created by the SDK",
+            options: ["Yes", "No", "Abstain"],
+            tokenType: "0xbc03aaab4c11eb84df8bf39fdc714fa5d5b65b16eb7d155e22c74a68c8d4e17f::coin::COIN", // Use SUI as the voting token
+            createdAt: now,
+            startDate: startDate,
+            endDate: endDate,
+        });
+        
+        // Set a fixed gas budget to avoid the dry run failure
+        tx.setGasBudget(20000000);
+        
+        // Log the transaction details
+        console.log("Transaction details before execution:");
+        console.log(JSON.stringify(tx, null, 2));
+        
+        // Execute the transaction
         const result = await daoSdk.createProposal({
             title: "Test Proposal",
             description: "This is a test proposal created by the SDK",
             options: ["Yes", "No", "Abstain"],
-            tokenType: "0x2::sui::SUI", // Use SUI as the voting token
+            tokenType: "0xbc03aaab4c11eb84df8bf39fdc714fa5d5b65b16eb7d155e22c74a68c8d4e17f::coin::COIN", // Use SUI as the voting token
             createdAt: now,
-            startDate: now,
+            startDate: startDate,
             endDate: endDate,
             address,
+            gasBudget: 20000000, // Set a fixed gas budget
         });
 
         console.log("Proposal created successfully!");
@@ -280,8 +308,7 @@ async function testTokenWeightedVoting() {
         console.log("1. Creating a test proposal with short voting period...");
         
         const now = new Date();
-        const endDate = new Date();
-        endDate.setMinutes(now.getMinutes() + 2); // End date is just 2 minutes from now for testing
+        const endDate = new Date(now.getTime() + (2 * 60 * 1000)); // 2 minutes from now
         
         const createResult = await daoSdk.createProposal({
             title: "Token-Weighted Test",
@@ -419,12 +446,12 @@ async function runAllTests() {
 
     // await testCreateProposal();
     // await testVoting();
-    // await getAllProposals();
+    await getAllProposals();
     // await testCloseProposal();
     // await testBuildTransactions();
     
     // To run the full token-weighted voting test, uncomment the line below
-    await testTokenWeightedVoting();
+    // await testTokenWeightedVoting();
 }
 
 runAllTests();

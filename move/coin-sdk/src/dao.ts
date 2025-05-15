@@ -109,13 +109,18 @@ class DaoSDK {
         );
 
         // Use current timestamp if createdAt is not provided
-        const currentTime = createdAt ? createdAt.getTime() : Date.now();
+        const currentTimeMs = createdAt ? createdAt.getTime() : Date.now();
         
         // Use current timestamp as start date if not provided
-        const startTime = startDate ? startDate.getTime() : currentTime;
+        const startTimeMs = startDate ? startDate.getTime() : currentTimeMs;
         
         // End date is required
-        const endTime = endDate.getTime();
+        const endTimeMs = endDate.getTime();
+        
+        // Convert milliseconds to seconds for Move contract
+        const currentTime = Math.floor(currentTimeMs / 1000);
+        const startTime = Math.floor(startTimeMs / 1000);
+        const endTime = Math.floor(endTimeMs / 1000);
 
         tx.moveCall({
             target: `${this.packageId}::dao::create_proposal`,
@@ -125,9 +130,9 @@ class DaoSDK {
                 tx.pure.vector('u8', Array.from(descBytes)),
                 tx.pure.vector('vector<u8>', optionsBytes.map(bytes => Array.from(bytes))),
                 tx.pure.vector('u8', Array.from(tokenTypeBytes)),
-                tx.pure.u64(currentTime),
-                tx.pure.u64(startTime),
-                tx.pure.u64(endTime),
+                tx.pure.u64(currentTimeMs),
+                tx.pure.u64(startTimeMs),
+                tx.pure.u64(endTimeMs),
                 tx.object("0x6"), // Clock object
             ],
         });
@@ -147,6 +152,7 @@ class DaoSDK {
         startDate,
         endDate,
         address,
+        gasBudget,
     }: {
         title: string;
         description: string;
@@ -156,6 +162,7 @@ class DaoSDK {
         startDate?: Date;
         endDate: Date;
         address: string;
+        gasBudget?: number;
     }): Promise<SuiTransactionBlockResponse> {
         const tx = this.buildCreateProposalTransaction({
             title,
@@ -166,6 +173,11 @@ class DaoSDK {
             startDate,
             endDate
         });
+        
+        // Set a gas budget if provided
+        if (gasBudget) {
+            tx.setGasBudget(gasBudget);
+        }
 
         return await signAndExecute(tx, ACTIVE_NETWORK, address);
     }
