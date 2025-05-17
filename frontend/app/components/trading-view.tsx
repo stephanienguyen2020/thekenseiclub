@@ -17,9 +17,15 @@ import { tradeAgent } from "@/app/lib/tradingBot";
 import { SuiClient } from "@mysten/sui/client";
 import axios from "axios";
 import { TransactionSuccess } from "./ui/transaction-success";
-import { safeDivide, safeMultiply, toBlockchainAmount } from "@/lib/priceUtils";
-import BigNumber from 'bignumber.js';
-import { buildTx, getQuote } from "@7kprotocol/sdk-ts";
+import {
+  fromBlockchainAmount,
+  safeDivide,
+  safeMultiply,
+  toBlockchainAmount,
+} from "@/lib/priceUtils";
+import BigNumber from "bignumber.js";
+import { buildSwapTransaction, getRoutes } from "coin-sdk/dist/src/flowx";
+import { SUI_COIN_TYPE } from "coin-sdk/dist/src/constant";
 
 interface TradingViewProps {
   tokenSymbol: string;
@@ -86,6 +92,12 @@ export default function TradingView({
   const [lastAction, setLastAction] = useState<"buy" | "sell" | "swap" | null>(
     null
   );
+
+  const [selectedCurrency, setSelectedCurrency] = useState("SUI");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Add state for search input
+  const [currencySearch, setCurrencySearch] = useState("");
 
   // Simulate chart loading
   useEffect(() => {
@@ -202,9 +214,50 @@ export default function TradingView({
     return { coinType, packageId, bondingCurveSdk };
   }
 
-  const handleBuy = async (buyAmount = amount, coinName?: string) => {
-    const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
+  console.log("selectedCurrency", selectedCurrency);
 
+  const handleSwap = async (buyAmount = amount, coinName?: string) => {
+    const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
+    if (selectedCurrency === "SOL") {
+      const routes = await getRoutes(
+        "0xbc03aaab4c11eb84df8bf39fdc714fa5d5b65b16eb7d155e22c74a68c8d4e17f::coin::COIN",
+        "0x2::sui::SUI",
+        toBlockchainAmount(buyAmount, new BigNumber(10).pow(8)).toString()
+      );
+
+      const swapTx = await buildSwapTransaction(
+        "0xbc03aaab4c11eb84df8bf39fdc714fa5d5b65b16eb7d155e22c74a68c8d4e17f::coin::COIN",
+        "0x2::sui::SUI",
+        toBlockchainAmount(buyAmount, new BigNumber(10).pow(8)).toString(),
+        currentAccount?.address || "",
+        network
+      );
+
+      console.log("swapTx", swapTx);
+      signAndExecuteTransaction(
+        {
+          transaction: swapTx,
+          chain: `sui:${network}`,
+        },
+        {
+          onSuccess: (result: any) => {
+            setAmount(routes.amountOut.toString());
+            handleBuySui(
+              fromBlockchainAmount(routes.amountOut.toString()).toString(),
+              coinName
+            );
+            console.log("success", result);
+          },
+          onError: (error: any) => {
+            console.log("error", error);
+          },
+        }
+      );
+    }
+  };
+
+  const handleBuySui = async (buyAmount = amount, coinName?: string) => {
+    const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
     const client = getClient(network);
     const { coinType, packageId, bondingCurveSdk } =
       await retrieveBondingCurveData(client);
@@ -246,9 +299,7 @@ export default function TradingView({
             .then((result) => {
               if (result.data.message === "Migration successful") {
                 console.log("migration status", result.data.message);
-                setNotificationMessage(
-                  "Migration successful"
-                );
+                setNotificationMessage("Migration successful");
                 setShowNotification(true);
                 window.location.href = `/marketplace`;
               }
@@ -261,10 +312,21 @@ export default function TradingView({
         onError: (error: any) => {
           console.log("Bonding curve transaction error:", error);
           // Add user-friendly error message
-          alert("Failed to execute bonding curve transaction. Please try again.");
+          alert(
+            "Failed to execute bonding curve transaction. Please try again."
+          );
         },
       }
     );
+  };
+
+  const handleBuy = async (buyAmount = amount, coinName?: string) => {
+    const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
+    if (selectedCurrency === "SOL") {
+      await handleSwap(buyAmount, coinName);
+    } else {
+      await handleBuySui(buyAmount, coinName);
+    }
   };
 
   const handleSell = async (sellAmount = amount, coinName?: string) => {
@@ -272,8 +334,8 @@ export default function TradingView({
     const client = getClient(network);
     const { coinType, packageId, bondingCurveSdk } =
       await retrieveBondingCurveData(client);
-    console.log("sellAmount", sellAmount)
-    console.log("coinType", coinType)
+    console.log("sellAmount", sellAmount);
+    console.log("coinType", coinType);
     const parsedAmount = BigInt(sellAmount) * BigInt(1000000000);
     const tx = await bondingCurveSdk.buildSellTransaction({
       amount: parsedAmount,
@@ -357,8 +419,9 @@ export default function TradingView({
                 ${currentPrice.toFixed(9)}
               </div>
               <div
-                className={`flex items-center justify-end ${change24h >= 0 ? "text-green-500" : "text-red-500"
-                  }`}
+                className={`flex items-center justify-end ${
+                  change24h >= 0 ? "text-green-500" : "text-red-500"
+                }`}
               >
                 {change24h >= 0 ? (
                   <ArrowUp size={16} />
@@ -388,17 +451,17 @@ export default function TradingView({
             ].map((time) => (
               <button
                 key={time[0]}
-                className={`px-4 py-2 rounded-xl font-bold border-4 border-black ${timeframe === time[1]
-                  ? "bg-[#c0ff00] text-black"
-                  : "bg-white text-black"
-                  }`}
+                className={`px-4 py-2 rounded-xl font-bold border-4 border-black ${
+                  timeframe === time[1]
+                    ? "bg-[#c0ff00] text-black"
+                    : "bg-white text-black"
+                }`}
                 onClick={() => setTimeframe(time[1])}
               >
                 {time[0]}
               </button>
             ))}
-            <button
-              className="ml-auto px-4 py-2 rounded-xl font-bold border-4 border-black bg-white text-black flex items-center gap-2">
+            <button className="ml-auto px-4 py-2 rounded-xl font-bold border-4 border-black bg-white text-black flex items-center gap-2">
               <RefreshCw size={16} />
               <span>Refresh</span>
             </button>
@@ -409,15 +472,13 @@ export default function TradingView({
         <div className="bg-white rounded-xl border-4 border-black p-4 h-[400px] relative">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className="w-12 h-12 border-4 border-t-[#c0ff00] border-r-[#c0ff00] border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+              <div className="w-12 h-12 border-4 border-t-[#c0ff00] border-r-[#c0ff00] border-b-transparent border-l-transparent rounded-full animate-spin"></div>
               <p className="ml-3 font-bold">Loading chart...</p>
             </div>
           ) : (
             <div ref={chartRef} className="w-full h-full">
               {/* This would be replaced with an actual trading chart library in a real implementation */}
-              <div
-                className="w-full h-full flex items-center justify-center bg-[#131722] text-white rounded-lg overflow-hidden">
+              <div className="w-full h-full flex items-center justify-center bg-[#131722] text-white rounded-lg overflow-hidden">
                 <CryptoChart data={chartData} />
               </div>
             </div>
@@ -432,37 +493,41 @@ export default function TradingView({
           {/* Tab Selector */}
           <div className="flex border-b-4 border-black">
             <button
-              className={`flex-1 py-3 font-black text-lg ${activeTradeTab === "buy"
-                ? "bg-[#c0ff00] text-black"
-                : "bg-white text-gray-500"
-                }`}
+              className={`flex-1 py-3 font-black text-lg ${
+                activeTradeTab === "buy"
+                  ? "bg-[#c0ff00] text-black"
+                  : "bg-white text-gray-500"
+              }`}
               onClick={() => setActiveTradeTab("buy")}
             >
               BUY
             </button>
             <button
-              className={`flex-1 py-3 font-black text-lg ${activeTradeTab === "sell"
-                ? "bg-red-500 text-white"
-                : "bg-white text-gray-500"
-                }`}
+              className={`flex-1 py-3 font-black text-lg ${
+                activeTradeTab === "sell"
+                  ? "bg-red-500 text-white"
+                  : "bg-white text-gray-500"
+              }`}
               onClick={() => setActiveTradeTab("sell")}
             >
               SELL
             </button>
             <button
-              className={`flex-1 py-3 font-black text-lg ${activeTradeTab === "swap"
-                ? "bg-[#0039C6] text-white"
-                : "bg-white text-gray-500"
-                }`}
+              className={`flex-1 py-3 font-black text-lg ${
+                activeTradeTab === "swap"
+                  ? "bg-[#0039C6] text-white"
+                  : "bg-white text-gray-500"
+              }`}
               onClick={() => setActiveTradeTab("swap")}
             >
               SWAP
             </button>
             <button
-              className={`flex-1 py-3 font-black text-lg ${activeTradeTab === "assistant"
-                ? "bg-purple-500 text-white"
-                : "bg-white text-gray-500"
-                }`}
+              className={`flex-1 py-3 font-black text-lg ${
+                activeTradeTab === "assistant"
+                  ? "bg-purple-500 text-white"
+                  : "bg-white text-gray-500"
+              }`}
               onClick={() => setActiveTradeTab("assistant")}
             >
               ASSIST
@@ -477,16 +542,56 @@ export default function TradingView({
                   <label className="block text-sm font-bold mb-2 uppercase">
                     Amount
                   </label>
-                  <div className="flex">
+                  <div className="flex border-4 border-black rounded-xl">
                     <input
                       type="number"
-                      className="flex-1 rounded-l-xl border-4 border-r-0 border-black p-3 focus:outline-none focus:ring-4 focus:ring-[#c0ff00] text-lg font-bold"
+                      className="flex-1 p-3 text-lg font-bold rounded-l-xl focus:outline-none focus:ring-4 focus:ring-[#c0ff00] placeholder:text-gray-400 border-none"
                       placeholder="0.00"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                     />
-                    <div className="bg-gray-100 px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold">
-                      {"SUI"}
+                    <div className="relative">
+                      <button
+                        className="bg-gray-100 px-4 py-3 font-bold flex items-center gap-1 border-l-4 border-black h-full rounded-r-xl"
+                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                        type="button"
+                      >
+                        {selectedCurrency} <ChevronDown size={16} />
+                      </button>
+                      {dropdownOpen && (
+                        <div className="absolute right-0 mt-1 w-40 rounded-xl shadow-lg z-10 bg-white border-2 border-black">
+                          <div className="p-2">
+                            <input
+                              type="text"
+                              placeholder="Search..."
+                              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#c0ff00] text-sm mb-2"
+                              value={currencySearch}
+                              onChange={(e) =>
+                                setCurrencySearch(e.target.value)
+                              }
+                            />
+                            {["SUI", "SOL"]
+                              .filter((c) =>
+                                c
+                                  .toLowerCase()
+                                  .includes(currencySearch.toLowerCase())
+                              )
+                              .map((c) => (
+                                <button
+                                  key={c}
+                                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 font-bold text-base"
+                                  onClick={() => {
+                                    setSelectedCurrency(c);
+                                    setDropdownOpen(false);
+                                    setCurrencySearch("");
+                                  }}
+                                >
+                                  {c}
+                                </button>
+                              ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -496,9 +601,7 @@ export default function TradingView({
                     Total {tokenSymbol}
                   </label>
                   <div className="bg-gray-100 p-3 rounded-xl border-4 border-black font-bold">
-                    {amount
-                      ? safeDivide(amount, suiPrice).toFixed(9)
-                      : "0.00"}
+                    {amount ? safeDivide(amount, suiPrice).toFixed(9) : "0.00"}
                   </div>
                 </div>
 
@@ -581,8 +684,7 @@ export default function TradingView({
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                     />
-                    <div
-                      className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
+                    <div className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
                       USD
                       <ChevronDown size={16} />
                     </div>
@@ -609,8 +711,7 @@ export default function TradingView({
                       }
                       readOnly
                     />
-                    <div
-                      className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
+                    <div className="bg-[#0039C6] px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold text-white flex items-center gap-2">
                       {tokenSymbol}
                       <ChevronDown size={16} />
                     </div>
@@ -657,10 +758,11 @@ export default function TradingView({
                   {chatHistory.map((msg, index) => (
                     <div
                       key={index}
-                      className={`p-3 rounded-xl border-2 border-black max-w-[80%] ${msg.role === "user"
-                        ? "bg-[#c0ff00] ml-auto"
-                        : "bg-gray-100"
-                        }`}
+                      className={`p-3 rounded-xl border-2 border-black max-w-[80%] ${
+                        msg.role === "user"
+                          ? "bg-[#c0ff00] ml-auto"
+                          : "bg-gray-100"
+                      }`}
                     >
                       <p className="text-sm font-medium">{msg.message}</p>
                     </div>
@@ -705,7 +807,6 @@ export default function TradingView({
             setActiveTradeTab(lastAction || "buy");
           }}
           recipient={currentAccount?.address || ""}
-
         />
       )}
     </div>

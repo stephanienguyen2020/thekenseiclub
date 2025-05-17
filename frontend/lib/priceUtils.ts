@@ -1,4 +1,4 @@
-import BigNumber from 'bignumber.js';
+import BigNumber from "bignumber.js";
 
 // Constants for price calculations
 export const DECIMALS = 9;
@@ -8,40 +8,49 @@ export const DECIMAL_MULTIPLIER = new BigNumber(10).pow(DECIMALS);
 BigNumber.config({
   DECIMAL_PLACES: DECIMALS,
   ROUNDING_MODE: BigNumber.ROUND_DOWN,
-  EXPONENTIAL_AT: [-DECIMALS, DECIMALS]
+  EXPONENTIAL_AT: [-DECIMALS, DECIMALS],
 });
 
 // Convert from human-readable number to blockchain format (with decimals)
-export function toBlockchainAmount(amount: number | string): bigint {
+export function toBlockchainAmount(
+  amount: number | string,
+  decimalMultiplier: BigNumber = DECIMAL_MULTIPLIER
+): bigint {
   const bnAmount = new BigNumber(amount);
-  const scaledAmount = bnAmount.times(DECIMAL_MULTIPLIER);
+  const scaledAmount = bnAmount.times(decimalMultiplier);
   return BigInt(scaledAmount.integerValue().toString());
 }
 
 // Convert from blockchain format to human-readable number
-export function fromBlockchainAmount(amount: bigint | string): number {
+export function fromBlockchainAmount(
+  amount: bigint | string,
+  decimalMultiplier: BigNumber = DECIMAL_MULTIPLIER
+): number {
   const bnAmount = new BigNumber(amount.toString());
-  return bnAmount.dividedBy(DECIMAL_MULTIPLIER).toNumber();
+  return bnAmount.dividedBy(decimalMultiplier).toNumber();
 }
 
 // Format price for display with appropriate decimal places
-export function formatPrice(price: number | string, options: {
-  compact?: boolean;
-  prefix?: string;
-  suffix?: string;
-  minDecimals?: number;
-  maxDecimals?: number;
-} = {}): string {
+export function formatPrice(
+  price: number | string,
+  options: {
+    compact?: boolean;
+    prefix?: string;
+    suffix?: string;
+    minDecimals?: number;
+    maxDecimals?: number;
+  } = {}
+): string {
   const {
     compact = false,
-    prefix = '$',
-    suffix = '',
+    prefix = "$",
+    suffix = "",
     minDecimals = 0,
-    maxDecimals = 8
+    maxDecimals = 8,
   } = options;
 
   const bnPrice = new BigNumber(price);
-  
+
   if (bnPrice.isZero()) {
     return `${prefix}0${suffix}`;
   }
@@ -51,9 +60,9 @@ export function formatPrice(price: number | string, options: {
     const compacted = bnPrice.toFormat(2, {
       prefix,
       suffix,
-      decimalSeparator: '.',
-      groupSeparator: ',',
-      groupSize: 3
+      decimalSeparator: ".",
+      groupSeparator: ",",
+      groupSize: 3,
     });
     return compacted;
   }
@@ -72,46 +81,45 @@ export function formatPrice(price: number | string, options: {
 
   // Format with determined decimal places
   return `${prefix}${bnPrice.toFormat(decimals, {
-    decimalSeparator: '.',
-    groupSeparator: ',',
-    groupSize: 3
+    decimalSeparator: ".",
+    groupSeparator: ",",
+    groupSize: 3,
   })}${suffix}`;
 }
 
 // Format percentage with appropriate decimal places
-export function formatPercentage(value: number | string, options: {
-  minDecimals?: number;
-  maxDecimals?: number;
-  showSign?: boolean;
-} = {}): string {
-  const {
-    minDecimals = 0,
-    maxDecimals = 2,
-    showSign = true
-  } = options;
+export function formatPercentage(
+  value: number | string,
+  options: {
+    minDecimals?: number;
+    maxDecimals?: number;
+    showSign?: boolean;
+  } = {}
+): string {
+  const { minDecimals = 0, maxDecimals = 2, showSign = true } = options;
 
   const bnValue = new BigNumber(value);
-  const sign = showSign && bnValue.gt(0) ? '+' : '';
-  
-  return `${sign}${bnValue.toFormat(Math.min(maxDecimals, Math.max(minDecimals, 2)))}%`;
+  const sign = showSign && bnValue.gt(0) ? "+" : "";
+
+  return `${sign}${bnValue.toFormat(
+    Math.min(maxDecimals, Math.max(minDecimals, 2))
+  )}%`;
 }
 
 // Format large numbers (e.g., market cap, volume)
-export function formatLargeNumber(value: number | string, options: {
-  compact?: boolean;
-  prefix?: string;
-  suffix?: string;
-  decimals?: number;
-} = {}): string {
-  const {
-    compact = true,
-    prefix = '$',
-    suffix = '',
-    decimals = 2
-  } = options;
+export function formatLargeNumber(
+  value: number | string,
+  options: {
+    compact?: boolean;
+    prefix?: string;
+    suffix?: string;
+    decimals?: number;
+  } = {}
+): string {
+  const { compact = true, prefix = "$", suffix = "", decimals = 2 } = options;
 
   const bnValue = new BigNumber(value);
-  
+
   if (bnValue.isZero()) {
     return `${prefix}0${suffix}`;
   }
@@ -127,9 +135,9 @@ export function formatLargeNumber(value: number | string, options: {
   }
 
   return `${prefix}${bnValue.toFormat(decimals, {
-    decimalSeparator: '.',
-    groupSeparator: ',',
-    groupSize: 3
+    decimalSeparator: ".",
+    groupSeparator: ",",
+    groupSize: 3,
   })}${suffix}`;
 }
 
@@ -144,7 +152,7 @@ export function safeDivide(a: number | string, b: number | string): number {
   const bnA = new BigNumber(a);
   const bnB = new BigNumber(b);
   if (bnB.isZero()) {
-    throw new Error('Division by zero');
+    throw new Error("Division by zero");
   }
   return bnA.dividedBy(bnB).toNumber();
 }
@@ -162,7 +170,11 @@ export function safeSubtract(a: number | string, b: number | string): number {
 }
 
 // Format long addresses with ellipsis
-export function formatAddress(address: string, startLength: number = 6, endLength: number = 4): string {
+export function formatAddress(
+  address: string,
+  startLength: number = 6,
+  endLength: number = 4
+): string {
   if (!address || address.length <= startLength + endLength) return address;
   return `${address.slice(0, startLength)}...${address.slice(-endLength)}`;
-} 
+}

@@ -60,7 +60,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
-    "coin-sdk": "^1.0.19",
+    "coin-sdk": "^1.0.22",
     "dayjs": "^1.11.13",
     "embla-carousel-react": "8.5.1",
     "ethers": "^6.13.5",
