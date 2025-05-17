@@ -1,31 +1,28 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import { ArrowUp, ArrowDown, RefreshCw, ChevronDown, Send } from "lucide-react";
-import CryptoChart, { CandleData } from "./CryptoChart";
-import {
-  useCurrentAccount,
-  useSignAndExecuteTransaction,
-  useSuiClient,
-} from "@mysten/dapp-kit";
-import api from "@/lib/api";
-import { getClient, Network } from "coin-sdk/dist/src/utils/sui-utils";
-import BondingCurveSDK from "coin-sdk/dist/src/bonding_curve";
-import { getObject } from "@/lib/utils";
 import { tradeAgent } from "@/app/lib/tradingBot";
-import { SuiClient } from "@mysten/sui/client";
-import axios from "axios";
-import { TransactionSuccess } from "./ui/transaction-success";
+import api from "@/lib/api";
 import {
   fromBlockchainAmount,
   safeDivide,
   safeMultiply,
   toBlockchainAmount,
 } from "@/lib/priceUtils";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+  useSuiClient,
+} from "@mysten/dapp-kit";
+import { SuiClient } from "@mysten/sui/client";
 import BigNumber from "bignumber.js";
+import BondingCurveSDK from "coin-sdk/dist/src/bonding_curve";
 import { buildSwapTransaction, getRoutes } from "coin-sdk/dist/src/flowx";
-import { SUI_COIN_TYPE } from "coin-sdk/dist/src/constant";
+import { getClient, Network } from "coin-sdk/dist/src/utils/sui-utils";
+import { ArrowDown, ArrowUp, ChevronDown, RefreshCw, Send } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+import CryptoChart, { CandleData } from "./CryptoChart";
+import { TransactionSuccess } from "./ui/transaction-success";
 
 interface TradingViewProps {
   tokenSymbol: string;
@@ -49,6 +46,7 @@ export default function TradingView({
   suiPrice,
 }: TradingViewProps) {
   const [amount, setAmount] = useState("");
+  const [suiAmount, setSuiAmount] = useState("");
   const [activeTradeTab, setActiveTradeTab] = useState<
     "buy" | "sell" | "swap" | "assistant"
   >("buy");
@@ -69,9 +67,6 @@ export default function TradingView({
   const chartRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const client = useSuiClient();
-
-  const [showNotification, setShowNotification] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState("");
 
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
@@ -222,12 +217,6 @@ export default function TradingView({
   const handleSwap = async (buyAmount = amount, coinName?: string) => {
     const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
     if (selectedCurrency === "SOL") {
-      const routes = await getRoutes(
-        "0xbc03aaab4c11eb84df8bf39fdc714fa5d5b65b16eb7d155e22c74a68c8d4e17f::coin::COIN",
-        "0x2::sui::SUI",
-        toBlockchainAmount(buyAmount, new BigNumber(10).pow(8)).toString()
-      );
-
       const swapTx = await buildSwapTransaction(
         "0xbc03aaab4c11eb84df8bf39fdc714fa5d5b65b16eb7d155e22c74a68c8d4e17f::coin::COIN",
         "0x2::sui::SUI",
@@ -235,31 +224,15 @@ export default function TradingView({
         currentAccount?.address || "",
         network
       );
-
-      console.log("swapTx", swapTx);
-      signAndExecuteTransaction(
-        {
-          transaction: swapTx,
-          chain: `sui:${network}`,
-        },
-        {
-          onSuccess: (result: any) => {
-            setAmount(routes.amountOut.toString());
-            handleBuySui(
-              fromBlockchainAmount(routes.amountOut.toString()).toString(),
-              coinName
-            );
-            console.log("success", result);
-          },
-          onError: (error: any) => {
-            console.log("error", error);
-          },
-        }
-      );
+      return swapTx;
     }
   };
 
-  const handleBuySui = async (buyAmount = amount, coinName?: string) => {
+  const handleBuySui = async (
+    buyAmount = amount,
+    coinName?: string,
+    tx?: any
+  ) => {
     const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
 
     const client = getClient(network);
@@ -274,11 +247,11 @@ export default function TradingView({
     );
     const parsedAmount = parseFloat(buyAmount) * 1000000000;
     const bondingTx = bondingCurveSdk.buildBuyTransaction({
-    const bondingTx = bondingCurveSdk.buildBuyTransaction({
       amount: BigInt(parsedAmount),
       minTokenRequired: BigInt(0),
       type: coinType,
       address: currentAccount?.address || "",
+      transaction: tx,
     });
 
     // Execute the bonding curve transaction with explicit gas budget
@@ -328,8 +301,23 @@ export default function TradingView({
   const handleBuy = async (buyAmount = amount, coinName?: string) => {
     const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
     if (selectedCurrency === "SOL") {
-      await handleSwap(buyAmount, coinName);
+      const routes = await getRoutes(
+        "0xbc03aaab4c11eb84df8bf39fdc714fa5d5b65b16eb7d155e22c74a68c8d4e17f::coin::COIN",
+        "0x2::sui::SUI",
+        toBlockchainAmount(buyAmount, new BigNumber(10).pow(8)).toString(),
+        currentAccount?.address || ""
+      );
+      setSuiAmount(
+        fromBlockchainAmount(routes.amountOut.toString()).toString()
+      );
+      const swapTx = await handleSwap(buyAmount, coinName);
+      await handleBuySui(
+        fromBlockchainAmount(routes.amountOut.toString()).toString(),
+        coinName,
+        swapTx
+      );
     } else {
+      setSuiAmount(buyAmount);
       await handleBuySui(buyAmount, coinName);
     }
   };
@@ -606,7 +594,9 @@ export default function TradingView({
                     Total {tokenSymbol}
                   </label>
                   <div className="bg-gray-100 p-3 rounded-xl border-4 border-black font-bold">
-                    {amount ? safeDivide(amount, suiPrice).toFixed(9) : "0.00"}
+                    {suiAmount
+                      ? safeDivide(suiAmount, suiPrice).toFixed(9)
+                      : "0.00"}
                   </div>
                 </div>
 
