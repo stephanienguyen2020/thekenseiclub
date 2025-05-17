@@ -73,6 +73,9 @@ export default function TradingView({
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
 
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
     execute: async ({ bytes, signature }) =>
       await client.executeTransactionBlock({
@@ -258,6 +261,7 @@ export default function TradingView({
 
   const handleBuySui = async (buyAmount = amount, coinName?: string) => {
     const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
+
     const client = getClient(network);
     const { coinType, packageId, bondingCurveSdk } =
       await retrieveBondingCurveData(client);
@@ -269,6 +273,7 @@ export default function TradingView({
       coinName || "default"
     );
     const parsedAmount = parseFloat(buyAmount) * 1000000000;
+    const bondingTx = bondingCurveSdk.buildBuyTransaction({
     const bondingTx = bondingCurveSdk.buildBuyTransaction({
       amount: BigInt(parsedAmount),
       minTokenRequired: BigInt(0),
