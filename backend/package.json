@@ -15,6 +15,7 @@
   "dependencies": {
     "@mysten/sui": "^1.28.2",
     "@mysten/walrus": "^0.0.21",
+    "@tusky-io/ts-sdk": "^0.30.0",
     "coin-sdk": "^1.0.14",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",

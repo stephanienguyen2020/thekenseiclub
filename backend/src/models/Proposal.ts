@@ -13,12 +13,13 @@ export interface IProposal extends Document {
     createdAt: Date;
     startDate: Date;
     endDate: Date;
-    ipfsHash: string;
-    contentHash: string;
+    upload_id: string;
     voteCount: number;
     votePoint: number;
     status: 'open' | 'closed' | 'upcoming';
     winningOption?: string;
+    tag: string;
+    image_upload_id: string;
 }
 
 const ProposalSchema: Schema = new Schema({
@@ -52,12 +53,13 @@ const ProposalSchema: Schema = new Schema({
             message: 'endDate must be a valid date'
         }
     },
-    ipfsHash: { type: String, required: true },
-    contentHash: { type: String, required: true },
+    upload_id: { type: String, required: true },
     voteCount: { type: Number, default: 0 },
     votePoint: { type: Number, default: 0 },
     status: { type: String, enum: ['open', 'closed', 'upcoming'], default: 'open' },
-    winningOption: { type: String }
+    winningOption: { type: String },
+    tag: { type: String, required: true },
+    image_upload_id: { type: String, required: true }
 });
 
 // Add validation to ensure endDate is after startDate

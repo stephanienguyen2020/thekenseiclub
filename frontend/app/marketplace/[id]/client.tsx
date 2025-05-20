@@ -469,9 +469,9 @@ export default function TokenDetailPageClient({ id }: { id: string }) {
                       tokenLogo={coin.logo}
                       options={proposal.options.map(option => ({
                         label: option.option,
-                        votes: option.points,
+                        votes: option.votes,
                         percentage: proposal.voteCount > 0 ? (option.points / proposal.votePoint) * 100 : 0,
-                        isSelected: option.option === proposal.winningOption || option.option === userVotes[proposal._id]
+                        isSelected: option.option === userVotes[proposal._id]
                       }))}
                       tokenId={id}
                       onVote={(choice) => handleVote(proposal._id, choice)}

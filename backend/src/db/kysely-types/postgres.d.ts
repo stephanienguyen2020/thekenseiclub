@@ -283,6 +283,45 @@ export interface _TimescaledbInternalCompressedChunkStats {
   uncompressedTotalSize: Int8 | null;
 }
 
+export interface _TimescaledbInternalCompressHyper23Chunk {
+  _TsMetaCount: number | null;
+  _TsMetaMax1: Timestamp | null;
+  _TsMetaMin1: Timestamp | null;
+  amountIn: string | null;
+  amountOut: string | null;
+  bondingCurveId: string | null;
+  direction: string | null;
+  price: string | null;
+  sender: string | null;
+  timestamp: string | null;
+}
+
+export interface _TimescaledbInternalCompressHyper24Chunk {
+  _TsMetaCount: number | null;
+  _TsMetaMax1: Timestamp | null;
+  _TsMetaMin1: Timestamp | null;
+  amountIn: string | null;
+  amountOut: string | null;
+  bondingCurveId: string | null;
+  direction: string | null;
+  price: string | null;
+  sender: string | null;
+  timestamp: string | null;
+}
+
+export interface _TimescaledbInternalCompressHyper26Chunk {
+  _TsMetaCount: number | null;
+  _TsMetaMax1: Timestamp | null;
+  _TsMetaMin1: Timestamp | null;
+  amountIn: string | null;
+  amountOut: string | null;
+  bondingCurveId: string | null;
+  direction: string | null;
+  price: string | null;
+  sender: string | null;
+  timestamp: string | null;
+}
+
 export interface _TimescaledbInternalHypertableChunkLocalSize {
   chunkId: number | null;
   chunkName: string | null;
@@ -361,20 +400,6 @@ export interface RawPrices {
   price: number;
   sender: string;
   timestamp: Timestamp;
-}
-
-export interface ReTweets {
-  createdAt: Timestamp;
-  id: Generated<Int8>;
-  postId: Int8;
-  userId: string;
-}
-
-export interface SavePosts {
-  createdAt: Timestamp;
-  id: Generated<Int8>;
-  postId: Int8;
-  userId: string;
 }
 
 export interface TimescaledbExperimentalPolicies {
@@ -573,6 +598,9 @@ export interface DB {
   "_TimescaledbInternal.bgwJobStatHistory": _TimescaledbInternalBgwJobStatHistory;
   "_TimescaledbInternal.bgwPolicyChunkStats": _TimescaledbInternalBgwPolicyChunkStats;
   "_TimescaledbInternal.compressedChunkStats": _TimescaledbInternalCompressedChunkStats;
+  "_TimescaledbInternal.compressHyper23Chunk": _TimescaledbInternalCompressHyper23Chunk;
+  "_TimescaledbInternal.compressHyper24Chunk": _TimescaledbInternalCompressHyper24Chunk;
+  "_TimescaledbInternal.compressHyper26Chunk": _TimescaledbInternalCompressHyper26Chunk;
   "_TimescaledbInternal.hypertableChunkLocalSize": _TimescaledbInternalHypertableChunkLocalSize;
   bondingCurve: BondingCurve;
   coins: Coins;
@@ -582,8 +610,6 @@ export interface DB {
   likes: Likes;
   posts: Posts;
   rawPrices: RawPrices;
-  reTweets: ReTweets;
-  savePosts: SavePosts;
   "timescaledbExperimental.policies": TimescaledbExperimentalPolicies;
   "timescaledbInformation.chunkColumnstoreSettings": TimescaledbInformationChunkColumnstoreSettings;
   "timescaledbInformation.chunkCompressionSettings": TimescaledbInformationChunkCompressionSettings;
