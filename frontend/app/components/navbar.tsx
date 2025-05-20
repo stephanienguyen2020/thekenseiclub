@@ -155,6 +155,12 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
         >
           Community Feed
         </Link>
+        <Link
+          href="/swap"
+          className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
+        >
+          Token Swap
+        </Link>
         {currentAccount && (
           <div className="relative group">
             <Link
