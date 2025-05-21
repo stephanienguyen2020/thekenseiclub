@@ -148,7 +148,7 @@ export default function LaunchTokenPage() {
       setShowNotification(true);
       setTimeout(() => {
         router.push(`/marketplace/${result.data.coin.id}`);
-      }, 2000);
+      }, 5000);
     } catch (error) {
       console.error("Error creating token:", error);
       setNotificationMessage("Failed to create token. Please try again.");
@@ -175,7 +175,7 @@ export default function LaunchTokenPage() {
       setShowNotification(true);
       setTimeout(() => {
         router.push(`/marketplace/${result.data.coin.id}`);
-      }, 2000);
+      }, 5000);
     } catch (error) {
       console.error("Error creating token:", error);
       setNotificationMessage("Failed to create token. Please try again.");
