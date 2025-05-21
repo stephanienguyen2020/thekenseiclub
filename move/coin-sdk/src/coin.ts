@@ -59,7 +59,7 @@ class CoinSDK {
       `${name}.move`
     );
 
-    address = address || getActiveAddress();
+    address = getActiveAddress();
 
     generateToMoveFile(templatePath, movePath, {
       coin_module: name,
