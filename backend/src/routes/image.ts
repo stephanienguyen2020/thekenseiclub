@@ -1,7 +1,5 @@
-import axios from "axios";
 import "dotenv/config";
 import express, { Request, Response } from "express";
-import FormData from "form-data";
 import multer from "multer";
 import { PinataSDK } from "pinata";
 import { db } from "../db/database";
@@ -73,30 +71,12 @@ router.post("/images", upload.single("file"), async (req: any, res: any) => {
       },
     };
 
-    // Create a FormData instance for Node.js
-    const formData = new FormData();
-    // Append the file buffer with the correct filename
-    formData.append("file", fileBuffer, {
-      filename: req.file.originalname,
-      contentType: req.file.mimetype,
+    const file = new File([fileBuffer], req.file.originalname, {
+      type: req.file.mimetype,
     });
 
-    // Add metadata
-    formData.append("pinataMetadata", JSON.stringify(options.metadata));
-
-    // Make a direct API call to Pinata
-    const pinataResponse = await axios.post(
-      "https://uploads.pinata.cloud/v3/files",
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PINATA_JWT}`,
-          ...formData.getHeaders(),
-        },
-      }
-    );
-
-    const pinataResult = pinataResponse.data;
+    // Upload to Pinata using the upload.file method
+    const pinataResult = await pinata.upload.public.file(file, options);
 
     // No need to clean up temporary files when using memory storage
 
