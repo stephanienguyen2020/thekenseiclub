@@ -59,6 +59,8 @@ class CoinSDK {
       `${name}.move`
     );
 
+    address = address || getActiveAddress();
+
     generateToMoveFile(templatePath, movePath, {
       coin_module: name,
       coin_name: name.toUpperCase(),
@@ -66,7 +68,6 @@ class CoinSDK {
       coin_description: description,
       coin_icon_url: iconUrl,
     });
-    address = getActiveAddress();
     const publishResult: SuiTransactionBlockResponse = await publishPackage({
       packagePath: path.resolve(__dirname, "../coin-create"),
       network: ACTIVE_NETWORK,
