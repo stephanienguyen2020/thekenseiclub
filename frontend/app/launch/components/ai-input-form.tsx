@@ -5,7 +5,7 @@ import { Bot, RefreshCcw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface AIInputFormProps {
-  onSubmit: (description: string) => Promise<() => void>;
+  onSubmit: (description: string) => Promise<void>;
   isCreatingToken: boolean;
 }
 
