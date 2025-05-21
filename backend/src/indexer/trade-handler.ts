@@ -162,8 +162,8 @@ export const handleBondingCurveEvent = async (
     const latestPortfolio = await db
       .selectFrom("portfolios")
       .select(["amount"])
-      .where("user_address", "=", event.sender)
-      .where("bonding_curve_id", "=", payload.bonding_curve_id)
+      .where("userAddress", "=", event.sender)
+      .where("bondingCurveId", "=", payload.bonding_curve_id)
       .orderBy("timestamp", "desc")
       .limit(1)
       .executeTakeFirst();
@@ -176,8 +176,8 @@ export const handleBondingCurveEvent = async (
     await db
       .insertInto("portfolios")
       .values({
-        user_address: event.sender,
-        bonding_curve_id: payload.bonding_curve_id,
+        userAddress: event.sender,
+        bondingCurveId: payload.bonding_curve_id,
         amount: newAmount,
         timestamp: timestamp,
       })

@@ -115,7 +115,7 @@ export default function TradingView({
           params: {
             bonding_curve_id: bondingCurveId,
             from: "2025-04-10 15:08:00.000000",
-            to: "2025-05-19 16:08:00.000000",
+            to: new Date().toISOString(),
             resolution: timeframe,
           },
         });

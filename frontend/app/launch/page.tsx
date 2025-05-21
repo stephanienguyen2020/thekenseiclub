@@ -1,19 +1,17 @@
 "use client";
-import { useState, useEffect, type ChangeEvent } from "react";
-import Image from "next/image";
-import { Upload, Sparkles } from "lucide-react";
-import Navbar from "@/components/navbar";
-import api from "@/lib/api";
 import { CoinResponse } from "@/app/launch/types";
-import { useRouter } from "next/navigation";
+import Navbar from "@/components/navbar";
+import { VoteNotification } from "@/components/ui/vote-notification";
+import api from "@/lib/api";
+import { useTokenGeneratingService } from "@/services/TokenGeneratingService";
 import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import AIInputForm from "./components/ai-input-form";
 import InputMethodSelector, {
   LaunchMethod,
 } from "./components/input-method-selector";
-import AIInputForm from "./components/ai-input-form";
 import ManualInputForm from "./components/manual-input-form";
-import { useTokenGeneratingService } from "@/services/TokenGeneratingService";
-import { VoteNotification } from "@/components/ui/vote-notification";
 
 interface ImageUploadResponse {
   image: {
@@ -114,7 +112,7 @@ export default function LaunchTokenPage() {
         symbol: tokenSymbol,
         description: tokenDescription,
         iconUrl: uploadedImageUrl,
-        address: currentAccount?.address || "",
+        // address: currentAccount?.address || "",
       });
       setNotificationMessage("Token created successfully!");
       setShowNotification(true);
@@ -143,14 +141,14 @@ export default function LaunchTokenPage() {
         symbol: tokenDetails.symbol,
         description: tokenDetails.description,
         iconUrl: imageUrl,
-        address: currentAccount?.address || "",
+        // address: currentAccount?.address || "",
       });
 
       setNotificationMessage("Token created successfully!");
       setShowNotification(true);
       setTimeout(() => {
         router.push(`/marketplace/${result.data.coin.id}`);
-      }, 2000);
+      }, 5000);
     } catch (error) {
       console.error("Error creating token:", error);
       setNotificationMessage("Failed to create token. Please try again.");
@@ -177,7 +175,7 @@ export default function LaunchTokenPage() {
       setShowNotification(true);
       setTimeout(() => {
         router.push(`/marketplace/${result.data.coin.id}`);
-      }, 2000);
+      }, 5000);
     } catch (error) {
       console.error("Error creating token:", error);
       setNotificationMessage("Failed to create token. Please try again.");
