@@ -1,8 +1,9 @@
-import fs, { readFileSync, writeFileSync } from "fs";
+import * as fs from "fs";
+import { readFileSync, writeFileSync } from "fs";
 
 import { execSync } from "child_process";
 import { homedir } from "os";
-import path from "path";
+import * as path from "path";
 import {
   getFullnodeUrl,
   SuiClient,
@@ -14,7 +15,11 @@ import { Transaction } from "@mysten/sui/transactions";
 import { fromBase64 } from "@mysten/sui/utils";
 
 export type Network = "mainnet" | "testnet" | "devnet" | "localnet";
-
+const networks = {
+  mainnet: { url: "https://fullnode.mainnet.sui.io:443" },
+  testnet: { url: "https://fullnode.testnet.sui.io:443" },
+  devnet: { url: "https://fullnode.devnet.sui.io:443" },
+};
 export const SUI_BIN = `sui`;
 export const ACTIVE_NETWORK = (process.env.NETWORK as Network) || "testnet";
 
@@ -58,6 +63,7 @@ export const signAndExecute = async (
   network: Network,
   address: string
 ) => {
+  console.log("signAndExecute", txb, network, address);
   const signer = getSigner(address);
 
   const client = getClient(network);

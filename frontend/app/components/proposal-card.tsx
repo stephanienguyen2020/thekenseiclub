@@ -27,23 +27,25 @@ interface ProposalCardProps {
   userVote?: string
   winningOption?: string
   isVoting?: boolean
+  image_upload_id?: string
 }
 
 export default function ProposalCard({
-                                       id,
-                                       title,
-                                       description,
-                                       status,
-                                       endDate,
-                                       tokenSymbol,
-                                       tokenLogo,
-                                       options,
-                                       tokenId,
-                                       onVote,
-                                       userVote,
-                                       winningOption,
-                                       isVoting
-                                     }: ProposalCardProps) {
+  id,
+  title,
+  description,
+  status,
+  endDate,
+  tokenSymbol,
+  tokenLogo,
+  options,
+  tokenId,
+  onVote,
+  userVote,
+  winningOption,
+  isVoting,
+  image_upload_id
+}: ProposalCardProps) {
   const [showAllOptions, setShowAllOptions] = useState(false)
   const [selectedOption, setSelectedOption] = useState<number | null>(
     userVote ? options.findIndex(opt => opt.label === userVote) : null
@@ -133,6 +135,18 @@ export default function ProposalCard({
           {status.charAt(0).toUpperCase() + status.slice(1)}
         </div>
       </div>
+
+      {/* Proposal Image */}
+      {image_upload_id && (
+        <div className="relative w-full h-48 border-b-2 border-black">
+          <Image
+            src={`/api/daos/proposals/${id}/image`}
+            alt={title}
+            fill
+            className="object-cover"
+          />
+        </div>
+      )}
 
       {/* Proposal Content */}
       <div className="px-4 py-4">

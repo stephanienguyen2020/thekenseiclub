@@ -144,33 +144,38 @@ export async function up(db: Kysely<any>): Promise<void> {
     db
   );
 
-  // await sql`CREATE MATERIALIZED VIEW secondly_prices_stats
-  // WITH (timescaledb.continuous) AS
-  // SELECT
-  //     time_bucket('5 seconds', timestamp) AS bucket,
-  //     'bonding_curve_id',
-  //     MAX(price) AS high,
-  //     FIRST(price, timestamp) AS open,
-  //     LAST(price, timestamp) AS close,
-  //     MIN(price) AS low
-  // FROM raw_prices
-  // GROUP BY bucket;`.execute(db);
+  // --- PORTFOLIOS TABLE MIGRATION ---
+  await db.schema
+    .createTable("portfolios")
+    .addColumn("user_address", "varchar", (col) => col.notNull())
+    .addColumn("bonding_curve_id", "varchar", (col) =>
+      col.references("bonding_curve.id").notNull()
+    )
+    .addColumn("amount", "float8", (col) => col.notNull())
+    .addColumn("timestamp", "timestamp", (col) => col.notNull())
+    .execute();
 
-  // await sql`SELECT add_continuous_aggregate_policy('secondly_prices_stats',
-  //     start_offset => INTERVAL '10 seconds',
-  //     end_offset => INTERVAL '5 seconds',
-  //     schedule_interval => INTERVAL '5 seconds')`.execute(db);
+  await sql`SELECT create_hypertable('portfolios', by_range('timestamp'));`.execute(db);
+  await sql`CREATE INDEX ON portfolios ("user_address", "timestamp");`.execute(db);
+  await sql`CREATE INDEX ON portfolios ("bonding_curve_id", "timestamp");`.execute(db);
+  await sql`ALTER TABLE portfolios SET (
+    timescaledb.compress,
+    timescaledb.compress_segmentby = '"user_address", "bonding_curve_id"',
+    timescaledb.compress_orderby = 'timestamp DESC'
+  )`.execute(db);
+  await sql`SELECT add_compression_policy('portfolios', INTERVAL '1 day')`.execute(db);
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
   // Reverse the table creations if needed.
+  await db.schema.dropTable("portfolios").execute();
   await db.schema.dropTable("raw_prices").execute();
   await db.schema.dropTable("cursors").execute();
   await db.schema.dropTable("comments").execute();
   await db.schema.dropTable("images").execute();
   await db.schema.dropTable("likes").execute();
-  await db.schema.dropTable("reTweets").execute();
-  await db.schema.dropTable("savePosts").execute();
+  await db.schema.dropTable("re_tweets").execute();
+  await db.schema.dropTable("save_posts").execute();
   await db.schema.dropTable("posts").execute();
   await db.schema.dropTable("users").execute();
   await db.schema.dropTable("bonding_curve").execute();

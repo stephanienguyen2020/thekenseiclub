@@ -15,7 +15,7 @@ import {
 } from "./utils/sui-utils";
 import BondingCurveSDK from "./bonding_curve";
 import {BONDING_CURVE_MODULE_PACKAGE_ID} from "./constant";
-import path from "path";
+import path from 'path';
 
 class CoinSDK {
     private treasuryCap: string;

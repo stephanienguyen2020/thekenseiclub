@@ -4,10 +4,11 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:300
 
 export async function GET(
     req: Request,
-    { params }: { params: { proposalId: string; wallet: string } }
+    { params }: { params: Promise<{ proposalId: string; wallet: string }> }
 ) {
     try {
-        const response = await fetch(`${BACKEND_URL}/api/proposals/${params.proposalId}/votes/user/${params.wallet}`);
+        const { proposalId, wallet } = await params;
+        const response = await fetch(`${BACKEND_URL}/api/proposals/${proposalId}/votes/user/${wallet}`);
         if (!response.ok) {
             if (response.status === 404) {
                 return NextResponse.json({ error: 'Vote not found' }, { status: 404 });

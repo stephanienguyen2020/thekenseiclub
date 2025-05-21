@@ -226,13 +226,13 @@ export default function CreateProposalPage() {
                 Proposal Image
               </label>
               <div className="mt-2 flex justify-center items-center px-6 pt-5 pb-6 border-4 border-black border-dashed rounded-xl bg-gray-50 hover:bg-gray-100">
-                <div className="space-y-1 text-center">
+                <div className="space-y-4 text-center">
                   {imagePreview ? (
                     <Image src={imagePreview} alt="Proposal preview" width={200} height={200} className="mx-auto h-48 w-auto object-contain rounded-lg border-2 border-black" />
                   ) : (
                     <ImageIcon className="mx-auto h-32 w-32 text-gray-400" size={48} />
                   )}
-                  <div className="flex text-sm text-gray-600">
+                  <div className="flex flex-col items-center gap-2">
                     <label
                       htmlFor="imageUploadInput"
                       className="relative cursor-pointer bg-[#c0ff00] rounded-md font-medium text-black hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-[#c0ff00] p-2 border-2 border-black"
@@ -240,9 +240,9 @@ export default function CreateProposalPage() {
                       <span>Upload an image</span>
                       <input id="imageUploadInput" name="imageUpload" type="file" className="sr-only" onChange={handleImageChange} accept="image/png, image/jpeg, image/jpg" />
                     </label>
+                    <p className="text-xs text-gray-500">PNG, JPG, JPEG up to 5MB</p>
+                    {imageFile && <p className="text-sm text-green-600 font-bold">Selected: {imageFile.name}</p>}
                   </div>
-                  <p className="text-xs text-gray-500">PNG, JPG, JPEG up to 5MB</p>
-                  {imageFile && <p className="text-sm text-green-600 font-bold">Selected: {imageFile.name}</p>}
                 </div>
               </div>
             </div>

@@ -103,8 +103,8 @@ export default function PostCard({ post }: PostCardProps) {
   const handleBoost = () => {
     const retweetPost = async () => {
       await api.post("/posts/reTweet", {
-          postId: post.id,
-          userId: post.user.id,
+        postId: post.id,
+        userId: post.user.id,
         isReTweet: !isBoosted,
       });
 
@@ -180,13 +180,14 @@ export default function PostCard({ post }: PostCardProps) {
       <div className="mt-3">
         <p className="whitespace-pre-wrap">{post.content}</p>
         {post.image && (
-          <div className="mt-3 rounded-2xl overflow-hidden border-2 border-black">
+          <div className="mt-3 rounded-2xl overflow-hidden border-2 border-black relative aspect-[16/9] w-full">
             <Image
               src={post.image || "/placeholder.svg"}
               alt="Post image"
-              width={500}
-              height={300}
-              className="w-full object-cover max-h-[300px]"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
+              priority
             />
           </div>
         )}
@@ -195,9 +196,8 @@ export default function PostCard({ post }: PostCardProps) {
       <div className="mt-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <button
-            className={`flex items-center gap-1 px-3 py-1 rounded-full ${
-              isLiked ? "bg-blue-100 text-blue-600" : "hover:bg-gray-100"
-            }`}
+            className={`flex items-center gap-1 px-3 py-1 rounded-full ${isLiked ? "bg-blue-100 text-blue-600" : "hover:bg-gray-100"
+              }`}
             onClick={handleLike}
           >
             <Heart
@@ -207,9 +207,8 @@ export default function PostCard({ post }: PostCardProps) {
             <span>{likes}</span>
           </button>
           <button
-            className={`flex items-center gap-1 px-3 py-1 rounded-full ${
-              isBoosted ? "bg-green-100 text-green-600" : "hover:bg-gray-100"
-            }`}
+            className={`flex items-center gap-1 px-3 py-1 rounded-full ${isBoosted ? "bg-green-100 text-green-600" : "hover:bg-gray-100"
+              }`}
             onClick={handleBoost}
           >
             <Repeat
@@ -234,9 +233,8 @@ export default function PostCard({ post }: PostCardProps) {
           </div>
 
           <button
-            className={`text-gray-500 hover:bg-gray-100 rounded-full p-1 ${
-              isBookmarked ? "text-blue-600" : ""
-            }`}
+            className={`text-gray-500 hover:bg-gray-100 rounded-full p-1 ${isBookmarked ? "text-blue-600" : ""
+              }`}
             onClick={handleBookmark}
           >
             <Bookmark

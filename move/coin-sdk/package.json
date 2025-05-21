@@ -1,6 +1,6 @@
 {
   "name": "coin-sdk",
-  "version": "1.0.14",
+  "version": "1.0.24",
   "description": "A TypeScript SDK for interacting with the coin contract on Sui blockchain.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -32,7 +32,8 @@
     "@flowx-finance/sdk": "1.2.2-3",
     "@mysten/sui": "^1.27.0",
     "axios": "^1.8.2",
-    "dotenv": "^16.5.0"
+    "dotenv": "^16.5.0",
+    "bignumber.js": "^9.1.2"
   },
   "devDependencies": {
     "@types/node": "^22.14.1",

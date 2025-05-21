@@ -11,6 +11,7 @@ import likesRouter from "./routes/interact";
 import daoRouter from "./routes/dao";
 import balanceRouter from "./routes/balance";
 import nonNativeTokenRouter from "./routes/nonNativeToken";
+import portfolioRouter from "./routes/portfolio";
 import cors from "cors"
 import { connectMongoDB } from './db/mongodb';
 import { scheduledTasks } from './scheduledTasks';
@@ -71,6 +72,7 @@ app.use(userRouter);
 app.use('/api', daoRouter);
 app.use('/api', balanceRouter);
 app.use('/api/non-native-token', nonNativeTokenRouter);
+app.use('/api', portfolioRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
