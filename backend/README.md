@@ -25,6 +25,8 @@ A backend service for blockchain data feeds, providing APIs for OHLCV (Open, Hig
 
 ## Installation
 
+### Option 1: Standard Installation
+
 1. **Clone the repository**
 
    ```bash
@@ -100,8 +102,29 @@ A backend service for blockchain data feeds, providing APIs for OHLCV (Open, Hig
    Or with specific environment variables:
 
    ```bash
-   PORT=3001 NETWORK=devnet PACKAGE_ID=0x8193d051bd13fb4336ad595bbb78dac06fa64ff1c3c3c184483ced397c9d2116 pnpm run dev
+   PORT=3001 NETWORK=testnet PACKAGE_ID=0x8a0e842265d44e3063405bd575cc9e22f10c86fa707858dbf00bdfa506d93aed pnpm run dev
    ```
+
+### Option 2: Docker Installation
+
+You can also run the entire application stack using Docker:
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/yourusername/suihackathon.git
+   cd suihackathon/backend
+   ```
+
+2. **Start with Docker Compose**
+
+   ```bash
+   docker-compose up
+   ```
+
+   This will start the backend service along with PostgreSQL and MongoDB databases.
+
+For more detailed information about Docker setup, see [DOCKER.md](./DOCKER.md).
 
 ## Configuration
 
@@ -117,6 +140,7 @@ DB_PASSWORD=your_secure_password
 
 # Network Configuration
 NETWORK=testnet  # Options: mainnet, testnet, devnet, localnet
+PACKAGE_ID=0x8a0e842265d44e3063405bd575cc9e22f10c86fa707858dbf00bdfa506d93aed
 ```
 
 ## API Documentation

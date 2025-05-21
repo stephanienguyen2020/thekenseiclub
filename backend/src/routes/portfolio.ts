@@ -14,8 +14,8 @@ router.get("/history", async (req, res) => {
 
     const query = db
       .selectFrom("portfolios")
-      .innerJoin("bonding_curve", "portfolios.bonding_curve_id", "bonding_curve.id")
-      .innerJoin("coins", "bonding_curve.coin_metadata", "coins.id")
+      .innerJoin("bondingCurve", "portfolios.bondingCurveId", "bondingCurve.id")
+      .innerJoin("coins", "bondingCurve.coinMetadata", "coins.id")
       .select([
         "portfolios.amount",
         "portfolios.timestamp",
@@ -23,7 +23,7 @@ router.get("/history", async (req, res) => {
         "coins.name",
         "coins.logo",
       ])
-      .where("portfolios.user_address", "=", user_address as string)
+      .where("portfolios.userAddress", "=", user_address as string)
       .orderBy("portfolios.timestamp", "desc");
 
     if (from) {
@@ -54,8 +54,8 @@ router.get("/current", async (req, res) => {
     // Get the latest portfolio entry for each bonding curve
     const portfolio = await db
       .selectFrom("portfolios as p1")
-      .innerJoin("bonding_curve", "p1.bonding_curve_id", "bonding_curve.id")
-      .innerJoin("coins", "bonding_curve.coin_metadata", "coins.id")
+      .innerJoin("bondingCurve", "p1.bondingCurveId", "bondingCurve.id")
+      .innerJoin("coins", "bondingCurve.coinMetadata", "coins.id")
       .select([
         "p1.amount",
         "p1.timestamp",
@@ -63,15 +63,17 @@ router.get("/current", async (req, res) => {
         "coins.name",
         "coins.logo",
       ])
-      .where("p1.user_address", "=", user_address as string)
+      .where("p1.userAddress", "=", user_address as string)
       .where((eb) =>
-        eb.exists(
-          eb
-            .selectFrom("portfolios as p2")
-            .whereRef("p2.bonding_curve_id", "=", "p1.bonding_curve_id")
-            .whereRef("p2.user_address", "=", "p1.user_address")
-            .whereRef("p2.timestamp", ">", "p1.timestamp")
-        ).not()
+        eb.not(
+          eb.exists(
+            eb
+              .selectFrom("portfolios as p2")
+              .whereRef("p2.bondingCurveId", "=", "p1.bondingCurveId")
+              .whereRef("p2.userAddress", "=", "p1.userAddress")
+              .whereRef("p2.timestamp", ">", "p1.timestamp")
+          )
+        )
       )
       .execute();
 

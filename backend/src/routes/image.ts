@@ -1,11 +1,11 @@
-import express, {Request, Response} from "express";
-import multer from "multer";
-import {db} from "../db/database";
-import {PinataSDK} from "pinata";
+import axios from "axios";
 import "dotenv/config";
-import {getWalrusClient, ACTIVE_NETWORK} from "../utils";
-import {getFundedKeypair} from "../funded-keypair";
-import {fileService} from "../services/fileService";
+import express, { Request, Response } from "express";
+import FormData from "form-data";
+import multer from "multer";
+import { PinataSDK } from "pinata";
+import { db } from "../db/database";
+import { fileService } from "../services/fileService";
 
 const router = express.Router();
 console.log("gateway", process.env.GATEWAY_URL);
@@ -54,7 +54,7 @@ router.post("/images", upload.single("file"), async (req: any, res: any) => {
     if (!req.file) {
       return res
         .status(400)
-        .json({error: "No file uploaded or file type not supported"});
+        .json({ error: "No file uploaded or file type not supported" });
     }
 
     const userId = req.body.userId;
@@ -73,17 +73,35 @@ router.post("/images", upload.single("file"), async (req: any, res: any) => {
       },
     };
 
-    const file = new File([fileBuffer], req.file.originalname, {
-      type: req.file.mimetype,
+    // Create a FormData instance for Node.js
+    const formData = new FormData();
+    // Append the file buffer with the correct filename
+    formData.append("file", fileBuffer, {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
     });
 
-    // Upload to Pinata using the upload.file method
-    const pinataResult = await pinata.upload.public.file(file, options);
+    // Add metadata
+    formData.append("pinataMetadata", JSON.stringify(options.metadata));
+
+    // Make a direct API call to Pinata
+    const pinataResponse = await axios.post(
+      "https://uploads.pinata.cloud/v3/files",
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PINATA_JWT}`,
+          ...formData.getHeaders(),
+        },
+      }
+    );
+
+    const pinataResult = pinataResponse.data;
 
     // No need to clean up temporary files when using memory storage
 
     if (!pinataResult.cid) {
-      return res.status(500).json({error: "Failed to upload to Pinata"});
+      return res.status(500).json({ error: "Failed to upload to Pinata" });
     }
 
     // Generate the gateway URL for the uploaded file
@@ -125,7 +143,7 @@ router.post("/images", upload.single("file"), async (req: any, res: any) => {
  */
 router.get("/images/:imageName", async (req: any, res: any) => {
   try {
-    const {imageName} = req.params;
+    const { imageName } = req.params;
 
     // Find the image in the database
     const image = await db
@@ -135,12 +153,12 @@ router.get("/images/:imageName", async (req: any, res: any) => {
       .executeTakeFirst();
 
     if (!image) {
-      return res.status(404).json({error: "Image not found"});
+      return res.status(404).json({ error: "Image not found" });
     }
 
     // Check if the imagePath is a valid URL (should be a Pinata gateway URL)
     if (!image.imagePath || !image.imagePath.startsWith("http")) {
-      return res.status(404).json({error: "Image URL not found or invalid"});
+      return res.status(404).json({ error: "Image URL not found or invalid" });
     }
 
     // Redirect to the Pinata gateway URL
@@ -161,32 +179,36 @@ router.get("/images/:imageName", async (req: any, res: any) => {
  * @param {Response} res - Express response object
  * @returns {Response} 201 on success with blobId, error status on failure
  */
-router.post("/images/walrus", upload.single("file"), async (req: any, res: any) => {
-  try {
-    // Check if file was uploaded
-    if (!req.file) {
-      return res
-        .status(400)
-        .json({error: "No file uploaded or file type not supported"});
+router.post(
+  "/images/walrus",
+  upload.single("file"),
+  async (req: any, res: any) => {
+    try {
+      // Check if file was uploaded
+      if (!req.file) {
+        return res
+          .status(400)
+          .json({ error: "No file uploaded or file type not supported" });
+      }
+
+      // Use the buffer directly from multer's memory storage
+      const fileBuffer = req.file.buffer;
+
+      const { blobId }: any = await fileService.writeWalrusBlob(fileBuffer);
+
+      return res.status(201).json({
+        message: "Image uploaded successfully to Walrus",
+        blobId,
+      });
+    } catch (error) {
+      console.error("Error uploading image to Walrus:", error);
+      return res.status(500).json({
+        error: "Failed to upload image to Walrus",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
     }
-
-    // Use the buffer directly from multer's memory storage
-    const fileBuffer = req.file.buffer;
-
-    const {blobId} = await fileService.writeWalrusBlob(fileBuffer);
-
-    return res.status(201).json({
-      message: "Image uploaded successfully to Walrus",
-      blobId,
-    });
-  } catch (error) {
-    console.error("Error uploading image to Walrus:", error);
-    return res.status(500).json({
-      error: "Failed to upload image to Walrus",
-      details: error instanceof Error ? error.message : "Unknown error",
-    });
   }
-})
+);
 
 /**
  * Get image from Walrus by its blobId
@@ -195,23 +217,26 @@ router.post("/images/walrus", upload.single("file"), async (req: any, res: any) 
  * @param {Response} res - Express response object
  * @returns {Response} 200 with image data
  */
-router.get("/images/walrus/info/:blobId", async (req: Request, res: Response) => {
-  try {
-    const { blobId } = req.params;
-    const buffer = await fileService.getWalrusBuffer(blobId)
-    // Set appropriate content type (assuming image/jpeg, but could be determined dynamically)
-    res.setHeader('Content-Type', 'image/jpeg');
-    res.setHeader('Content-Length', buffer.length);
+router.get(
+  "/images/walrus/info/:blobId",
+  async (req: Request, res: Response) => {
+    try {
+      const { blobId } = req.params;
+      const buffer = await fileService.getWalrusBuffer(blobId);
+      // Set appropriate content type (assuming image/jpeg, but could be determined dynamically)
+      res.setHeader("Content-Type", "image/jpeg");
+      res.setHeader("Content-Length", buffer.length);
 
-    // Send the image data
-    return res.status(200).send(buffer);
-  } catch (error) {
-    console.error("Error retrieving image from Walrus:", error);
-    return res.status(500).json({
-      error: "Failed to retrieve image from Walrus",
-      details: error instanceof Error ? error.message : "Unknown error",
-    });
+      // Send the image data
+      return res.status(200).send(buffer);
+    } catch (error) {
+      console.error("Error retrieving image from Walrus:", error);
+      return res.status(500).json({
+        error: "Failed to retrieve image from Walrus",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   }
-});
+);
 
 export default router;
