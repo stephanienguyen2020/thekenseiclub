@@ -13,7 +13,11 @@ import { Coin } from "@/app/marketplace/types";
 import { AxiosResponse } from "axios";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useParams } from "next/navigation";
-import { formatPrice, formatPercentage, formatLargeNumber } from '@/lib/priceUtils';
+import {
+  formatPrice,
+  formatPercentage,
+  formatLargeNumber,
+} from "@/lib/priceUtils";
 type ProposalStatus = "open" | "closed" | "upcoming";
 
 interface OptionObject {
@@ -52,13 +56,15 @@ export default function TokenDetailPage() {
     "all" | ProposalStatus
   >("all");
   const params = useParams();
-  const id = typeof params.id === 'string' ? params.id : '';
+  const id = typeof params.id === "string" ? params.id : "";
   const [coin, setCoin] = useState<Coin | null>(null);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userVotes, setUserVotes] = useState<Record<string, string>>({});
-  const [votingProposals, setVotingProposals] = useState<Set<string>>(new Set());
+  const [votingProposals, setVotingProposals] = useState<Set<string>>(
+    new Set()
+  );
   const currentAccount = useCurrentAccount();
 
   const formatDate = (dateString: string) => {
@@ -75,65 +81,69 @@ export default function TokenDetailPage() {
   const fetchUserVotes = async (proposalId: string) => {
     if (!currentAccount?.address) return null;
     try {
-      const response = await fetch(`http://localhost:3000/api/daos/votes/user/${proposalId}/${currentAccount.address}`);
+      const response = await fetch(
+        `http://localhost:3000/api/daos/votes/user/${proposalId}/${currentAccount.address}`
+      );
       if (!response.ok) {
         if (response.status === 404) {
           return null;
         }
-        throw new Error('Failed to fetch user vote');
+        throw new Error("Failed to fetch user vote");
       }
       const data = await response.json();
       return data.choice;
     } catch (error) {
-      console.error('Error fetching user vote:', error);
+      console.error("Error fetching user vote:", error);
       return null;
     }
   };
 
   const handleVote = async (proposalId: string, choice: string) => {
     if (!currentAccount?.address) {
-      setError('Please connect your wallet to vote');
+      setError("Please connect your wallet to vote");
       return;
     }
 
     try {
-      setVotingProposals(prev => new Set(prev).add(proposalId));
+      setVotingProposals((prev) => new Set(prev).add(proposalId));
       const signature = "0x" + Math.random().toString(16).substring(2, 66); // Mock signature for now
 
-      const response = await fetch('http://localhost:3000/api/daos/votes', {
-        method: 'POST',
+      const response = await fetch("http://localhost:3000/api/daos/votes", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           wallet: currentAccount.address,
           proposalId,
           choice,
-          signature
-        })
+          signature,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit vote');
+        throw new Error("Failed to submit vote");
       }
 
-      setUserVotes(prev => ({
+      setUserVotes((prev) => ({
         ...prev,
-        [proposalId]: choice
+        [proposalId]: choice,
       }));
 
       // Refresh proposals to get updated vote counts
-      const proposalsResponse = await fetch(`http://localhost:3000/api/daos/token/${id}`);
+      const proposalsResponse = await fetch(
+        `http://localhost:3000/api/daos/token/${id}`
+      );
       if (!proposalsResponse.ok) {
-        throw new Error('Failed to fetch proposals');
+        throw new Error("Failed to fetch proposals");
       }
       const proposalsData = await proposalsResponse.json();
       setProposals(proposalsData.data || []);
     } catch (error) {
-      console.error('Error submitting vote:', error);
-      setError('Failed to submit vote. Please try again.');
+      console.error("Error submitting vote:", error);
+      setError("Failed to submit vote. Please try again.");
     } finally {
-      setVotingProposals(prev => {
+      setVotingProposals((prev) => {
         const newSet = new Set(prev);
         newSet.delete(proposalId);
         return newSet;
@@ -154,7 +164,7 @@ export default function TokenDetailPage() {
           createdAt: data.createdAt || new Date().toISOString(),
           updatedAt: data.updatedAt || new Date().toISOString(),
           image: data.logo,
-          value: data.price * (data.holdings || 0)
+          value: data.price * (data.holdings || 0),
         };
         setCoin(coinData);
 
@@ -264,15 +274,28 @@ export default function TokenDetailPage() {
                 <div className="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
                   <LineChart size={16} />
                   <div>
-                    {formatPrice(coin?.price || 0, { minDecimals: 2, maxDecimals: 8 })}
+                    {formatPrice(coin?.price || 0, {
+                      minDecimals: 2,
+                      maxDecimals: 8,
+                    })}
                   </div>
-                  <div className={`text-sm ${(coin?.change24h || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {(coin?.change24h || 0) >= 0 ? '+' : ''}{formatPercentage(coin?.change24h || 0)}
+                  <div
+                    className={`text-sm ${
+                      (coin?.change24h || 0) >= 0
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }`}
+                  >
+                    {(coin?.change24h || 0) >= 0 ? "+" : ""}
+                    {formatPercentage(coin?.change24h || 0)}
                   </div>
                 </div>
                 <div className="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
                   <Building size={16} />
-                  <span>Market Cap: {formatLargeNumber(coin?.marketCap || 0, { suffix: '' })}</span>
+                  <span>
+                    Market Cap:{" "}
+                    {formatLargeNumber(coin?.marketCap || 0, { suffix: "" })}
+                  </span>
                 </div>
                 <div className="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
                   <Users size={16} />
@@ -459,11 +482,16 @@ export default function TokenDetailPage() {
                       endDate={formatDate(proposal.endDate)}
                       tokenSymbol={coin?.symbol || ""}
                       tokenLogo={coin?.logo || "/placeholder.svg"}
-                      options={proposal.options.map(option => ({
+                      options={proposal.options.map((option) => ({
                         label: option.option,
                         votes: option.votes,
-                        percentage: proposal.voteCount > 0 ? (option.points / proposal.votePoint) * 100 : 0,
-                        isSelected: option.option === proposal.winningOption || option.option === userVotes[proposal._id]
+                        percentage:
+                          proposal.voteCount > 0
+                            ? (option.points / proposal.votePoint) * 100
+                            : 0,
+                        isSelected:
+                          option.option === proposal.winningOption ||
+                          option.option === userVotes[proposal._id],
                       }))}
                       tokenId={id}
                       onVote={(choice) => handleVote(proposal._id, choice)}
