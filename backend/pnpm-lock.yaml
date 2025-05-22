@@ -30,7 +30,7 @@ importers:
         specifier: ^9.3.0
         version: 9.3.0
       coin-sdk:
-        specifier: ^1.0.14
+        specifier: ^1.0.26
         version: 1.0.26(graphql@16.10.0)(typescript@5.8.3)
       cors:
         specifier: ^2.8.5
@@ -622,6 +622,8 @@ packages:
     resolution: {integrity: sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==}
     engines: {node: '>=0.8'}
 
+  coin-sdk@1.0.26:
+    resolution: {integrity: sha512-tosMevRrHRoZhgJ2g+cSvevn1BkY8pCZc5dXDuBEvNCNgLZFBmhi1kzsIULj7DO4iQcpmq+5J0D3KojCxnzLRg==}
   coin-sdk@1.0.26:
     resolution: {integrity: sha512-tosMevRrHRoZhgJ2g+cSvevn1BkY8pCZc5dXDuBEvNCNgLZFBmhi1kzsIULj7DO4iQcpmq+5J0D3KojCxnzLRg==}
 
@@ -2743,6 +2745,7 @@ snapshots:
 
   clone@2.1.2: {}
 
+  coin-sdk@1.0.26(graphql@16.10.0)(typescript@5.8.3):
   coin-sdk@1.0.26(graphql@16.10.0)(typescript@5.8.3):
     dependencies:
       '@flowx-finance/sdk': 1.2.2-3(graphql@16.10.0)(typescript@5.8.3)
