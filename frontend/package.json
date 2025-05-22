@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@7kprotocol/sdk-ts": "^2.4.1",
     "@emotion/is-prop-valid": "latest",
     "@hookform/resolvers": "^3.9.1",
     "@metamask/sdk-react": "^0.32.1",

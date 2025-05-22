@@ -40,6 +40,10 @@ interface Proposal {
     points: number;
     _id: string;
   }[];
+  tag: string;
+  image_upload_id: string;
+  startDate: string;
+  createdBy: string;
 }
 
 export default function TokenDetailPage() {
@@ -466,6 +470,7 @@ export default function TokenDetailPage() {
                       userVote={userVotes[proposal._id]}
                       winningOption={proposal.winningOption}
                       isVoting={votingProposals.has(proposal._id)}
+                      image_upload_id={proposal.image_upload_id}
                     />
                   ))}
                 </div>

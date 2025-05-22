@@ -27,23 +27,26 @@ interface ProposalCardProps {
   userVote?: string
   winningOption?: string
   isVoting?: boolean
+  image_upload_id?: string
 }
 
 export default function ProposalCard({
-                                       id,
-                                       title,
-                                       description,
-                                       status,
-                                       endDate,
-                                       tokenSymbol,
-                                       tokenLogo,
-                                       options,
-                                       tokenId,
-                                       onVote,
-                                       userVote,
-                                       winningOption,
-                                       isVoting
-                                     }: ProposalCardProps) {
+  id,
+  title,
+  description,
+  status,
+  endDate,
+  tokenSymbol,
+  tokenLogo,
+  options,
+  tokenId,
+  onVote,
+  userVote,
+  winningOption,
+  isVoting,
+  image_upload_id
+}: ProposalCardProps) {
+  console.log(userVote)
   const [showAllOptions, setShowAllOptions] = useState(false)
   const [selectedOption, setSelectedOption] = useState<number | null>(
     userVote ? options.findIndex(opt => opt.label === userVote) : null
@@ -90,13 +93,10 @@ export default function ProposalCard({
   }
 
   const getOptionStyle = (option: VoteOption, isSelected: boolean) => {
-    if (winningOption === option.label) {
+    if (status === "closed" && winningOption === option.label) {
       return "bg-green-500 bg-opacity-10 border-2 border-green-500 text-green-500"
     }
-    if (userVote === option.label) {
-      return "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4] text-[#0046F4]"
-    }
-    if (isSelected) {
+    if (status === "open" && userVote === option.label) {
       return "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4] text-[#0046F4]"
     }
     if (status === "open" && !userVote) {
@@ -134,6 +134,18 @@ export default function ProposalCard({
         </div>
       </div>
 
+      {/* Proposal Image */}
+      {image_upload_id && (
+        <div className="relative w-full h-48 border-b-2 border-black">
+          <Image
+            src={`/api/daos/proposals/${id}/image`}
+            alt={title}
+            fill
+            className="object-cover"
+          />
+        </div>
+      )}
+
       {/* Proposal Content */}
       <div className="px-4 py-4">
         <h2 className="text-xl font-bold mb-1">{title}</h2>
@@ -160,14 +172,12 @@ export default function ProposalCard({
             >
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  {(isSelected || isUserVote || isWinning) && (
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                      isWinning ? 'bg-green-500' : 'bg-[#0046F4]'
-                    }`}>
+                  {(isUserVote) && (
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[#0046F4]">
                       <Check className="text-white" size={14} />
                     </div>
                   )}
-                  {isInteractive && !isSelected && !isUserVote && !isWinning && (
+                  {isInteractive && !isUserVote && !isWinning && (
                     <div className="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-[#0046F4] transition-colors duration-200" />
                   )}
                   <span className="font-medium">{option.label}</span>

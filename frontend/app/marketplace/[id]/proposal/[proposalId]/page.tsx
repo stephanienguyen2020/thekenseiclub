@@ -75,7 +75,7 @@ export default function ProposalDetailPage({
           options: data.options.map((opt: Option) => ({
             label: opt.option,
             votes: opt.votes,
-            percentage: (opt.points / data.votePoint) * 100 || 0,
+            percentage: (opt.points / data.votePoint) * 100,
             isSelected: opt.option === data.winningOption
           })),
           quorum: 0, // Not provided in API

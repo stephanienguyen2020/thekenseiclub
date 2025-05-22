@@ -10,6 +10,7 @@ import commentRouter from "./routes/comments";
 import likesRouter from "./routes/interact";
 import daoRouter from "./routes/dao";
 import balanceRouter from "./routes/balance";
+import nonNativeTokenRouter from "./routes/nonNativeToken";
 import portfolioRouter from "./routes/portfolio";
 import cors from "cors"
 import { connectMongoDB } from './db/mongodb';
@@ -70,6 +71,7 @@ app.use(likesRouter);
 app.use(userRouter);
 app.use('/api', daoRouter);
 app.use('/api', balanceRouter);
+app.use('/api/non-native-token', nonNativeTokenRouter);
 app.use('/api', portfolioRouter);
 
 // Error handling middleware
