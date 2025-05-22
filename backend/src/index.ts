@@ -12,9 +12,13 @@ import daoRouter from "./routes/dao";
 import balanceRouter from "./routes/balance";
 import nonNativeTokenRouter from "./routes/nonNativeToken";
 import portfolioRouter from "./routes/portfolio";
+import twitterRouter from "./routes/twitter";
 import cors from "cors"
+import session from 'express-session';
 import { connectMongoDB } from './db/mongodb';
 import { scheduledTasks } from './scheduledTasks';
+
+
 // import './indexer/cron';
 
 // Get port from environment variable or use default
@@ -35,6 +39,18 @@ const corsOptions = {
 
 // Apply CORS middleware
 app.use(cors(corsOptions));
+
+// Setup session middleware
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
 
 // Setup blockchain event listeners
 setupListeners();
@@ -73,6 +89,7 @@ app.use('/api', daoRouter);
 app.use('/api', balanceRouter);
 app.use('/api/non-native-token', nonNativeTokenRouter);
 app.use('/api', portfolioRouter);
+app.use('/api/twitter', twitterRouter);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
