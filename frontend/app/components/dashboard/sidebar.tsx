@@ -63,7 +63,7 @@ export default function DashboardSidebar() {
   ];
 
   return (
-    <div className="h-screen bg-[#0039C6] w-64 flex-shrink-0 border-r-4 border-black">
+    <div className="fixed left-0 top-20 h-[calc(100vh-5rem)] bg-[#0039C6] w-64 flex-shrink-0 border-r-4 border-black z-40">
       <div className="p-4">
         <div className="mb-6">
           <div className="flex items-center gap-3 bg-[#0046F4] p-3 rounded-xl border-4 border-black">
