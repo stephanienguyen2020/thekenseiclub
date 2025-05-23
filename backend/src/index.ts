@@ -14,6 +14,9 @@ import nonNativeTokenRouter from "./routes/nonNativeToken";
 import ohlcvRouter from "./routes/ohlcv";
 import portfolioRouter from "./routes/portfolio";
 import twitterRouter from "./routes/twitter";
+import userRouter from "./routes/user"
+import postRouter from "./routes/posts"
+
 import { scheduledTasks } from "./scheduledTasks";
 
 // import './indexer/cron';

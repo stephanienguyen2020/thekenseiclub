@@ -176,3 +176,55 @@ User input: "${userInput}"
     throw error;
   }
 }
+
+export async function getTokenTags(userInput: string) {
+  const prompt = `
+You are an AI classifier for meme tokens in the crypto space. Your task is to analyze the token information and classify it into tribes and provide relevant meme metadata.
+
+Token Information to analyze:
+${userInput}
+
+Classify the token into one of these primary tribes:
+1. Canine Clan (dog-related tokens)
+2. Feline Syndicate (cat-related tokens)
+3. Aquatic Order (sea/water-related tokens)
+4. Wildcard Degens (other meme tokens)
+
+Return the analysis in the following JSON format:
+{
+  "tribe": {
+    "name": "primary tribe name",
+    "confidence": "confidence score 1-100",
+    "subCategory": "specific category within tribe"
+  }
+}
+`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+      temperature: 0.7,
+    });
+
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error("No content received from OpenAI");
+    }
+
+    // Parse and validate the response
+    const result = JSON.parse(content);
+    
+    // Add timestamp and version
+    return {
+      ...result,
+      timestamp: new Date().toISOString(),
+      version: "1.0",
+      analysisType: "meme-tribe-classification"
+    };
+  } catch (error: any) {
+    console.error("Error in getTokenTags:", error);
+    throw new Error(`Failed to analyze token: ${error.message || 'Unknown error'}`);
+  }
+}
