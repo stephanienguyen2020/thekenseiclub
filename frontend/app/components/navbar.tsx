@@ -13,6 +13,7 @@ import {
   Bot,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import {
   useCurrentAccount,
@@ -34,7 +35,6 @@ interface NavbarProps {
 export default function Navbar({ isAuthenticated = false }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNetworkOpen, setIsNetworkOpen] = useState(false);
   const currentAccount = useCurrentAccount();
   const { mutate: disconnectWallet } = useDisconnectWallet();
@@ -236,80 +236,84 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
             </button>
 
             {/* Avatar/Wallet Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="w-10 h-10 rounded-full bg-[#c0ff00] flex items-center justify-center border-2 border-black"
+            <div className="relative group">
+              <Link
+                href="/dashboard/settings"
+                className="block w-10 h-10 rounded-full overflow-hidden border-2 border-black cursor-pointer hover:border-[#c0ff00] transition-colors"
               >
-                <User size={20} className="text-black" />
-              </button>
-              {isProfileOpen && (
-                <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[220px] border-2 border-black">
-                  {currentAccount ? (
-                    <>
-                      <div className="px-4 py-2">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            <Wallet size={16} className="text-gray-600" />
-                            <span className="text-sm font-medium">Address</span>
-                          </div>
-                          <span className="text-xs text-gray-600">
-                            {formatAddress(currentAccount.address)}
+                <Image
+                  src="/pixel-cool-cat.png"
+                  alt="Profile avatar"
+                  width={40}
+                  height={40}
+                  className="object-cover w-full h-full"
+                />
+              </Link>
+              {/* Buffer div positioned absolutely to not affect button size */}
+              <div className="absolute inset-x-0 h-2 bottom-0 translate-y-full" />
+              <div className="hidden group-hover:block absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg p-2 z-50 min-w-[220px] border-2 border-black">
+                {currentAccount ? (
+                  <>
+                    <div className="px-4 py-2">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <Wallet size={16} className="text-gray-600" />
+                          <span className="text-sm font-medium">Address</span>
+                        </div>
+                        <span className="text-xs text-gray-600">
+                          {formatAddress(currentAccount.address)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="px-4 py-2">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <Globe size={16} className="text-gray-600" />
+                          <span className="text-sm font-medium">
+                            SUI Network
                           </span>
                         </div>
                       </div>
-                      <div className="px-4 py-2">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            <Globe size={16} className="text-gray-600" />
-                            <span className="text-sm font-medium">
-                              SUI Network
-                            </span>
-                          </div>
-                        </div>
+                    </div>
+                    <Link
+                      href="/dashboard/settings"
+                      className="block px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Settings size={16} />
+                        <span>Settings</span>
                       </div>
-                      <Link
-                        href="/dashboard/settings"
-                        className="block px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Settings size={16} />
-                          <span>Settings</span>
-                        </div>
-                      </Link>
-                      <button
-                        onClick={() => handleDisconnect()}
-                        className="w-full text-left px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
-                      >
-                        <div className="flex items-center gap-2">
-                          <LogOut size={16} />
-                          <span>Disconnect</span>
-                        </div>
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        onClick={handleConnect}
-                        className="w-full text-left px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
-                      >
-                        Connect Wallet
-                      </button>
-                      <Link
-                        href="/dashboard/settings"
-                        className="block px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Settings size={16} />
-                          <span>Settings</span>
-                        </div>
-                      </Link>
-                    </>
-                  )}
-                </div>
-              )}
+                    </Link>
+                    <button
+                      onClick={() => handleDisconnect()}
+                      className="w-full text-left px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
+                    >
+                      <div className="flex items-center gap-2">
+                        <LogOut size={16} />
+                        <span>Disconnect</span>
+                      </div>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleConnect}
+                      className="w-full text-left px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
+                    >
+                      Connect Wallet
+                    </button>
+                    <Link
+                      href="/dashboard/settings"
+                      className="block px-4 py-2 text-sm text-black hover:bg-[#0046F4] hover:text-white rounded-lg"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Settings size={16} />
+                        <span>Settings</span>
+                      </div>
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </>
         ) : (
