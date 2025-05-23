@@ -45,8 +45,8 @@ export default function MarketplacePage() {
 
   const chainOptions = [
     { value: "kensei", label: "Kensei", color: "#0039C6" },
-    { value: "sui", label: "Sui", color: "#4DA2FF" },
-    { value: "ethereum", label: "ETH", color: "#627EEA" },
+    { value: "sui", label: "Sui", color: "#4DA2FF", image: "/sui.jpg" },
+    { value: "ethereum", label: "ETH", color: "#627EEA", image: "/eth.png" },
   ];
 
   // Save watchlist to localStorage when it changes
@@ -240,10 +240,20 @@ export default function MarketplacePage() {
                   onClick={() => setIsChainDropdownOpen(!isChainDropdownOpen)}
                   className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center gap-1 font-medium transition-all"
                 >
-                  <div
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: selectedChainOption?.color }}
-                  ></div>
+                  {selectedChainOption?.image ? (
+                    <Image
+                      src={selectedChainOption.image}
+                      width={16}
+                      height={16}
+                      alt={selectedChainOption.label}
+                      className="rounded-full flex-shrink-0"
+                    />
+                  ) : (
+                    <div
+                      className="w-4 h-4 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: selectedChainOption?.color }}
+                    ></div>
+                  )}
                   <span>{selectedChainOption?.label}</span>
                   <ChevronDown
                     size={16}
@@ -263,10 +273,20 @@ export default function MarketplacePage() {
                           selectedChain === option.value ? "bg-gray-100" : ""
                         }`}
                       >
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: option.color }}
-                        ></div>
+                        {option.image ? (
+                          <Image
+                            src={option.image}
+                            width={16}
+                            height={16}
+                            alt={option.label}
+                            className="rounded-full flex-shrink-0"
+                          />
+                        ) : (
+                          <div
+                            className="w-4 h-4 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: option.color }}
+                          ></div>
+                        )}
                         <span className="font-medium">{option.label}</span>
                         {selectedChain === option.value && (
                           <ChevronRight size={16} className="ml-auto" />
