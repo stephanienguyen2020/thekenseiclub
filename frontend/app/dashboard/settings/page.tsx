@@ -2,11 +2,20 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Upload, Wallet, History, Twitter, Save } from "lucide-react";
+import {
+  Upload,
+  Wallet,
+  History,
+  Twitter,
+  Save,
+  MessageCircle,
+  Send,
+  Facebook,
+} from "lucide-react";
 import { useSuiWallet } from "@/hooks/useSuiWallet";
 import { toast } from "@/hooks/use-toast";
 import { useCurrentAccount } from "@mysten/dapp-kit";
-import {fetchUserByAddress, updateUserProfile} from "@/app/api/users/route";
+import { fetchUserByAddress, updateUserProfile } from "@/app/api/users/route";
 
 export default function SettingsPage() {
   const currentAccount = useCurrentAccount();
@@ -306,25 +315,71 @@ export default function SettingsPage() {
           <h2 className="text-xl font-bold">Social Connections</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <div className="font-medium mb-2">Connected Accounts</div>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            <h3 className="font-bold text-lg">Connected Accounts</h3>
+            <h3 className="font-bold text-lg">Connect New Account</h3>
+          </div>
+
+          {/* Twitter Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
             <div className="bg-white rounded-xl p-4 flex items-center justify-between border-2 border-black">
               <div className="flex items-center gap-3">
                 <Twitter size={20} className="text-[#1DA1F2]" />
-                <span className="text-gray-700">Twitter</span>
+                <span className="text-gray-700 font-medium">Twitter</span>
               </div>
               <button className="text-red-500 hover:text-red-700 font-medium text-sm transition-colors">
                 Disconnect
               </button>
             </div>
-          </div>
-
-          <div>
-            <div className="font-medium mb-2">Connect New Account</div>
-            <button className="bg-[#1DA1F2] hover:bg-[#0d8bd9] text-white px-4 py-3 rounded-xl font-bold w-full flex items-center justify-center gap-2 border-2 border-black transition-colors">
+            <button className="bg-[#1DA1F2] hover:bg-[#0d8bd9] text-white px-6 py-3 rounded-xl font-bold w-full flex items-center justify-center gap-3 border-2 border-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
               <Twitter size={20} />
               Connect Twitter
+            </button>
+          </div>
+
+          {/* Discord Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between border-2 border-gray-300">
+              <div className="flex items-center gap-3">
+                <MessageCircle size={20} className="text-gray-400" />
+                <span className="text-gray-500 font-medium">Discord</span>
+              </div>
+              <span className="text-gray-400 text-sm">Not connected</span>
+            </div>
+            <button className="bg-[#5865F2] hover:bg-[#4752C4] text-white px-6 py-3 rounded-xl font-bold w-full flex items-center justify-center gap-3 border-2 border-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <MessageCircle size={20} />
+              Connect Discord
+            </button>
+          </div>
+
+          {/* Telegram Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between border-2 border-gray-300">
+              <div className="flex items-center gap-3">
+                <Send size={20} className="text-gray-400" />
+                <span className="text-gray-500 font-medium">Telegram</span>
+              </div>
+              <span className="text-gray-400 text-sm">Not connected</span>
+            </div>
+            <button className="bg-[#0088cc] hover:bg-[#006699] text-white px-6 py-3 rounded-xl font-bold w-full flex items-center justify-center gap-3 border-2 border-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <Send size={20} />
+              Connect Telegram
+            </button>
+          </div>
+
+          {/* Facebook Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between border-2 border-gray-300">
+              <div className="flex items-center gap-3">
+                <Facebook size={20} className="text-gray-400" />
+                <span className="text-gray-500 font-medium">Facebook</span>
+              </div>
+              <span className="text-gray-400 text-sm">Not connected</span>
+            </div>
+            <button className="bg-[#1877F2] hover:bg-[#166FE5] text-white px-6 py-3 rounded-xl font-bold w-full flex items-center justify-center gap-3 border-2 border-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <Facebook size={20} />
+              Connect Facebook
             </button>
           </div>
         </div>
