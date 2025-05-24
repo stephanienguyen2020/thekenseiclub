@@ -26,9 +26,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Enhance the prompt with cute animals, water, and Ghibli themes
+    const enhancedPrompt = `${prompt}, featuring cute adorable animals near water, in the magical whimsical style of Studio Ghibli animation, with soft pastel colors, gentle lighting, and enchanting atmosphere`;
+
     const response = await openai.images.generate({
       model: "dall-e-3",
-      prompt: prompt,
+      prompt: enhancedPrompt,
       n: 1,
       size: "1024x1024",
       quality: "standard",
