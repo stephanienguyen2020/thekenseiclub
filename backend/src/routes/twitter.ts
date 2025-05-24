@@ -16,10 +16,19 @@ const tempTokenStorage = new Map<string, string>();
 // Get OAuth URL for Twitter login
 router.get('/auth/url', async (req, res) => {
   try {
+    const { walletAddress } = req.query;
+    
+    if (!walletAddress) {
+      return res.status(400).json({ error: 'Wallet address is required' });
+    }
+
     const authData = await twitterService.getAuthUrl();
     
-    // Store oauth_token_secret mapped to oauth_token
-    tempTokenStorage.set(authData.oauth_token, authData.oauth_token_secret);
+    // Store oauth_token_secret and wallet address mapped to oauth_token
+    tempTokenStorage.set(authData.oauth_token, JSON.stringify({
+      oauth_token_secret: authData.oauth_token_secret,
+      walletAddress,
+    }));
     
     // Only send the URL to client
     res.json({ url: authData.url });
@@ -34,14 +43,17 @@ router.get('/auth/callback', async (req, res) => {
     const { oauth_token, oauth_verifier } = req.query;
     
     if (!oauth_token || !oauth_verifier) {
-      return res.status(400).json({ error: 'Missing required OAuth parameters' });
+      return res.redirect(`${process.env.FRONTEND_URL}/dashboard/settings?error=Missing required OAuth parameters`);
     }
 
-    // Get the stored oauth_token_secret
-    const oauth_token_secret = tempTokenStorage.get(oauth_token as string);
-    if (!oauth_token_secret) {
-      return res.status(400).json({ error: 'OAuth token expired or invalid' });
+    // Get the stored data
+    const storedData = tempTokenStorage.get(oauth_token as string);
+    if (!storedData) {
+      return res.redirect(`${process.env.FRONTEND_URL}/dashboard/settings?error=OAuth token expired or invalid`);
     }
+    console.log(storedData);
+    
+    const { oauth_token_secret, walletAddress } = JSON.parse(storedData);
 
     // Delete the token from storage
     tempTokenStorage.delete(oauth_token as string);
@@ -49,13 +61,15 @@ router.get('/auth/callback', async (req, res) => {
     const result = await twitterService.handleCallback(
       oauth_token as string,
       oauth_verifier as string,
-      oauth_token_secret
+      oauth_token_secret,
+      walletAddress
     );
 
-    res.json(result);
+    // Redirect back to frontend settings page with success
+    res.redirect(`${process.env.FRONTEND_URL}/dashboard/settings?twitter=connected&username=${result.username}`);
   } catch (error) {
     console.error('Callback error:', error);
-    res.status(500).json({ error: 'Failed to complete authentication' });
+    res.redirect(`${process.env.FRONTEND_URL}/dashboard/settings?error=Failed to complete authentication`);
   }
 });
 
@@ -86,11 +100,11 @@ router.post('/tweet', upload.array('images', 4), async (req, res) => {
 // Get Twitter account info
 router.get('/account', async (req, res) => {
   try {
-    const { username } = req.query;
-    if (!username) {
-      return res.status(400).json({ error: 'Twitter username is required' });
+    const { walletAddress } = req.query;
+    if (!walletAddress) {
+      return res.status(400).json({ error: 'Wallet address is required' });
     }
-    const account = await twitterService.getConnectedAccount(username as string);
+    const account = await twitterService.getConnectedAccount(walletAddress as string);
     res.json(account);
   } catch (error) {
     res.status(500).json({ error: 'Failed to get account info' });

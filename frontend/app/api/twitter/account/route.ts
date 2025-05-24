@@ -15,7 +15,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const response = await fetch(`${BACKEND_URL}/api/twitter/auth/url?walletAddress=${walletAddress}`, {
+    const response = await fetch(`${BACKEND_URL}/api/twitter/account?walletAddress=${walletAddress}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -23,14 +23,15 @@ export async function GET(request: Request) {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to get Twitter auth URL');
+      throw new Error('Failed to get Twitter account status');
     }
 
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
+    
     return NextResponse.json(
-      { error: 'Failed to initiate Twitter authentication: ' + error },
+      { error: 'Failed to get Twitter account status' },
       { status: 500 }
     );
   }

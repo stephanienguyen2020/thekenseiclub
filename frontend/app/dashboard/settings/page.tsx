@@ -26,6 +26,8 @@ export default function SettingsPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchingUserData, setFetchingUserData] = useState(true);
+  const [isConnectingTwitter, setIsConnectingTwitter] = useState(false);
+  const [twitterAccount, setTwitterAccount] = useState<{ username?: string; connected: boolean } | null>(null);
 
   // Fetch user data when component mounts
   useEffect(() => {
@@ -52,6 +54,72 @@ export default function SettingsPage() {
 
     fetchUserData();
   }, [currentAccount?.address]);
+
+  // Fetch Twitter connection status
+  useEffect(() => {
+    async function checkTwitterConnection() {
+      if (currentAccount?.address) {
+        try {
+          const response = await fetch(`/api/twitter/account?walletAddress=${currentAccount.address}`);
+          if (!response.ok) {
+            throw new Error('Failed to check Twitter connection');
+          }
+          const data = await response.json();
+          if (data.error) {
+            console.error('Error checking Twitter connection:', data.error);
+            setTwitterAccount({ connected: false });
+            return;
+          }
+          setTwitterAccount(data);
+        } catch (error) {
+          console.error('Error checking Twitter connection:', error);
+          setTwitterAccount({ connected: false });
+          toast({
+            title: "Error",
+            description: "Failed to check Twitter connection status",
+            type: "foreground",
+          });
+        }
+      } else {
+        setTwitterAccount({ connected: false });
+      }
+    }
+
+    checkTwitterConnection();
+  }, [currentAccount?.address]);
+
+  // Handle Twitter connection status from URL params
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const error = searchParams.get('error');
+    const twitterConnected = searchParams.get('twitter');
+    const twitterUsername = searchParams.get('username');
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: decodeURIComponent(error),
+        type: "foreground",
+      });
+    } else if (twitterConnected === 'connected' && twitterUsername) {
+      toast({
+        title: "Success",
+        description: `Successfully connected Twitter account @${twitterUsername}`,
+        type: "foreground",
+      });
+      // Update Twitter account state
+      setTwitterAccount({
+        username: twitterUsername,
+        connected: true
+      });
+    }
+
+    // Clean up URL params
+    if (error || twitterConnected) {
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -108,6 +176,46 @@ export default function SettingsPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTwitterConnect = async () => {
+    if (!currentAccount?.address) {
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first.",
+        type: "foreground",
+      });
+      return;
+    }
+
+    try {
+      setIsConnectingTwitter(true);
+      const response = await fetch(`/api/twitter?walletAddress=${currentAccount.address}`);
+      if (!response.ok) {
+        throw new Error('Failed to get Twitter auth URL');
+      }
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      if (data.url) {
+        // Redirect to Twitter auth page
+        window.location.href = data.url;
+      } else {
+        throw new Error('Failed to get Twitter auth URL');
+      }
+    } catch (error) {
+      console.error('Twitter connect error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to connect Twitter account. Please try again.",
+        type: "foreground",
+      });
+    } finally {
+      setIsConnectingTwitter(false);
     }
   };
 
@@ -323,18 +431,30 @@ export default function SettingsPage() {
 
           {/* Twitter Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-            <div className="bg-white rounded-xl p-4 flex items-center justify-between border-2 border-black">
+            <div className={`${twitterAccount?.connected ? 'bg-white' : 'bg-gray-50'} rounded-xl p-4 flex items-center justify-between border-2 ${twitterAccount?.connected ? 'border-black' : 'border-gray-300'}`}>
               <div className="flex items-center gap-3">
-                <Twitter size={20} className="text-[#1DA1F2]" />
-                <span className="text-gray-700 font-medium">Twitter</span>
+                <Twitter size={20} className={twitterAccount?.connected ? 'text-[#1DA1F2]' : 'text-gray-400'} />
+                <span className={`${twitterAccount?.connected ? 'text-gray-700' : 'text-gray-500'} font-medium`}>
+                  {twitterAccount?.connected && twitterAccount.username ? `@${twitterAccount.username}` : 'Twitter'}
+                </span>
               </div>
-              <button className="text-red-500 hover:text-red-700 font-medium text-sm transition-colors">
-                Disconnect
-              </button>
+              {twitterAccount?.connected ? (
+                <button className="text-red-500 hover:text-red-700 font-medium text-sm transition-colors">
+                  Disconnect
+                </button>
+              ) : (
+                <span className="text-gray-400 text-sm">Not connected</span>
+              )}
             </div>
-            <button className="bg-[#1DA1F2] hover:bg-[#0d8bd9] text-white px-6 py-3 rounded-xl font-bold w-full flex items-center justify-center gap-3 border-2 border-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            <button 
+              onClick={handleTwitterConnect}
+              disabled={isConnectingTwitter || !currentAccount?.address}
+              className={`bg-[#1DA1F2] hover:bg-[#0d8bd9] text-white px-6 py-3 rounded-xl font-bold w-full flex items-center justify-center gap-3 border-2 border-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
+                (!currentAccount?.address || isConnectingTwitter) ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
               <Twitter size={20} />
-              Connect Twitter
+              {isConnectingTwitter ? 'Connecting...' : 'Connect Twitter'}
             </button>
           </div>
 

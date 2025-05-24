@@ -4,6 +4,7 @@ export interface ITwitter extends Document {
   accessToken: string;
   accessSecret: string;
   username: string;
+  walletAddress: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -13,6 +14,11 @@ const TwitterSchema: Schema = new Schema({
     type: String,
     required: true,
     unique: true,
+  },
+  walletAddress: {
+    type: String,
+    required: true,
+    index: true,
   },
   accessToken: {
     type: String,
