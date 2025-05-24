@@ -3,6 +3,7 @@ import { getActiveAddress } from "coin-sdk/dist/src/utils/sui-utils";
 import express from "express";
 import { db } from "../db/database";
 import { balanceService } from "../services/balanceService";
+import { daoService } from "../services/daoService";
 import { getCurrentPrice, getMarketData } from "../services/marketDataService";
 import { ACTIVE_NETWORK, getClient } from "../utils";
 
@@ -190,6 +191,10 @@ router.get("/coins", async (req: any, res: any) => {
           );
           return { ...enrichedCoin, ...marketData };
         }
+
+        // For coins without bonding curve, get proposal count
+        const proposals = await daoService.getProposalsByToken(coin.id);
+
         return {
           ...enrichedCoin,
           suiPrice: 0,
@@ -198,6 +203,7 @@ router.get("/coins", async (req: any, res: any) => {
           volume24h: "0",
           marketCap: "0",
           holders: 0,
+          proposals: proposals.length,
         };
       })
     );
@@ -268,11 +274,16 @@ router.get("/coin/:id", async (req: any, res: any) => {
       volume24h: "0",
       marketCap: "0",
       holders: 0,
+      proposals: 0,
     };
 
     if (coin.bondingCurveId) {
       const price = await getCurrentPrice(coin.bondingCurveId);
       marketData = await getMarketData(coin.id, coin.bondingCurveId, price);
+    } else {
+      // Even if there's no bonding curve, we still want to get the proposal count
+      const proposals = await daoService.getProposalsByToken(coin.id);
+      marketData.proposals = proposals.length;
     }
 
     // Return coin with market data and tribe information
@@ -483,11 +494,16 @@ router.get("/coin/name/:name", async (req: any, res: any) => {
       volume24h: "0",
       marketCap: "0",
       holders: 0,
+      proposals: 0,
     };
 
     if (coin.bondingCurveId) {
       const price = await getCurrentPrice(coin.bondingCurveId);
       marketData = await getMarketData(coin.id, coin.bondingCurveId, price);
+    } else {
+      // Even if there's no bonding curve, we still want to get the proposal count
+      const proposals = await daoService.getProposalsByToken(coin.id);
+      marketData.proposals = proposals.length;
     }
 
     // Return coin with market data

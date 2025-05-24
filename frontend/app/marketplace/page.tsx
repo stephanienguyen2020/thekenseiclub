@@ -146,11 +146,7 @@ export default function MarketplacePage() {
         if (selectedChain === "kensei") {
           // Use existing coins API for Kensei
           const rs: AxiosResponse<CoinList> = await api.get("/coins");
-          const coinList = rs.data.data.map((ele) => ({
-            ...ele,
-            proposals: 8,
-          }));
-          setCoins(coinList);
+          setCoins(rs.data.data);
         } else {
           // Use nonNativeToken API for Sui and ETH through Next.js API route
           const platform = selectedChain === "sui" ? "sui" : "ethereum";

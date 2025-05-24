@@ -1,6 +1,7 @@
 "use client";
 
 import { useCurrentAccount } from "@mysten/dapp-kit";
+import { formatAddress } from "@mysten/sui/utils";
 import { ExternalLink, ImageIcon, Trophy } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -154,10 +155,7 @@ export default function MyNFTsPage() {
                   {/* NFT ID */}
                   <div className="bg-gray-100 p-2 rounded-lg border-2 border-gray-300 mb-4">
                     <p className="text-xs font-bold text-gray-500 mb-1">
-                      Object ID:
-                    </p>
-                    <p className="text-xs font-mono text-black break-all">
-                      {nft.id}
+                      Object ID: {formatAddress(nft.id)}
                     </p>
                   </div>
 
