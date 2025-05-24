@@ -78,6 +78,7 @@ export default function MarketplacePage() {
     { value: "kensei", label: "Kensei", color: "#0039C6" },
     { value: "sui", label: "Sui", color: "#4DA2FF", image: "/sui.jpg" },
     { value: "ethereum", label: "ETH", color: "#627EEA", image: "/eth.png" },
+    { value: "solana", label: "SOL", color: "#9945FF", image: "/sol.png" },
   ];
 
   // Tribe options for dropdown

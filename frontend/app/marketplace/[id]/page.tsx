@@ -1,23 +1,55 @@
 "use client";
 
+import { Coin } from "@/app/marketplace/types";
 import Navbar from "@/components/navbar";
 import ProposalCard from "@/components/proposal-card";
 import TokenFeed from "@/components/token-feed";
 import TradingView from "@/components/trading-view";
+import api from "@/lib/api";
+import {
+  formatLargeNumber,
+  formatPercentage,
+  formatPrice,
+} from "@/lib/priceUtils";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { AxiosResponse } from "axios";
 import { ArrowLeft, Building, LineChart, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import api from "@/lib/api";
-import { Coin } from "@/app/marketplace/types";
-import { AxiosResponse } from "axios";
-import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useParams } from "next/navigation";
-import {
-  formatPrice,
-  formatPercentage,
-  formatLargeNumber,
-} from "@/lib/priceUtils";
+import { useEffect, useState } from "react";
+
+// Define the available tribes (matching backend)
+const TRIBES = {
+  CANINE_CLANS: "canine_clans",
+  FELINE_SYNDICATES: "feline_syndicates",
+  AQUATIC_ORDERS: "aquatic_orders",
+  WILDCARDS: "wildcards",
+} as const;
+
+// Tribe metadata for UI display
+const TRIBE_METADATA = {
+  [TRIBES.CANINE_CLANS]: {
+    name: "Canine Clans",
+    emoji: "🐕",
+    description: "Dog coins coordinate from the Kennel Council",
+  },
+  [TRIBES.FELINE_SYNDICATES]: {
+    name: "Feline Syndicates",
+    emoji: "🐱",
+    description: "Cat tokens organize in the Litterbox Syndicate",
+  },
+  [TRIBES.AQUATIC_ORDERS]: {
+    name: "Aquatic Orders",
+    emoji: "🐠",
+    description: "Degen fish make waves from The Reef",
+  },
+  [TRIBES.WILDCARDS]: {
+    name: "Wildcards",
+    emoji: "🃏",
+    description: "Unique tokens that march to their own beat",
+  },
+};
 type ProposalStatus = "open" | "closed" | "upcoming";
 
 interface OptionObject {
@@ -266,6 +298,33 @@ export default function TokenDetailPage() {
                 <span className="bg-gray-100 px-2 py-1 rounded-full text-sm">
                   {coin?.symbol}
                 </span>
+                {/* Tribe Tag */}
+                {coin?.tribe &&
+                  TRIBE_METADATA[coin.tribe as keyof typeof TRIBE_METADATA] && (
+                    <div
+                      className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 px-3 py-1 rounded-full flex items-center gap-1"
+                      title={
+                        TRIBE_METADATA[
+                          coin.tribe as keyof typeof TRIBE_METADATA
+                        ].description
+                      }
+                    >
+                      <span className="text-lg">
+                        {
+                          TRIBE_METADATA[
+                            coin.tribe as keyof typeof TRIBE_METADATA
+                          ].emoji
+                        }
+                      </span>
+                      <span className="text-sm font-medium text-blue-800">
+                        {
+                          TRIBE_METADATA[
+                            coin.tribe as keyof typeof TRIBE_METADATA
+                          ].name
+                        }
+                      </span>
+                    </div>
+                  )}
               </div>
               <p className="text-gray-600 mb-4">{coin?.description}</p>
               <div className="flex flex-wrap gap-4">
