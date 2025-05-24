@@ -11,13 +11,20 @@ import {
   formatPercentage,
   formatPrice,
 } from "@/lib/priceUtils";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+  useSuiClient,
+} from "@mysten/dapp-kit";
 import { AxiosResponse } from "axios";
+import { Network } from "coin-sdk/dist/src/utils/sui-utils";
 import { ArrowLeft, Building, LineChart, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import NFTPopup from "../../../components/nft-popup";
+import { nftService } from "../../../services/nftService";
 
 // Define the available tribes (matching backend)
 const TRIBES = {
@@ -98,6 +105,24 @@ export default function TokenDetailPage() {
     new Set()
   );
   const currentAccount = useCurrentAccount();
+  // NFT popup states
+  const [showNFTPopup, setShowNFTPopup] = useState(false);
+  const [mintedNFT, setMintedNFT] = useState<any>(null);
+  const [nftTransactionHash, setNFTTransactionHash] = useState<string>("");
+  const client = useSuiClient();
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
+    execute: async ({ bytes, signature }) =>
+      await client.executeTransactionBlock({
+        transactionBlock: bytes,
+        signature,
+        options: {
+          // Raw effects are required so the effects can be reported back to the wallet
+          showRawEffects: true,
+          // Select additional data to return
+          showObjectChanges: true,
+        },
+      }),
+  });
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -161,6 +186,68 @@ export default function TokenDetailPage() {
         ...prev,
         [proposalId]: choice,
       }));
+
+      // Find the proposal to get its title
+      const currentProposal = proposals.find((p) => p._id === proposalId);
+      const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
+
+      // Mint NFT after successful vote
+      try {
+        if (coin && currentProposal) {
+          const nftResult = await nftService.buildMintTransaction({
+            tokenName: coin.name,
+            tokenSymbol: coin.symbol,
+            proposalTitle: currentProposal.title,
+            tokenImageUrl: coin.logo || "/placeholder.svg",
+            userAddress: currentAccount.address,
+          });
+
+          signAndExecuteTransaction(
+            {
+              transaction: nftResult,
+              chain: `sui:${network}`,
+              options: {
+                showEffects: true,
+                showEvents: true,
+                gasBudget: 100000000, // Set a higher gas budget (0.1 SUI)
+              },
+            },
+            {
+              onSuccess: async (nftResult: any) => {
+                console.log("NFT minted successfully", nftResult);
+                console.log("nftResult", JSON.stringify(nftResult, null, 2));
+                // Get the minted NFT object ID from transaction effects
+                const nftObjectChange = nftResult.objectChanges?.find(
+                  (change: any) =>
+                    change.type === "created" &&
+                    change.objectType.includes("::soulbound_nft::SoulboundNFT")
+                );
+
+                console.log("nftObjectChange", nftObjectChange);
+
+                if (nftObjectChange && nftObjectChange.type === "created") {
+                  // Get NFT details
+                  const nftDetails = await nftService.getNFTDetails(
+                    nftObjectChange.objectId
+                  );
+                  console.log("nftDetails", nftDetails);
+                  if (nftDetails) {
+                    setMintedNFT(nftDetails);
+                    setNFTTransactionHash(nftResult.digest);
+                    setShowNFTPopup(true);
+                  }
+                }
+              },
+              onError: (error: any) => {
+                console.error("Error minting NFT:", error);
+              },
+            }
+          );
+        }
+      } catch (nftError) {
+        console.error("Error minting NFT:", nftError);
+        // Don't fail the vote if NFT minting fails, just log the error
+      }
 
       // Refresh proposals to get updated vote counts
       const proposalsResponse = await fetch(
@@ -608,6 +695,14 @@ export default function TokenDetailPage() {
           )}
         </div>
       </div>
+      {showNFTPopup && (
+        <NFTPopup
+          isVisible={showNFTPopup}
+          onClose={() => setShowNFTPopup(false)}
+          nft={mintedNFT}
+          transactionHash={nftTransactionHash}
+        />
+      )}
     </div>
   );
 }
