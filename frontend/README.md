@@ -34,8 +34,9 @@ This is the frontend application for thekenseiclub.
    - `BE_HOST` and `BE_PORT`: Backend service host and port
    - `NEXT_PUBLIC_PACKAGE_ID`: Your Sui package ID
    - `NEXT_PUBLIC_NETWORK`: Choose between testnet, mainnet, or devnet
-   - `NEXT_PUBLIC_OPENAI_API_KEY`: Your OpenAI API key
-   - `NEXT_PUBLIC_NEWS_API_KEY`: Your News API key
+   - `OPENAI_KEY`: Your OpenAI API key (server-side only, secure)
+   - `NEWS_API_KEY`: Your News API key (server-side only, secure)
+   - `MONGODB_URI`: Your MongoDB connection string (server-side only, secure)
 
 4. **Run the development server**
 
