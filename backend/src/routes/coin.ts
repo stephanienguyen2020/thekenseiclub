@@ -386,11 +386,15 @@ router.get("/holding-coins/:walletAddress", async (req: any, res: any) => {
               price
             );
 
+            const enrichedDbCoin = enrichCoinWithTribe(dbCoin);
+
             return {
               ...coin,
-              name: dbCoin.name || coin.symbol,
-              description: dbCoin.description || "No description available",
-              logo: dbCoin.logo || "",
+              name: enrichedDbCoin.name || coin.symbol,
+              description:
+                enrichedDbCoin.description || "No description available",
+              logo: enrichedDbCoin.logo || "",
+              tribe: enrichedDbCoin.tribe,
               suiPrice: marketData.suiPrice,
               price: marketData.price, // USD price
               change24h: marketData.change24h,
