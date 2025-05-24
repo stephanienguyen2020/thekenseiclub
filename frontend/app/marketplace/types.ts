@@ -23,6 +23,7 @@ export interface Coin {
   holdings?: number;
   suiPrice: number;
   balance: string;
+  tribe?: string;
 }
 
 export interface CoinList {
