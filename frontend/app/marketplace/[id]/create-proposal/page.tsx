@@ -2,25 +2,25 @@
 
 import type React from "react";
 
-import { useState, useEffect, ChangeEvent } from "react";
-import Link from "next/link";
-import Image from "next/image";
+import { VoteNotification } from "@/app/components/ui/vote-notification";
+import Navbar from "@/components/navbar";
+import api from "@/lib/api";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { AxiosResponse } from "axios";
 import {
   ArrowLeft,
   Calendar,
   Clock,
   HelpCircle,
+  Image as ImageIcon,
   Plus,
   Trash2,
-  UploadCloud,
-  Image as ImageIcon,
 } from "lucide-react";
-import Navbar from "@/components/navbar";
-import { AxiosResponse } from "axios";
-import { Coin } from "../../types";
-import api from "@/lib/api";
+import Image from "next/image";
+import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import { ChangeEvent, useEffect, useState } from "react";
+import { Coin } from "../../types";
 
 // Update the component to include the new features with neo-brutalism style without asymmetry
 export default function CreateProposalPage() {
@@ -51,6 +51,8 @@ export default function CreateProposalPage() {
   const [loading, setLoading] = useState(false);
   const currentAccount = useCurrentAccount();
   const { id } = useParams();
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
 
   // Calculate minimum date (tomorrow)
   const tomorrow = new Date();
@@ -114,15 +116,18 @@ export default function CreateProposalPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentAccount?.address) {
-      alert("Please connect your wallet.");
+      setNotificationMessage("Please connect your wallet.");
+      setShowNotification(true);
       return;
     }
     if (!imageFile) {
-      alert("Please upload a proposal image.");
+      setNotificationMessage("Please upload a proposal image.");
+      setShowNotification(true);
       return;
     }
     if (!tag.trim()) {
-      alert("Please enter a proposal tag.");
+      setNotificationMessage("Please enter a proposal tag.");
+      setShowNotification(true);
       return;
     }
 
@@ -153,12 +158,16 @@ export default function CreateProposalPage() {
 
       const result = await response.json();
       console.log("Proposal created:", result);
-      alert("Proposal created successfully!");
+      setNotificationMessage("Proposal created successfully!");
+      setShowNotification(true);
       // Redirect back to token page
-      window.location.href = `/marketplace/${id}`;
+      setTimeout(() => {
+        window.location.href = `/marketplace/${id}`;
+      }, 1000);
     } catch (error) {
       console.error("Error creating proposal:", error);
-      alert(`Error: ${(error as Error).message}`);
+      setNotificationMessage(`Error: ${(error as Error).message}`);
+      setShowNotification(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -512,6 +521,11 @@ export default function CreateProposalPage() {
           </form>
         </div>
       </div>
+      <VoteNotification
+        isOpen={showNotification}
+        onClose={() => setShowNotification(false)}
+        message={notificationMessage}
+      />
     </div>
   );
 }
