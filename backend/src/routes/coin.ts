@@ -9,6 +9,24 @@ import { ACTIVE_NETWORK, getClient } from "../utils";
 const router = express.Router();
 
 /**
+ * Utility function to get coin tribe
+ */
+async function getCoinTribe(coinId: string): Promise<string> {
+  try {
+    const coinTribe = await db
+      .selectFrom("coinTribes")
+      .select(["tribe"])
+      .where("coinId", "=", coinId)
+      .executeTakeFirst();
+
+    return coinTribe?.tribe || "wildcards";
+  } catch (error) {
+    console.error("Error fetching coin tribe:", error);
+    return "wildcards";
+  }
+}
+
+/**
  * Endpoint to deploy a new coin on the Sui blockchain
  * @route POST /coin
  */
@@ -31,18 +49,23 @@ router.post("/coin", async (req: any, res: any) => {
     console.log("tribe", tribe);
     console.log("rs.coinMetadata", rs.coinMetadata);
 
-    // Update the coin in database with the tribe information if provided
+    // Insert the coin-tribe relationship if provided
     if (tribe && rs.coinMetadata) {
-      console.log("Updating coin with tribe:", tribe);
+      console.log("Inserting coin-tribe relationship:", {
+        coinId: rs.coinMetadata,
+        tribe,
+      });
       try {
         await db
-          .updateTable("coins")
-          .set({ tribe })
-          .where("id", "=", rs.coinMetadata)
+          .insertInto("coinTribes")
+          .values({
+            coinId: rs.coinMetadata,
+            tribe: tribe,
+          })
           .execute();
       } catch (dbError) {
-        console.error("Error updating coin with tribe:", dbError);
-        // Don't fail the request if tribe update fails
+        console.error("Error inserting coin-tribe relationship:", dbError);
+        // Don't fail the request if tribe insert fails
       }
     }
 
@@ -58,6 +81,37 @@ router.post("/coin", async (req: any, res: any) => {
     console.error("Error deploying coin:", error);
     return res.status(500).json({
       error: "Failed to deploy coin",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
+/**
+ * Endpoint to get tribe for a specific coin
+ * @route GET /coin/:id/tribe
+ */
+router.get("/coin/:id/tribe", async (req: any, res: any) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "Coin ID is required" });
+    }
+
+    const coinTribe = await db
+      .selectFrom("coinTribes")
+      .select(["tribe"])
+      .where("coinId", "=", id)
+      .executeTakeFirst();
+
+    return res.status(200).json({
+      coinId: id,
+      tribe: coinTribe?.tribe || "wildcards",
+    });
+  } catch (error) {
+    console.error("Error fetching coin tribe:", error);
+    return res.status(500).json({
+      error: "Failed to fetch coin tribe",
       details: error instanceof Error ? error.message : "Unknown error",
     });
   }
@@ -91,7 +145,6 @@ router.get("/coins", async (req: any, res: any) => {
         "c.logo",
         "c.address",
         "c.createdAt",
-        "c.tribe",
         "b.id as bondingCurveId",
       ])
       .orderBy("c.createdAt", "desc")
@@ -181,7 +234,6 @@ router.get("/coin/:id", async (req: any, res: any) => {
         "c.logo",
         "c.address",
         "c.createdAt",
-        "c.tribe",
         "b.id as bondingCurveId",
       ])
       .where("c.id", "=", id)
@@ -237,7 +289,6 @@ router.get("/allCoins", async (req: any, res: any) => {
         "logo",
         "address",
         "createdAt",
-        "tribe",
       ])
       .orderBy("createdAt", "desc")
       .execute();

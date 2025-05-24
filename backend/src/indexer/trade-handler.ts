@@ -102,7 +102,6 @@ export const handleBondingCurveEvent = async (
           logo: fields?.icon_url,
           address: event.sender,
           createdAt: new Date(),
-          tribe: "wildcards", // Default tribe for indexer-created coins
         })
         .execute();
 

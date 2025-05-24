@@ -137,8 +137,11 @@ export default function LaunchTokenPage() {
       const imageUrl = tokenDetails.gatewayUrl || tokenDetails.imageUrl;
 
       // Classify the token into a tribe
-      const tribe = await fetch("/api/openai/tribe-classification", {
+      const tribeResponse = await fetch("/api/openai/tribe-classification", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           name: tokenDetails.name,
           symbol: tokenDetails.symbol,
@@ -146,14 +149,15 @@ export default function LaunchTokenPage() {
         }),
       });
 
-      console.log("tribe", tribe);
+      const tribeData = await tribeResponse.json();
+      console.log("tribe", tribeData);
 
       const result = await api.post<CoinResponse>("/coin", {
         name: tokenDetails.name,
         symbol: tokenDetails.symbol,
         description: tokenDetails.description,
         iconUrl: imageUrl,
-        tribe: tribe,
+        tribe: tribeData.classification,
         // address: currentAccount?.address || "",
       });
 
