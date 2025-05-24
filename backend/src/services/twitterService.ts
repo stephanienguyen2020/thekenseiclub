@@ -42,7 +42,7 @@ class TwitterService {
     };
   }
 
-  async handleCallback(oauth_token: string, oauth_verifier: string, oauth_token_secret: string) {
+  async handleCallback(oauth_token: string, oauth_verifier: string, oauth_token_secret: string, walletAddress: string) {
     try {
       // Create client with temporary tokens
       const client = this.getClient(oauth_token, oauth_token_secret);
@@ -55,11 +55,12 @@ class TwitterService {
       
       // Save tokens
       await Twitter.findOneAndUpdate(
-        { username: userObject.username },
+        { walletAddress },
         {
           accessToken: accessToken,
           accessSecret: accessSecret,
           username: userObject.username,
+          walletAddress: walletAddress
         },
         { upsert: true }
       );
@@ -127,15 +128,27 @@ class TwitterService {
     }
   }
 
-  async getConnectedAccount(username: string) {
-    const account = await Twitter.findOne({ username });
-    if (!account) {
-      return null;
+  async getConnectedAccount(walletAddress: string) {
+    try {
+      console.log("Checking Twitter connection for wallet:", walletAddress);
+      
+      const account = await Twitter.findOne({ walletAddress });
+      
+      if (!account) {
+        console.log("No Twitter account found for wallet:", walletAddress);
+        return {
+          connected: false
+        };
+      }
+      
+      return {
+        username: account.username,
+        connected: true,
+      };
+    } catch (error) {
+      console.error("Error getting Twitter account:", error);
+      throw new Error('Failed to get Twitter account status');
     }
-    return {
-      username: account.username,
-      connected: true,
-    };
   }
 }
 

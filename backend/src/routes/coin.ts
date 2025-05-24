@@ -1,13 +1,44 @@
 import { BondingCurveSDK, CoinSDK } from "coin-sdk/dist/src";
 import { getActiveAddress } from "coin-sdk/dist/src/utils/sui-utils";
 import express from "express";
+import { getActiveAddress } from "coin-sdk/dist/src/utils/sui-utils";
+import express from "express";
 import { db } from "../db/database";
 import { balanceService } from "../services/balanceService";
 import { daoService } from "../services/daoService";
 import { getCurrentPrice, getMarketData } from "../services/marketDataService";
 import { ACTIVE_NETWORK, getClient } from "../utils";
+import { ACTIVE_NETWORK, getClient } from "../utils";
 
 const router = express.Router();
+
+/**
+ * Utility function to get coin tribe
+ */
+async function getCoinTribe(coinId: string): Promise<string> {
+  try {
+    const coinTribe = await db
+      .selectFrom("coinTribes")
+      .select(["tribe"])
+      .where("coinId", "=", coinId)
+      .executeTakeFirst();
+
+    return coinTribe?.tribe || "wildcards";
+  } catch (error) {
+    console.error("Error fetching coin tribe:", error);
+    return "wildcards";
+  }
+}
+
+/**
+ * Utility function to enrich coin data with default tribe if missing
+ */
+function enrichCoinWithTribe(coin: any) {
+  return {
+    ...coin,
+    tribe: coin.tribe || "wildcards",
+  };
+}
 
 /**
  * Utility function to get coin tribe
@@ -45,6 +76,7 @@ router.post("/coin", async (req: any, res: any) => {
   try {
     // Validate required fields
     const { name, symbol, description, iconUrl, address, tribe } = req.body;
+    const { name, symbol, description, iconUrl, address, tribe } = req.body;
 
     if (!name || !symbol || !description || !iconUrl) {
       return res.status(400).json({
@@ -80,11 +112,35 @@ router.post("/coin", async (req: any, res: any) => {
       }
     }
 
+    console.log("tribe", tribe);
+    console.log("rs.coinMetadata", rs.coinMetadata);
+
+    // Insert the coin-tribe relationship if provided
+    if (tribe && rs.coinMetadata) {
+      console.log("Inserting coin-tribe relationship:", {
+        coinId: rs.coinMetadata,
+        tribe,
+      });
+      try {
+        await db
+          .insertInto("coinTribes")
+          .values({
+            coinId: rs.coinMetadata,
+            tribe: tribe,
+          })
+          .execute();
+      } catch (dbError) {
+        console.error("Error inserting coin-tribe relationship:", dbError);
+        // Don't fail the request if tribe insert fails
+      }
+    }
+
     return res.status(200).json({
       message: "Coin deployed successfully",
       network: ACTIVE_NETWORK,
       coin: {
         id: rs.coinMetadata,
+        tribe: tribe || "wildcards",
         tribe: tribe || "wildcards",
       },
     });
@@ -130,7 +186,40 @@ router.get("/coin/:id/tribe", async (req: any, res: any) => {
 
 /**
  * Endpoint to get all coins with pagination and tribe information
+ * Endpoint to get tribe for a specific coin
+ * @route GET /coin/:id/tribe
+ */
+router.get("/coin/:id/tribe", async (req: any, res: any) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "Coin ID is required" });
+    }
+
+    const coinTribe = await db
+      .selectFrom("coinTribes")
+      .select(["tribe"])
+      .where("coinId", "=", id)
+      .executeTakeFirst();
+
+    return res.status(200).json({
+      coinId: id,
+      tribe: coinTribe?.tribe || "wildcards",
+    });
+  } catch (error) {
+    console.error("Error fetching coin tribe:", error);
+    return res.status(500).json({
+      error: "Failed to fetch coin tribe",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
+/**
+ * Endpoint to get all coins with pagination and tribe information
  * @route GET /coins
+ * @returns {Object} Response containing paginated coins with tribe data
  * @returns {Object} Response containing paginated coins with tribe data
  */
 router.get("/coins", async (req: any, res: any) => {
@@ -150,6 +239,7 @@ router.get("/coins", async (req: any, res: any) => {
       .selectFrom("coins as c")
       .leftJoin("bondingCurve as b", "c.id", "b.coinMetadata")
       .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
+      .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
       .select([
         "c.id",
         "c.name",
@@ -158,6 +248,7 @@ router.get("/coins", async (req: any, res: any) => {
         "c.logo",
         "c.address",
         "c.createdAt",
+        "ct.tribe",
         "ct.tribe",
         "b.id as bondingCurveId",
       ])
@@ -182,6 +273,7 @@ router.get("/coins", async (req: any, res: any) => {
     let enrichedCoins = await Promise.all(
       coins.map(async (coin) => {
         const enrichedCoin = enrichCoinWithTribe(coin);
+        const enrichedCoin = enrichCoinWithTribe(coin);
         if (coin.bondingCurveId) {
           const price = await getCurrentPrice(coin.bondingCurveId);
           const marketData = await getMarketData(
@@ -190,12 +282,14 @@ router.get("/coins", async (req: any, res: any) => {
             price
           );
           return { ...enrichedCoin, ...marketData };
+          return { ...enrichedCoin, ...marketData };
         }
 
         // For coins without bonding curve, get proposal count
         const proposals = await daoService.getProposalsByToken(coin.id);
 
         return {
+          ...enrichedCoin,
           ...enrichedCoin,
           suiPrice: 0,
           price: 0, // USD price
@@ -232,7 +326,9 @@ router.get("/coins", async (req: any, res: any) => {
 
 /**
  * Endpoint to get a coin by ID with tribe information
+ * Endpoint to get a coin by ID with tribe information
  * @route GET /coin/:id
+ * @returns {Object} Response containing coin details with tribe data
  * @returns {Object} Response containing coin details with tribe data
  */
 router.get("/coin/:id", async (req: any, res: any) => {
@@ -244,9 +340,11 @@ router.get("/coin/:id", async (req: any, res: any) => {
     }
 
     // Get the coin with bonding curve ID and tribe information
+    // Get the coin with bonding curve ID and tribe information
     const coin = await db
       .selectFrom("coins as c")
       .leftJoin("bondingCurve as b", "c.id", "b.coinMetadata")
+      .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
       .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
       .select([
         "c.id",
@@ -256,6 +354,7 @@ router.get("/coin/:id", async (req: any, res: any) => {
         "c.logo",
         "c.address",
         "c.createdAt",
+        "ct.tribe",
         "ct.tribe",
         "b.id as bondingCurveId",
       ])
@@ -287,7 +386,9 @@ router.get("/coin/:id", async (req: any, res: any) => {
     }
 
     // Return coin with market data and tribe information
+    // Return coin with market data and tribe information
     return res.status(200).json({
+      ...enrichCoinWithTribe(coin),
       ...enrichCoinWithTribe(coin),
       ...marketData,
     });
@@ -302,13 +403,18 @@ router.get("/coin/:id", async (req: any, res: any) => {
 
 /**
  * Endpoint to get all coins without pagination, including tribe information
+ * Endpoint to get all coins without pagination, including tribe information
  * @route GET /allCoins
+ * @returns {Object} Response containing all coins with tribe data
  * @returns {Object} Response containing all coins with tribe data
  */
 router.get("/allCoins", async (req: any, res: any) => {
   try {
     // Get all coins with tribe information
+    // Get all coins with tribe information
     const coins = await db
+      .selectFrom("coins as c")
+      .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
       .selectFrom("coins as c")
       .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
       .select([
@@ -320,14 +426,27 @@ router.get("/allCoins", async (req: any, res: any) => {
         "c.address",
         "c.createdAt",
         "ct.tribe",
+        "c.id",
+        "c.name",
+        "c.symbol",
+        "c.description",
+        "c.logo",
+        "c.address",
+        "c.createdAt",
+        "ct.tribe",
       ])
+      .orderBy("c.createdAt", "desc")
       .orderBy("c.createdAt", "desc")
       .execute();
 
     // Enrich each coin with default tribe if missing
     const enrichedCoins = coins.map(enrichCoinWithTribe);
 
+    // Enrich each coin with default tribe if missing
+    const enrichedCoins = coins.map(enrichCoinWithTribe);
+
     return res.status(200).json({
+      data: enrichedCoins,
       data: enrichedCoins,
     });
   } catch (error) {
@@ -374,6 +493,7 @@ router.get("/holding-coins/:walletAddress", async (req: any, res: any) => {
             .selectFrom("coins as c")
             .leftJoin("bondingCurve as b", "c.id", "b.coinMetadata")
             .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
+            .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
             .select([
               "c.id",
               "c.name",
@@ -382,6 +502,7 @@ router.get("/holding-coins/:walletAddress", async (req: any, res: any) => {
               "c.logo",
               "c.address",
               "c.createdAt",
+              "ct.tribe",
               "ct.tribe",
               "b.id as bondingCurveId",
             ])
@@ -399,8 +520,15 @@ router.get("/holding-coins/:walletAddress", async (req: any, res: any) => {
 
             const enrichedDbCoin = enrichCoinWithTribe(dbCoin);
 
+            const enrichedDbCoin = enrichCoinWithTribe(dbCoin);
+
             return {
               ...coin,
+              name: enrichedDbCoin.name || coin.symbol,
+              description:
+                enrichedDbCoin.description || "No description available",
+              logo: enrichedDbCoin.logo || "",
+              tribe: enrichedDbCoin.tribe,
               name: enrichedDbCoin.name || coin.symbol,
               description:
                 enrichedDbCoin.description || "No description available",
@@ -468,6 +596,7 @@ router.get("/coin/name/:name", async (req: any, res: any) => {
       .selectFrom("coins as c")
       .leftJoin("bondingCurve as b", "c.id", "b.coinMetadata")
       .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
+      .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
       .select([
         "c.id",
         "c.name",
@@ -476,6 +605,7 @@ router.get("/coin/name/:name", async (req: any, res: any) => {
         "c.logo",
         "c.address",
         "c.createdAt",
+        "ct.tribe",
         "ct.tribe",
         "b.id as bondingCurveId",
       ])

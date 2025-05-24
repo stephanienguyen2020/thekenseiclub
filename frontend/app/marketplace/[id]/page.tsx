@@ -412,6 +412,33 @@ export default function TokenDetailPage() {
                       </span>
                     </div>
                   )}
+                {/* Tribe Tag */}
+                {coin?.tribe &&
+                  TRIBE_METADATA[coin.tribe as keyof typeof TRIBE_METADATA] && (
+                    <div
+                      className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 px-3 py-1 rounded-full flex items-center gap-1"
+                      title={
+                        TRIBE_METADATA[
+                          coin.tribe as keyof typeof TRIBE_METADATA
+                        ].description
+                      }
+                    >
+                      <span className="text-lg">
+                        {
+                          TRIBE_METADATA[
+                            coin.tribe as keyof typeof TRIBE_METADATA
+                          ].emoji
+                        }
+                      </span>
+                      <span className="text-sm font-medium text-blue-800">
+                        {
+                          TRIBE_METADATA[
+                            coin.tribe as keyof typeof TRIBE_METADATA
+                          ].name
+                        }
+                      </span>
+                    </div>
+                  )}
               </div>
               <p className="text-gray-600 mb-4">{coin?.description}</p>
               <div className="flex flex-wrap gap-4">
