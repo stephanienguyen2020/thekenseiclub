@@ -24,12 +24,42 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+// Define the available tribes (matching backend)
+const TRIBES = {
+  CANINE_CLANS: "canine_clans",
+  FELINE_SYNDICATES: "feline_syndicates",
+  AQUATIC_ORDERS: "aquatic_orders",
+  WILDCARDS: "wildcards",
+} as const;
+
+// Tribe metadata for UI display
+const TRIBE_METADATA = {
+  [TRIBES.CANINE_CLANS]: {
+    name: "Canine Clans",
+    emoji: "🐕",
+  },
+  [TRIBES.FELINE_SYNDICATES]: {
+    name: "Feline Syndicates",
+    emoji: "🐱",
+  },
+  [TRIBES.AQUATIC_ORDERS]: {
+    name: "Aquatic Orders",
+    emoji: "🐠",
+  },
+  [TRIBES.WILDCARDS]: {
+    name: "Wildcards",
+    emoji: "🃏",
+  },
+};
+
 export default function MarketplacePage() {
   const [sortBy, setSortBy] = useState("trending");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [selectedChain, setSelectedChain] = useState("kensei");
   const [isChainDropdownOpen, setIsChainDropdownOpen] = useState(false);
+  const [selectedTribe, setSelectedTribe] = useState<string>("all");
+  const [isTribeDropdownOpen, setIsTribeDropdownOpen] = useState(false);
   const [watchlist, setWatchlist] = useState<string[]>(() => {
     // Initialize from localStorage if available
     if (typeof window !== "undefined") {
@@ -42,11 +72,38 @@ export default function MarketplacePage() {
   const [loading, setLoading] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const tribeDropdownRef = useRef<HTMLDivElement>(null);
 
   const chainOptions = [
     { value: "kensei", label: "Kensei", color: "#0039C6" },
     { value: "sui", label: "Sui", color: "#4DA2FF", image: "/sui.jpg" },
     { value: "ethereum", label: "ETH", color: "#627EEA", image: "/eth.png" },
+    { value: "solana", label: "SOL", color: "#9945FF", image: "/sol.png" },
+  ];
+
+  // Tribe options for dropdown
+  const tribeOptions = [
+    { value: "all", label: "All Tribes", emoji: "🌟" },
+    {
+      value: TRIBES.CANINE_CLANS,
+      label: TRIBE_METADATA[TRIBES.CANINE_CLANS].name,
+      emoji: TRIBE_METADATA[TRIBES.CANINE_CLANS].emoji,
+    },
+    {
+      value: TRIBES.FELINE_SYNDICATES,
+      label: TRIBE_METADATA[TRIBES.FELINE_SYNDICATES].name,
+      emoji: TRIBE_METADATA[TRIBES.FELINE_SYNDICATES].emoji,
+    },
+    {
+      value: TRIBES.AQUATIC_ORDERS,
+      label: TRIBE_METADATA[TRIBES.AQUATIC_ORDERS].name,
+      emoji: TRIBE_METADATA[TRIBES.AQUATIC_ORDERS].emoji,
+    },
+    {
+      value: TRIBES.WILDCARDS,
+      label: TRIBE_METADATA[TRIBES.WILDCARDS].name,
+      emoji: TRIBE_METADATA[TRIBES.WILDCARDS].emoji,
+    },
   ];
 
   // Save watchlist to localStorage when it changes
@@ -63,6 +120,12 @@ export default function MarketplacePage() {
       ) {
         setIsChainDropdownOpen(false);
       }
+      if (
+        tribeDropdownRef.current &&
+        !tribeDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsTribeDropdownOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -72,6 +135,11 @@ export default function MarketplacePage() {
   }, []);
 
   useEffect(() => {
+    // Reset tribe filter when chain changes
+    if (selectedChain !== "kensei") {
+      setSelectedTribe("all");
+    }
+
     const fetchCoins = async () => {
       setLoading(true);
       try {
@@ -186,11 +254,25 @@ export default function MarketplacePage() {
     setIsChainDropdownOpen(false);
   };
 
-  const filteredCoins = coins.filter(
-    (coin: Coin) =>
+  const handleTribeSelect = (tribeValue: string) => {
+    setSelectedTribe(tribeValue);
+    setIsTribeDropdownOpen(false);
+  };
+
+  const filteredCoins = coins.filter((coin: Coin) => {
+    // Filter by search query
+    const matchesSearch =
       coin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      coin.symbol.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      coin.symbol.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Filter by tribe (only for Kensei tokens)
+    const matchesTribe =
+      selectedChain !== "kensei" ||
+      selectedTribe === "all" ||
+      coin.tribe === selectedTribe;
+
+    return matchesSearch && matchesTribe;
+  });
 
   const sortedCoins = [...filteredCoins].sort((a, b) => {
     switch (sortBy) {
@@ -294,6 +376,57 @@ export default function MarketplacePage() {
                   </div>
                 )}
               </div>
+
+              {/* Tribe Filter Dropdown */}
+              {selectedChain === "kensei" && (
+                <div className="relative" ref={tribeDropdownRef}>
+                  <button
+                    onClick={() => setIsTribeDropdownOpen(!isTribeDropdownOpen)}
+                    className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center gap-1 font-medium transition-all"
+                  >
+                    <span className="text-lg">
+                      {
+                        tribeOptions.find(
+                          (option) => option.value === selectedTribe
+                        )?.emoji
+                      }
+                    </span>
+                    <span>
+                      {
+                        tribeOptions.find(
+                          (option) => option.value === selectedTribe
+                        )?.label
+                      }
+                    </span>
+                    <ChevronDown
+                      size={16}
+                      className={`transform transition-transform ${
+                        isTribeDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {isTribeDropdownOpen && (
+                    <div className="absolute top-full mt-2 w-full bg-white border-2 border-black rounded-xl shadow-lg z-50 overflow-hidden">
+                      {tribeOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => handleTribeSelect(option.value)}
+                          className={`w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors ${
+                            selectedTribe === option.value ? "bg-gray-100" : ""
+                          }`}
+                        >
+                          <span className="text-lg">{option.emoji}</span>
+                          <span className="font-medium">{option.label}</span>
+                          {selectedTribe === option.value && (
+                            <ChevronRight size={16} className="ml-auto" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <button
                 className={`px-4 py-2 rounded-full flex items-center gap-1 ${

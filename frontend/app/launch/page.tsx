@@ -136,11 +136,28 @@ export default function LaunchTokenPage() {
 
       const imageUrl = tokenDetails.gatewayUrl || tokenDetails.imageUrl;
 
+      // Classify the token into a tribe
+      const tribeResponse = await fetch("/api/openai/tribe-classification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: tokenDetails.name,
+          symbol: tokenDetails.symbol,
+          description: tokenDetails.description,
+        }),
+      });
+
+      const tribeData = await tribeResponse.json();
+      console.log("tribe", tribeData);
+
       const result = await api.post<CoinResponse>("/coin", {
         name: tokenDetails.name,
         symbol: tokenDetails.symbol,
         description: tokenDetails.description,
         iconUrl: imageUrl,
+        tribe: tribeData.classification,
         // address: currentAccount?.address || "",
       });
 
@@ -163,11 +180,30 @@ export default function LaunchTokenPage() {
     try {
       const iconUrl = uploadedImageUrl || imagePreview;
 
+      // Classify the token into a tribe
+      const response = await fetch("/api/openai/tribe-classification", {
+        method: "POST",
+        body: JSON.stringify({
+          name: tokenName,
+          symbol: tokenSymbol,
+          description: tokenDescription,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to process query");
+      }
+
+      const tribe = await response.json();
+      console.log("tribe", tribe);
+
       const result = await api.post<CoinResponse>("/coin", {
         name: tokenName,
         symbol: tokenSymbol,
         description: tokenDescription,
         iconUrl: iconUrl,
+        tribe: tribe.classification,
         address: currentAccount?.address || "",
       });
 

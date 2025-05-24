@@ -1,9 +1,9 @@
 // File: src/indexer/trade-handler.ts
-import { db } from "../db/database";
-import { BondingCurve, RawPrices } from "../db/kysely-types/postgres";
 import { SuiEvent } from "@mysten/sui/client";
+import BigNumber from "bignumber.js";
+import { db } from "../db/database";
+import { BondingCurve } from "../db/kysely-types/postgres";
 import { getClient } from "../utils";
-import BigNumber from 'bignumber.js';
 
 // Define interfaces for the parsed JSON data
 interface BondingCurveCreatedEventPayload {
@@ -91,7 +91,7 @@ export const handleBondingCurveEvent = async (
 
       // Add type assertion for the fields
       const fields = (coinMetadata.data?.content as any)?.fields;
-      
+
       await db
         .insertInto("coins")
         .values({
@@ -156,8 +156,9 @@ export const handleBondingCurveEvent = async (
       .execute();
 
     // Update portfolio data
-    const portfolioChange = payload.direction === "BUY" ? amountOut.toNumber() : -amountIn.toNumber();
-    
+    const portfolioChange =
+      payload.direction === "BUY" ? amountOut.toNumber() : -amountIn.toNumber();
+
     // Get the latest portfolio entry for this user and bonding curve
     const latestPortfolio = await db
       .selectFrom("portfolios")

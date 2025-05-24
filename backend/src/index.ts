@@ -13,9 +13,9 @@ import likesRouter from "./routes/interact";
 import nonNativeTokenRouter from "./routes/nonNativeToken";
 import ohlcvRouter from "./routes/ohlcv";
 import portfolioRouter from "./routes/portfolio";
+import postRouter from "./routes/posts";
 import twitterRouter from "./routes/twitter";
-import userRouter from "./routes/user"
-import postRouter from "./routes/posts"
+import userRouter from "./routes/user";
 
 import { scheduledTasks } from "./scheduledTasks";
 
