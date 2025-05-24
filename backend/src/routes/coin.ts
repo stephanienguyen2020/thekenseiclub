@@ -537,7 +537,6 @@ router.get("/coin/name/:name", async (req: any, res: any) => {
       .selectFrom("coins as c")
       .leftJoin("bondingCurve as b", "c.id", "b.coinMetadata")
       .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
-      .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
       .select([
         "c.id",
         "c.name",
@@ -546,7 +545,6 @@ router.get("/coin/name/:name", async (req: any, res: any) => {
         "c.logo",
         "c.address",
         "c.createdAt",
-        "ct.tribe",
         "ct.tribe",
         "b.id as bondingCurveId",
       ])
