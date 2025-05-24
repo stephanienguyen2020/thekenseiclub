@@ -44,6 +44,7 @@ export default function WalletPage() {
     if (activeTab === "holdings") {
       const fetchHoldings = async () => {
         const tokensHolding = await getHoldingToken(currentAccount);
+        console.log("tokensHolding", tokensHolding);
         setHoldings(tokensHolding);
       };
       fetchHoldings();

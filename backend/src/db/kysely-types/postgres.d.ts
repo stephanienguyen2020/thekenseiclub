@@ -10,17 +10,9 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
 
-export type Int8 = ColumnType<
-  string,
-  bigint | number | string,
-  bigint | number | string
->;
+export type Int8 = ColumnType<string, bigint | number | string, bigint | number | string>;
 
-export type Interval = ColumnType<
-  IPostgresInterval,
-  IPostgresInterval | number | string,
-  IPostgresInterval | number | string
->;
+export type Interval = ColumnType<IPostgresInterval, IPostgresInterval | number | string, IPostgresInterval | number | string>;
 
 export type Json = JsonValue;
 
@@ -596,8 +588,8 @@ export interface DB {
   "_TimescaledbInternal.compressedChunkStats": _TimescaledbInternalCompressedChunkStats;
   "_TimescaledbInternal.hypertableChunkLocalSize": _TimescaledbInternalHypertableChunkLocalSize;
   bondingCurve: BondingCurve;
-  coinTribes: CoinTribes;
   coins: Coins;
+  coinTribes: CoinTribes;
   comments: Comments;
   cursors: Cursors;
   images: Images;

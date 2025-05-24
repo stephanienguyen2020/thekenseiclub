@@ -75,8 +75,6 @@ A backend service for blockchain data feeds, providing APIs for OHLCV (Open, Hig
 5. **Run Database Migrations**
 
    ```bash
-   pnpm run migrate
-   # or
    npx kysely-ctl migrate up
    ```
 
