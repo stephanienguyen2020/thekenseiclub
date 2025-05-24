@@ -19,13 +19,9 @@ export default function Page() {
 
   return (
     <React.Fragment>
-      <div className="min-h-screen bg-[#0039C6] p-2 md:p-4 flex items-center justify-center">
+      <Navbar />
+      <div className="min-h-screen bg-[#0039C6] p-2 md:p-4 flex items-center justify-center pt-24">
         <div className="w-full max-w-7xl bg-[#0039C6] rounded-3xl overflow-hidden relative border border-blue-500">
-          {/* Navigation */}
-          <div className="px-6 py-4">
-            <Navbar />
-          </div>
-
           {/* Hero Section with Glassmorphism Cards */}
           <div className="relative px-6 py-12 md:py-24 overflow-hidden min-h-[600px]">
             {/* Background Grid Pattern */}

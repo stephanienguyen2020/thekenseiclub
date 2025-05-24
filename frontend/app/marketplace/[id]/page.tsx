@@ -236,10 +236,8 @@ export default function TokenDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#0039C6]">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <Navbar isAuthenticated={true} />
-
+      <Navbar isAuthenticated={true} />
+      <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
         <div className="flex items-center mb-8 mt-4">
           <Link href="/marketplace" className="flex items-center gap-2">
             <ArrowLeft className="text-white" />

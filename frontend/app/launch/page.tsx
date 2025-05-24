@@ -186,10 +186,8 @@ export default function LaunchTokenPage() {
 
   return (
     <div className="min-h-screen bg-[#0039C6]">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header with authenticated navbar */}
-        <Navbar isAuthenticated={!!currentAccount} />
-
+      <Navbar isAuthenticated={!!currentAccount} />
+      <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
         <div className="bg-white rounded-3xl p-8 mt-8 max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-8 text-center">
             Launch Your Token

@@ -213,10 +213,8 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen bg-[#0039C6]">
-      <div className="max-w-8xl mx-auto px-4 py-8">
-        {/* Header with authenticated navbar */}
-        <Navbar isAuthenticated={true} />
-
+      <Navbar isAuthenticated={true} />
+      <div className="max-w-8xl mx-auto px-4 py-8 pt-24">
         {/* Search and Filter */}
         <div className="bg-white rounded-3xl p-6 mb-8 mt-8">
           <div className="flex flex-col md:flex-row gap-4 justify-between">

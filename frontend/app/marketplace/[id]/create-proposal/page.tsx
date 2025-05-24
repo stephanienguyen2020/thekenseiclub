@@ -13,7 +13,7 @@ import {
   Plus,
   Trash2,
   UploadCloud,
-  Image as ImageIcon
+  Image as ImageIcon,
 } from "lucide-react";
 import Navbar from "@/components/navbar";
 import { AxiosResponse } from "axios";
@@ -122,8 +122,8 @@ export default function CreateProposalPage() {
       return;
     }
     if (!tag.trim()) {
-        alert("Please enter a proposal tag.");
-        return;
+      alert("Please enter a proposal tag.");
+      return;
     }
 
     setIsSubmitting(true);
@@ -179,10 +179,8 @@ export default function CreateProposalPage() {
 
   return (
     <div className="min-h-screen bg-[#0039C6]">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <Navbar isAuthenticated={true} />
-
+      <Navbar isAuthenticated={true} />
+      <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
         <div className="flex items-center mb-8 mt-4">
           <Link href={`/marketplace/${id}`} className="flex items-center gap-2">
             <div className="bg-[#c0ff00] p-2 rounded-full border-4 border-black">
@@ -210,15 +208,15 @@ export default function CreateProposalPage() {
                 Create Proposal for {coin.name || "Your Token"}
               </h1>
               <p className="text-black font-bold">
-                Create a governance proposal for the {coin.symbol || "Token"} community to vote on
+                Create a governance proposal for the {coin.symbol || "Token"}{" "}
+                community to vote on
               </p>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
-
-                        {/* Image Upload */}
-                        <div>
+            {/* Image Upload */}
+            <div>
               <label
                 htmlFor="imageUpload"
                 className="block text-lg font-black text-black mb-2 uppercase"
@@ -228,9 +226,18 @@ export default function CreateProposalPage() {
               <div className="mt-2 flex justify-center items-center px-6 pt-5 pb-6 border-4 border-black border-dashed rounded-xl bg-gray-50 hover:bg-gray-100">
                 <div className="space-y-4 text-center">
                   {imagePreview ? (
-                    <Image src={imagePreview} alt="Proposal preview" width={200} height={200} className="mx-auto h-48 w-auto object-contain rounded-lg border-2 border-black" />
+                    <Image
+                      src={imagePreview}
+                      alt="Proposal preview"
+                      width={200}
+                      height={200}
+                      className="mx-auto h-48 w-auto object-contain rounded-lg border-2 border-black"
+                    />
                   ) : (
-                    <ImageIcon className="mx-auto h-32 w-32 text-gray-400" size={48} />
+                    <ImageIcon
+                      className="mx-auto h-32 w-32 text-gray-400"
+                      size={48}
+                    />
                   )}
                   <div className="flex flex-col items-center gap-2">
                     <label
@@ -238,10 +245,23 @@ export default function CreateProposalPage() {
                       className="relative cursor-pointer bg-[#c0ff00] rounded-md font-medium text-black hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-[#c0ff00] p-2 border-2 border-black"
                     >
                       <span>Upload an image</span>
-                      <input id="imageUploadInput" name="imageUpload" type="file" className="sr-only" onChange={handleImageChange} accept="image/png, image/jpeg, image/jpg" />
+                      <input
+                        id="imageUploadInput"
+                        name="imageUpload"
+                        type="file"
+                        className="sr-only"
+                        onChange={handleImageChange}
+                        accept="image/png, image/jpeg, image/jpg"
+                      />
                     </label>
-                    <p className="text-xs text-gray-500">PNG, JPG, JPEG up to 5MB</p>
-                    {imageFile && <p className="text-sm text-green-600 font-bold">Selected: {imageFile.name}</p>}
+                    <p className="text-xs text-gray-500">
+                      PNG, JPG, JPEG up to 5MB
+                    </p>
+                    {imageFile && (
+                      <p className="text-sm text-green-600 font-bold">
+                        Selected: {imageFile.name}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -482,8 +502,8 @@ export default function CreateProposalPage() {
                   !tag.trim() ||
                   !startDate ||
                   !endDate ||
-                  !imageFile || 
-                  options.some(opt => !opt.trim()) // Ensure no empty options
+                  !imageFile ||
+                  options.some((opt) => !opt.trim()) // Ensure no empty options
                 }
               >
                 {isSubmitting ? "CREATING PROPOSAL..." : "CREATE PROPOSAL 🚀"}

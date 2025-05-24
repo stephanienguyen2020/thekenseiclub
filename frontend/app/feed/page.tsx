@@ -20,10 +20,8 @@ export default function FeedPage() {
 
   return (
     <div className="min-h-screen bg-[#0039C6]">
-      <div className="max-w-8xl mx-auto px-12 py-8">
-        {/* Header with authenticated navbar */}
-        <Navbar isAuthenticated={true} />
-
+      <Navbar isAuthenticated={true} />
+      <div className="max-w-8xl mx-auto px-12 py-8 pt-24">
         <div className="mt-8">
           <h1 className="text-3xl font-black text-white mb-6">
             Community Feed
