@@ -144,6 +144,15 @@ export async function up(db: Kysely<any>): Promise<void> {
     db
   );
 
+  // --- COIN TRIBES TABLE ---
+  await db.schema
+    .createTable("coin_tribes")
+    .addColumn("id", "bigserial", (col) => col.primaryKey().notNull())
+    .addColumn("coin_id", "varchar", (col) => col.notNull())
+    .addColumn("tribe", "varchar", (col) => col.notNull())
+    .addUniqueConstraint("coin_tribes_unique", ["coin_id"])
+    .execute();
+
   // --- PORTFOLIOS TABLE MIGRATION ---
   await db.schema
     .createTable("portfolios")
@@ -155,21 +164,30 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("timestamp", "timestamp", (col) => col.notNull())
     .execute();
 
-  await sql`SELECT create_hypertable('portfolios', by_range('timestamp'));`.execute(db);
-  await sql`CREATE INDEX ON portfolios ("user_address", "timestamp");`.execute(db);
-  await sql`CREATE INDEX ON portfolios ("bonding_curve_id", "timestamp");`.execute(db);
+  await sql`SELECT create_hypertable('portfolios', by_range('timestamp'));`.execute(
+    db
+  );
+  await sql`CREATE INDEX ON portfolios ("user_address", "timestamp");`.execute(
+    db
+  );
+  await sql`CREATE INDEX ON portfolios ("bonding_curve_id", "timestamp");`.execute(
+    db
+  );
   await sql`ALTER TABLE portfolios SET (
     timescaledb.compress,
     timescaledb.compress_segmentby = '"user_address", "bonding_curve_id"',
     timescaledb.compress_orderby = 'timestamp DESC'
   )`.execute(db);
-  await sql`SELECT add_compression_policy('portfolios', INTERVAL '1 day')`.execute(db);
+  await sql`SELECT add_compression_policy('portfolios', INTERVAL '1 day')`.execute(
+    db
+  );
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
   // Reverse the table creations if needed.
   await db.schema.dropTable("portfolios").execute();
   await db.schema.dropTable("raw_prices").execute();
+  await db.schema.dropTable("coin_tribes").execute();
   await db.schema.dropTable("cursors").execute();
   await db.schema.dropTable("comments").execute();
   await db.schema.dropTable("images").execute();

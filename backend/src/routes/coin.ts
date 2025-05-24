@@ -27,6 +27,16 @@ async function getCoinTribe(coinId: string): Promise<string> {
 }
 
 /**
+ * Utility function to enrich coin data with default tribe if missing
+ */
+function enrichCoinWithTribe(coin: any) {
+  return {
+    ...coin,
+    tribe: coin.tribe || "wildcards",
+  };
+}
+
+/**
  * Endpoint to deploy a new coin on the Sui blockchain
  * @route POST /coin
  */
@@ -137,6 +147,7 @@ router.get("/coins", async (req: any, res: any) => {
     let coinsQuery = db
       .selectFrom("coins as c")
       .leftJoin("bondingCurve as b", "c.id", "b.coinMetadata")
+      .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
       .select([
         "c.id",
         "c.name",
@@ -145,6 +156,7 @@ router.get("/coins", async (req: any, res: any) => {
         "c.logo",
         "c.address",
         "c.createdAt",
+        "ct.tribe",
         "b.id as bondingCurveId",
       ])
       .orderBy("c.createdAt", "desc")
@@ -167,6 +179,7 @@ router.get("/coins", async (req: any, res: any) => {
     // For each coin, calculate market data if it has a bonding curve
     let enrichedCoins = await Promise.all(
       coins.map(async (coin) => {
+        const enrichedCoin = enrichCoinWithTribe(coin);
         if (coin.bondingCurveId) {
           const price = await getCurrentPrice(coin.bondingCurveId);
           const marketData = await getMarketData(
@@ -174,10 +187,10 @@ router.get("/coins", async (req: any, res: any) => {
             coin.bondingCurveId,
             price
           );
-          return { ...coin, ...marketData };
+          return { ...enrichedCoin, ...marketData };
         }
         return {
-          ...coin,
+          ...enrichedCoin,
           suiPrice: 0,
           price: 0, // USD price
           change24h: 0,
@@ -258,9 +271,9 @@ router.get("/coin/:id", async (req: any, res: any) => {
       marketData = await getMarketData(coin.id, coin.bondingCurveId, price);
     }
 
-    // Return coin with market data
+    // Return coin with market data and tribe information
     return res.status(200).json({
-      ...coin,
+      ...enrichCoinWithTribe(coin),
       ...marketData,
     });
   } catch (error) {
@@ -278,23 +291,28 @@ router.get("/coin/:id", async (req: any, res: any) => {
  */
 router.get("/allCoins", async (req: any, res: any) => {
   try {
-    // Get all coins directly from coins table without joins
+    // Get all coins with tribe information
     const coins = await db
-      .selectFrom("coins")
+      .selectFrom("coins as c")
+      .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
       .select([
-        "id",
-        "name",
-        "symbol",
-        "description",
-        "logo",
-        "address",
-        "createdAt",
+        "c.id",
+        "c.name",
+        "c.symbol",
+        "c.description",
+        "c.logo",
+        "c.address",
+        "c.createdAt",
+        "ct.tribe",
       ])
-      .orderBy("createdAt", "desc")
+      .orderBy("c.createdAt", "desc")
       .execute();
 
+    // Enrich each coin with default tribe if missing
+    const enrichedCoins = coins.map(enrichCoinWithTribe);
+
     return res.status(200).json({
-      data: coins,
+      data: enrichedCoins,
     });
   } catch (error) {
     console.error("Error fetching all coins:", error);
@@ -339,6 +357,7 @@ router.get("/holding-coins/:walletAddress", async (req: any, res: any) => {
           const dbCoin = await db
             .selectFrom("coins as c")
             .leftJoin("bondingCurve as b", "c.id", "b.coinMetadata")
+            .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
             .select([
               "c.id",
               "c.name",
@@ -347,7 +366,7 @@ router.get("/holding-coins/:walletAddress", async (req: any, res: any) => {
               "c.logo",
               "c.address",
               "c.createdAt",
-              "c.tribe",
+              "ct.tribe",
               "b.id as bondingCurveId",
             ])
             .where("c.id", "=", coin.id as string)
@@ -428,6 +447,7 @@ router.get("/coin/name/:name", async (req: any, res: any) => {
     const coin = await db
       .selectFrom("coins as c")
       .leftJoin("bondingCurve as b", "c.id", "b.coinMetadata")
+      .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
       .select([
         "c.id",
         "c.name",
@@ -436,7 +456,7 @@ router.get("/coin/name/:name", async (req: any, res: any) => {
         "c.logo",
         "c.address",
         "c.createdAt",
-        "c.tribe",
+        "ct.tribe",
         "b.id as bondingCurveId",
       ])
       .where("c.name", "=", name)
