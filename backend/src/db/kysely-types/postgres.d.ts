@@ -316,6 +316,7 @@ export interface Coins {
   logo: string;
   name: string;
   symbol: string;
+  tribe: Generated<string | null>;
 }
 
 export interface Comments {

@@ -1,11 +1,10 @@
-import express from "express";
 import { BondingCurveSDK, CoinSDK } from "coin-sdk/dist/src";
-import { ACTIVE_NETWORK, getClient } from "../utils";
-import { db } from "../db/database";
-import { getCurrentPrice, getMarketData } from "../services/marketDataService";
-import { balanceService } from "../services/balanceService";
 import { getActiveAddress } from "coin-sdk/dist/src/utils/sui-utils";
-import { sql } from "kysely/dist/esm";
+import express from "express";
+import { db } from "../db/database";
+import { balanceService } from "../services/balanceService";
+import { getCurrentPrice, getMarketData } from "../services/marketDataService";
+import { ACTIVE_NETWORK, getClient } from "../utils";
 
 const router = express.Router();
 
@@ -16,7 +15,7 @@ const router = express.Router();
 router.post("/coin", async (req: any, res: any) => {
   try {
     // Validate required fields
-    const { name, symbol, description, iconUrl, address } = req.body;
+    const { name, symbol, description, iconUrl, address, tribe } = req.body;
 
     if (!name || !symbol || !description || !iconUrl) {
       return res.status(400).json({
@@ -28,11 +27,31 @@ router.post("/coin", async (req: any, res: any) => {
     const suiClient = getClient(ACTIVE_NETWORK);
     const rs = await CoinSDK.deployNewCoin({ ...req.body, client: suiClient });
     console.log("Coin deployed successfully:", rs);
+
+    console.log("tribe", tribe);
+    console.log("rs.coinMetadata", rs.coinMetadata);
+
+    // Update the coin in database with the tribe information if provided
+    if (tribe && rs.coinMetadata) {
+      console.log("Updating coin with tribe:", tribe);
+      try {
+        await db
+          .updateTable("coins")
+          .set({ tribe })
+          .where("id", "=", rs.coinMetadata)
+          .execute();
+      } catch (dbError) {
+        console.error("Error updating coin with tribe:", dbError);
+        // Don't fail the request if tribe update fails
+      }
+    }
+
     return res.status(200).json({
       message: "Coin deployed successfully",
       network: ACTIVE_NETWORK,
       coin: {
         id: rs.coinMetadata,
+        tribe: tribe || "wildcards",
       },
     });
   } catch (error) {
@@ -72,6 +91,7 @@ router.get("/coins", async (req: any, res: any) => {
         "c.logo",
         "c.address",
         "c.createdAt",
+        "c.tribe",
         "b.id as bondingCurveId",
       ])
       .orderBy("c.createdAt", "desc")
@@ -161,6 +181,7 @@ router.get("/coin/:id", async (req: any, res: any) => {
         "c.logo",
         "c.address",
         "c.createdAt",
+        "c.tribe",
         "b.id as bondingCurveId",
       ])
       .where("c.id", "=", id)
@@ -216,6 +237,7 @@ router.get("/allCoins", async (req: any, res: any) => {
         "logo",
         "address",
         "createdAt",
+        "tribe",
       ])
       .orderBy("createdAt", "desc")
       .execute();
@@ -274,6 +296,7 @@ router.get("/holding-coins/:walletAddress", async (req: any, res: any) => {
               "c.logo",
               "c.address",
               "c.createdAt",
+              "c.tribe",
               "b.id as bondingCurveId",
             ])
             .where("c.id", "=", coin.id as string)
@@ -362,6 +385,7 @@ router.get("/coin/name/:name", async (req: any, res: any) => {
         "c.logo",
         "c.address",
         "c.createdAt",
+        "c.tribe",
         "b.id as bondingCurveId",
       ])
       .where("c.name", "=", name)
