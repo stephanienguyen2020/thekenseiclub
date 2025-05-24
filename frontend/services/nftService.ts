@@ -63,6 +63,56 @@ export class NFTService {
   }
 
   /**
+   * Get all NFTs owned by a user address
+   */
+  async getUserNFTs(userAddress: string) {
+    try {
+      console.log(`Fetching NFTs for user: ${userAddress}`);
+
+      const response = await this.client.getOwnedObjects({
+        owner: userAddress,
+        filter: {
+          StructType: `${this.packageId}::soulbound_nft::SoulboundNFT`,
+        },
+        options: {
+          showContent: true,
+          showDisplay: true,
+          showType: true,
+        },
+      });
+
+      if (!response.data || response.data.length === 0) {
+        console.log("No NFTs found for user");
+        return [];
+      }
+
+      const nfts = response.data
+        .filter((item) => item.data?.content?.dataType === "moveObject")
+        .map((item) => {
+          const content = item.data?.content;
+          if (content?.dataType === "moveObject") {
+            const fields = (content as any).fields;
+            return {
+              id: item.data?.objectId || "",
+              name: fields?.name || "Unknown NFT",
+              description: fields?.description || "No description",
+              url: fields?.url || "/placeholder.svg",
+              type: item.data?.type || "",
+            };
+          }
+          return null;
+        })
+        .filter((nft) => nft !== null);
+
+      console.log(`Found ${nfts.length} NFTs for user`);
+      return nfts;
+    } catch (error) {
+      console.error("Error fetching user NFTs:", error);
+      return [];
+    }
+  }
+
+  /**
    * Get NFT details by object ID with retry mechanism
    */
   async getNFTDetails(objectId: string, maxRetries: number = 5) {

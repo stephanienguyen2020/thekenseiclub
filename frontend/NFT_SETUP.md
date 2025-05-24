@@ -40,9 +40,11 @@ NEXT_PUBLIC_NFT_PACKAGE_ID=0x_your_deployed_nft_package_id_here
 
 ## Components Added
 
-- `services/nftService.ts` - Handles NFT minting logic
+- `services/nftService.ts` - Handles NFT minting logic and fetching user NFTs
 - `components/nft-popup.tsx` - Displays NFT information after minting
+- `app/dashboard/nfts/page.tsx` - Lists all user's NFTs in a collection view
 - Updated `app/marketplace/[id]/page.tsx` - Integrated NFT minting into voting flow
+- Updated `app/components/dashboard/sidebar.tsx` - Added "My NFT" menu item
 
 ## Features
 
@@ -51,6 +53,27 @@ NEXT_PUBLIC_NFT_PACKAGE_ID=0x_your_deployed_nft_package_id_here
 - ✅ Link to view transaction on Sui explorer
 - ✅ Error handling (voting continues even if NFT minting fails)
 - ✅ Soulbound NFTs (cannot be transferred unless contract allows it)
+- ✅ **NEW:** My NFT collection page in dashboard
+- ✅ **NEW:** Grid view of all user's governance NFTs
+- ✅ **NEW:** Direct links to view NFTs on Sui explorer
+
+## My NFT Collection Features
+
+The new "My NFT" menu in the dashboard sidebar provides:
+
+1. **Collection Overview:** See all your governance NFTs in one place
+2. **Beautiful Grid Layout:** Cards showing NFT images, names, and descriptions
+3. **NFT Details:** Object IDs and descriptions for each NFT
+4. **Explorer Links:** Click to view any NFT on the Sui blockchain explorer
+5. **Empty State:** Helpful guidance when you don't have any NFTs yet
+6. **Responsive Design:** Works on desktop and mobile devices
+
+## Navigation
+
+Access your NFT collection through:
+
+- Dashboard → My NFT (in the sidebar)
+- Direct URL: `/dashboard/nfts`
 
 ## Troubleshooting
 

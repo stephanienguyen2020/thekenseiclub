@@ -1,6 +1,9 @@
 "use client";
+import { useCurrentAccount, useDisconnectWallet } from "@mysten/dapp-kit";
+import { formatAddress } from "@mysten/sui/utils";
 import {
   FileText,
+  Image as ImageIcon,
   LayoutDashboard,
   LogOut,
   MessageSquare,
@@ -12,8 +15,6 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCurrentAccount, useDisconnectWallet } from "@mysten/dapp-kit";
-import { formatAddress } from "@mysten/sui/utils";
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
@@ -44,6 +45,11 @@ export default function DashboardSidebar() {
       title: "My Proposals",
       icon: FileText,
       href: "/dashboard/proposals",
+    },
+    {
+      title: "My NFT",
+      icon: ImageIcon,
+      href: "/dashboard/nfts",
     },
     {
       title: "My Tweets",
