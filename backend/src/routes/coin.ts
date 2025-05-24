@@ -128,8 +128,9 @@ router.get("/coin/:id/tribe", async (req: any, res: any) => {
 });
 
 /**
- * Endpoint to get all coins with pagination
+ * Endpoint to get all coins with pagination and tribe information
  * @route GET /coins
+ * @returns {Object} Response containing paginated coins with tribe data
  */
 router.get("/coins", async (req: any, res: any) => {
   try {
@@ -224,8 +225,9 @@ router.get("/coins", async (req: any, res: any) => {
 });
 
 /**
- * Endpoint to get a coin by ID
+ * Endpoint to get a coin by ID with tribe information
  * @route GET /coin/:id
+ * @returns {Object} Response containing coin details with tribe data
  */
 router.get("/coin/:id", async (req: any, res: any) => {
   try {
@@ -235,10 +237,11 @@ router.get("/coin/:id", async (req: any, res: any) => {
       return res.status(400).json({ error: "Coin ID is required" });
     }
 
-    // Get the coin with bonding curve ID
+    // Get the coin with bonding curve ID and tribe information
     const coin = await db
       .selectFrom("coins as c")
       .leftJoin("bondingCurve as b", "c.id", "b.coinMetadata")
+      .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
       .select([
         "c.id",
         "c.name",
@@ -247,6 +250,7 @@ router.get("/coin/:id", async (req: any, res: any) => {
         "c.logo",
         "c.address",
         "c.createdAt",
+        "ct.tribe",
         "b.id as bondingCurveId",
       ])
       .where("c.id", "=", id)
@@ -286,8 +290,9 @@ router.get("/coin/:id", async (req: any, res: any) => {
 });
 
 /**
- * Endpoint to get all coins without pagination
+ * Endpoint to get all coins without pagination, including tribe information
  * @route GET /allCoins
+ * @returns {Object} Response containing all coins with tribe data
  */
 router.get("/allCoins", async (req: any, res: any) => {
   try {
