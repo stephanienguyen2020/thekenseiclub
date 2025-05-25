@@ -18,7 +18,7 @@ export function toBlockchainAmount(
 ): bigint {
   const bnAmount = new BigNumber(amount);
   const scaledAmount = bnAmount.times(decimalMultiplier);
-  return BigInt(scaledAmount.integerValue().toString());
+  return BigInt(scaledAmount.toFixed(0));
 }
 
 // Convert from blockchain format to human-readable number

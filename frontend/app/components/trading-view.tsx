@@ -35,6 +35,31 @@ interface TradingViewProps {
   suiPrice: number;
 }
 
+// Helper function to format numbers in a user-friendly way
+const formatAmount = (value: number | string): string => {
+  const num = typeof value === "string" ? parseFloat(value) : value;
+
+  if (isNaN(num) || num === 0) return "0.00";
+
+  // For very small numbers (< 0.0001), show up to 8 decimal places
+  if (Math.abs(num) < 0.0001) {
+    return num.toFixed(8).replace(/\.?0+$/, "");
+  }
+
+  // For small numbers (< 1), show up to 6 decimal places
+  if (Math.abs(num) < 1) {
+    return num.toFixed(6).replace(/\.?0+$/, "");
+  }
+
+  // For larger numbers, show up to 4 decimal places
+  if (Math.abs(num) < 1000) {
+    return num.toFixed(4).replace(/\.?0+$/, "");
+  }
+
+  // For very large numbers, show up to 2 decimal places
+  return num.toFixed(2).replace(/\.?0+$/, "");
+};
+
 export default function TradingView({
   tokenSymbol,
   tokenName,
@@ -97,15 +122,6 @@ export default function TradingView({
   // Add state for search input
   const [currencySearch, setCurrencySearch] = useState("");
 
-  // Simulate chart loading
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     setIsLoading(false);
-  //   }, 1500);
-
-  //   return () => clearTimeout(timer);
-  // }, []);
-
   useEffect(() => {
     // Fetch chart data with error handling
     const fetchChartData = async () => {
@@ -119,7 +135,14 @@ export default function TradingView({
             resolution: timeframe,
           },
         });
-        const data: CandleData[] = response.data || [];
+        const data: CandleData[] =
+          response.data.map((item: any) => ({
+            ...item,
+            open: fromBlockchainAmount(item.open),
+            high: fromBlockchainAmount(item.high),
+            low: fromBlockchainAmount(item.low),
+            close: fromBlockchainAmount(item.close),
+          })) || [];
         setChartData(data);
         setIsLoading(false);
       } catch (error) {
@@ -410,7 +433,7 @@ export default function TradingView({
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold">
-                ${currentPrice.toFixed(9)}
+                ${formatAmount(currentPrice)}
               </div>
               <div
                 className={`flex items-center justify-end ${
@@ -506,7 +529,7 @@ export default function TradingView({
             >
               SELL
             </button>
-            <button
+            {/* <button
               className={`flex-1 py-3 font-black text-lg ${
                 activeTradeTab === "swap"
                   ? "bg-[#0039C6] text-white"
@@ -515,7 +538,7 @@ export default function TradingView({
               onClick={() => setActiveTradeTab("swap")}
             >
               SWAP
-            </button>
+            </button> */}
             <button
               className={`flex-1 py-3 font-black text-lg ${
                 activeTradeTab === "assistant"
@@ -595,8 +618,8 @@ export default function TradingView({
                     Total {tokenSymbol}
                   </label>
                   <div className="bg-gray-100 p-3 rounded-xl border-4 border-black font-bold">
-                    {suiAmount
-                      ? safeDivide(suiAmount, suiPrice).toFixed(9)
+                    {amount
+                      ? formatAmount(safeDivide(amount, suiPrice))
                       : "0.00"}
                   </div>
                 </div>
@@ -644,7 +667,7 @@ export default function TradingView({
                   </label>
                   <div className="bg-gray-100 p-3 rounded-xl border-4 border-black font-bold">
                     {amount
-                      ? safeMultiply(amount, suiPrice).toFixed(9)
+                      ? formatAmount(safeMultiply(amount, suiPrice))
                       : "0.00"}
                   </div>
                 </div>
@@ -702,7 +725,7 @@ export default function TradingView({
                       placeholder="0.00"
                       value={
                         amount
-                          ? safeDivide(amount, currentPrice).toFixed(8)
+                          ? formatAmount(safeDivide(amount, currentPrice))
                           : ""
                       }
                       readOnly
@@ -718,7 +741,7 @@ export default function TradingView({
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Rate</span>
                     <span className="font-bold">
-                      1 {tokenSymbol} = ${displayPrice.toFixed(9)}
+                      1 {tokenSymbol} = ${formatAmount(displayPrice)}
                       {/* This is the canonical marginal price from the contract event, scaled to 9 decimals */}
                     </span>
                   </div>
