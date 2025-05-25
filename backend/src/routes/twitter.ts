@@ -76,21 +76,21 @@ router.get('/auth/callback', async (req, res) => {
 // Post a tweet
 router.post('/tweet', upload.array('images', 4), async (req, res) => {
   try {
-    const { username, text } = req.body;
+    const { walletAddress, text } = req.body;
     const files = req.files as Express.Multer.File[];
 
     if (!text) {
       return res.status(400).json({ error: 'Tweet text is required' });
     }
 
-    if (!username) {
-      return res.status(400).json({ error: 'Twitter username is required' });
+    if (!walletAddress) {
+      return res.status(400).json({ error: 'Wallet address is required' });
     }
 
     // Convert uploaded files to buffers if they exist
     const imageBuffers = files?.length > 0 ? files.map(file => file.buffer) : undefined;
 
-    const tweet = await twitterService.postTweet(username, text, imageBuffers);
+    const tweet = await twitterService.postTweet(walletAddress, text, imageBuffers);
     res.json(tweet);
   } catch (error) {
     res.status(500).json({ error: 'Failed to post tweet, ' + error });

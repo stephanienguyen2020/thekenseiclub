@@ -72,9 +72,9 @@ class TwitterService {
     }
   }
 
-  async postTweet(username: string, text: string, images?: Buffer[]) {
+  async postTweet(walletAddress: string, text: string, images?: Buffer[]) {
     try {
-      const twitterAccount = await Twitter.findOne({ username });
+      const twitterAccount = await Twitter.findOne({ walletAddress });
       if (!twitterAccount) {
         throw new Error('Twitter account not connected');
       }

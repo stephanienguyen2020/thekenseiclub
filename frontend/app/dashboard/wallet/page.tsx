@@ -18,6 +18,7 @@ import {useEffect, useState} from "react";
 import {getChanges24h, getCreatedToken, getHoldingToken, getTotalValue} from "@/services/coinService";
 import {fetchUserByAddress} from "@/app/api/users/route";
 import { formatPrice, formatPercentage, formatLargeNumber, formatAddress } from '@/lib/priceUtils';
+import { TRIBE_METADATA } from "@/app/lib/utils";
 
 export default function WalletPage() {
   const [activeTab, setActiveTab] = useState<"holdings" | "created">(
@@ -32,7 +33,7 @@ export default function WalletPage() {
   const [user, setUser] = useState<{username: string}>({username: ""});
 
   const currentAccount = useCurrentAccount();
-
+  console.log("currentAccount", currentAccount);
   // Calculate total value and 24h change from holdings
   const totalValue = getTotalValue(holdings);
 
@@ -111,6 +112,60 @@ export default function WalletPage() {
     } else {
       setSortBy(column);
       setSortOrder("desc");
+    }
+  };
+
+  const handleAutoShill = async (token: any) => {
+    try {
+      // Generate shill content
+      const shillResponse = await fetch('/api/openai/coin-shill-script', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: token.name,
+          description: token.description,
+          price: token.price,
+          priceChange24h: token.change24h,
+          marketCap: token.marketCap,
+          tribe: token.tribe,
+          tribeMetadata: TRIBE_METADATA[token.tribe as keyof typeof TRIBE_METADATA]
+        }),
+      });
+
+      if (!shillResponse.ok) {
+        throw new Error('Failed to generate shill content');
+      }
+
+      const { tweet } = await shillResponse.json();
+
+      // Create form data for Twitter post
+      const formData = new FormData();
+      formData.append('text', tweet);
+      formData.append('walletAddress', currentAccount?.address || '');
+
+      // Add token logo if available
+      if (token.logo) {
+        const logoResponse = await fetch(token.logo);
+        const logoBlob = await logoResponse.blob();
+        formData.append('images', logoBlob, 'token-logo.png');
+      }
+
+      // Post to Twitter
+      const tweetResponse = await fetch('/api/twitter/tweet', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!tweetResponse.ok) {
+        throw new Error('Failed to post tweet');
+      }
+
+      alert('Successfully posted to Twitter!');
+    } catch (error) {
+      console.error('Error auto-shilling:', error);
+      alert('Failed to auto-shill. Please try again.');
     }
   };
 
@@ -381,6 +436,7 @@ export default function WalletPage() {
                           View
                         </Link>
                         <button
+                          onClick={() => handleAutoShill(holding)}
                           className="bg-[#c0ff00] text-black px-4 py-1 rounded-xl text-sm font-bold border-2 border-black">
                           AutoShill
                         </button>
@@ -458,6 +514,7 @@ export default function WalletPage() {
                       View
                     </Link>
                     <button
+                      onClick={() => handleAutoShill(holding)}
                       className="flex-1 bg-[#c0ff00] text-black py-2 rounded-xl text-sm font-bold border-2 border-black">
                       AutoShill
                     </button>
@@ -570,6 +627,7 @@ export default function WalletPage() {
                           View
                         </Link>
                         <button
+                          onClick={() => handleAutoShill(token)}
                           className="bg-[#c0ff00] text-black px-3 py-1 rounded-xl text-sm font-bold border-2 border-black">
                           AutoShill
                         </button>
@@ -634,6 +692,7 @@ export default function WalletPage() {
                       View
                     </Link>
                     <button
+                      onClick={() => handleAutoShill(token)}
                       className="flex-1 bg-[#c0ff00] text-black py-2 rounded-xl text-sm font-bold border-2 border-black">
                       AutoShill
                     </button>

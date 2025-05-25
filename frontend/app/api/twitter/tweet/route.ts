@@ -6,10 +6,10 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const text = formData.get('text');
-    const username = formData.get('username');
+    const walletAddress = formData.get('walletAddress');
     const images = formData.getAll('images');
 
-    if (!text || !username) {
+    if (!text || !walletAddress) {
       return NextResponse.json(
         { error: 'Text and username are required' },
         { status: 400 }
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     // Create a new FormData instance for the backend request
     const backendFormData = new FormData();
     backendFormData.append('text', text as string);
-    backendFormData.append('username', username as string);
+    backendFormData.append('walletAddress', walletAddress as string);
 
     // Append images if they exist
     images.forEach((image) => {
