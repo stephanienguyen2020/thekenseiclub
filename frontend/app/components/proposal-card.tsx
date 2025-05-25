@@ -1,69 +1,85 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Check, FileText, MessageSquare, ExternalLink, ChevronDown } from "lucide-react"
-import Link from "next/link"
-import Image from "next/image"
-import {VoteNotification} from "@/components/ui/vote-notification";
+import { VoteNotification } from "@/components/ui/vote-notification";
+import {
+  Check,
+  ChevronDown,
+  ExternalLink,
+  FileText,
+  MessageSquare,
+  X,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 
 interface VoteOption {
-  label: string
-  votes: number
-  percentage: number
-  isSelected?: boolean
+  label: string;
+  votes: number;
+  percentage: number;
+  isSelected?: boolean;
 }
 
 interface ProposalCardProps {
-  id: string
-  title: string
-  description: string
-  status: "open" | "closed" | "upcoming"
-  endDate: string
-  tokenSymbol: string
-  tokenLogo: string
-  options: VoteOption[]
-  tokenId: string
-  onVote?: (choice: string) => Promise<void>
-  userVote?: string
-  winningOption?: string
-  isVoting?: boolean
+  id: string;
+  title: string;
+  description: string;
+  status: "open" | "closed" | "upcoming";
+  endDate: string;
+  tokenSymbol: string;
+  tokenLogo: string;
+  options: VoteOption[];
+  tokenId: string;
+  onVote?: (choice: string) => Promise<void>;
+  userVote?: string;
+  winningOption?: string;
+  isVoting?: boolean;
+  image_upload_id?: string;
 }
 
 export default function ProposalCard({
-                                       id,
-                                       title,
-                                       description,
-                                       status,
-                                       endDate,
-                                       tokenSymbol,
-                                       tokenLogo,
-                                       options,
-                                       tokenId,
-                                       onVote,
-                                       userVote,
-                                       winningOption,
-                                       isVoting
-                                     }: ProposalCardProps) {
-  const [showAllOptions, setShowAllOptions] = useState(false)
+  id,
+  title,
+  description,
+  status,
+  endDate,
+  tokenSymbol,
+  tokenLogo,
+  options,
+  tokenId,
+  onVote,
+  userVote,
+  winningOption,
+  isVoting,
+  image_upload_id,
+}: ProposalCardProps) {
+  console.log(userVote);
+  const [showAllOptions, setShowAllOptions] = useState(false);
   const [selectedOption, setSelectedOption] = useState<number | null>(
-    userVote ? options.findIndex(opt => opt.label === userVote) : null
-  )
+    userVote ? options.findIndex((opt) => opt.label === userVote) : null
+  );
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
+  const [showImageModal, setShowImageModal] = useState(false);
 
-  const isVotable = status === "open"
-  const truncatedDescription = description.length > 200 ? `${description.substring(0, 200)}...` : description
-  const hasMoreThanTwoOptions = options.length > 2
+  const isVotable = status === "open";
+  const truncatedDescription =
+    description.length > 200
+      ? `${description.substring(0, 200)}...`
+      : description;
+  const hasMoreThanTwoOptions = options.length > 2;
 
   // Sort options by percentage (highest first)
-  const sortedOptions = [...options].sort((a, b) => b.percentage - a.percentage)
+  const sortedOptions = [...options].sort(
+    (a, b) => b.percentage - a.percentage
+  );
 
   // Display only the first 2 options if not showing all and there are more than 2
   const displayedOptions = showAllOptions
     ? sortedOptions
     : hasMoreThanTwoOptions
-      ? sortedOptions.slice(0, 2)
-      : sortedOptions
+    ? sortedOptions.slice(0, 2)
+    : sortedOptions;
 
   const handleVoteSelect = async (index: number) => {
     if (status !== "open") {
@@ -87,23 +103,20 @@ export default function ProposalCard({
     if (onVote) {
       await onVote(options[index].label);
     }
-  }
+  };
 
   const getOptionStyle = (option: VoteOption, isSelected: boolean) => {
-    if (winningOption === option.label) {
-      return "bg-green-500 bg-opacity-10 border-2 border-green-500 text-green-500"
+    if (status === "closed" && winningOption === option.label) {
+      return "bg-green-500 bg-opacity-10 border-2 border-green-500 text-green-500";
     }
-    if (userVote === option.label) {
-      return "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4] text-[#0046F4]"
-    }
-    if (isSelected) {
-      return "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4] text-[#0046F4]"
+    if (status === "open" && userVote === option.label) {
+      return "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4] text-[#0046F4]";
     }
     if (status === "open" && !userVote) {
-      return "bg-gray-50 border-2 border-gray-200 hover:bg-gray-100 hover:border-[#0046F4] hover:text-[#0046F4] transition-all duration-200"
+      return "bg-gray-50 border-2 border-gray-200 hover:bg-gray-100 hover:border-[#0046F4] hover:text-[#0046F4] transition-all duration-200";
     }
-    return "bg-gray-50 border-2 border-gray-200"
-  }
+    return "bg-gray-50 border-2 border-gray-200";
+  };
 
   return (
     <div className="bg-white rounded-3xl overflow-hidden mb-6 border-2 border-black">
@@ -126,13 +139,63 @@ export default function ProposalCard({
             status === "open"
               ? "bg-[#c0ff00] text-black"
               : status === "closed"
-                ? "bg-red-500 text-white"
-                : "bg-blue-200 text-blue-800"
+              ? "bg-red-500 text-white"
+              : "bg-blue-200 text-blue-800"
           }`}
         >
           {status.charAt(0).toUpperCase() + status.slice(1)}
         </div>
       </div>
+
+      {/* Proposal Image */}
+      {image_upload_id && (
+        <>
+          <div
+            className="relative w-full h-64 border-b-2 border-black cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={() => setShowImageModal(true)}
+          >
+            <Image
+              src={`/api/daos/proposals/${id}/image`}
+              alt={title}
+              fill
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center">
+              <div className="opacity-0 hover:opacity-100 transition-opacity bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+                Click to view full image
+              </div>
+            </div>
+          </div>
+
+          {/* Image Modal */}
+          {showImageModal && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+              onClick={() => setShowImageModal(false)}
+            >
+              <div className="relative max-w-4xl w-full max-h-[90vh]">
+                <button
+                  className="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 z-10 hover:bg-opacity-75 transition-all"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowImageModal(false);
+                  }}
+                >
+                  <X size={24} />
+                </button>
+                <Image
+                  src={`/api/daos/proposals/${id}/image`}
+                  alt={title}
+                  width={1200}
+                  height={675}
+                  className="w-full h-auto object-contain rounded-lg"
+                  priority
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Proposal Content */}
       <div className="px-4 py-4">
@@ -144,30 +207,28 @@ export default function ProposalCard({
       {/* Voting Options */}
       <div className="px-4 pb-4 space-y-3">
         {displayedOptions.map((option, index) => {
-          const isSelected = selectedOption === index
-          const isUserVote = userVote === option.label
-          const isWinning = winningOption === option.label
-          const optionStyle = getOptionStyle(option, isSelected)
-          const isInteractive = status === "open" && !userVote && !isWinning
+          const isSelected = selectedOption === index;
+          const isUserVote = userVote === option.label;
+          const isWinning = winningOption === option.label;
+          const optionStyle = getOptionStyle(option, isSelected);
+          const isInteractive = status === "open" && !userVote && !isWinning;
 
           return (
             <div
               key={index}
               className={`p-4 rounded-xl cursor-pointer transition-all duration-200 ${optionStyle} ${
-                isInteractive ? 'hover:scale-[1.02] hover:shadow-md' : ''
-              } ${isVoting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                isInteractive ? "hover:scale-[1.02] hover:shadow-md" : ""
+              } ${isVoting ? "opacity-50 cursor-not-allowed" : ""}`}
               onClick={() => handleVoteSelect(index)}
             >
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  {(isSelected || isUserVote || isWinning) && (
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                      isWinning ? 'bg-green-500' : 'bg-[#0046F4]'
-                    }`}>
+                  {isUserVote && (
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[#0046F4]">
                       <Check className="text-white" size={14} />
                     </div>
                   )}
-                  {isInteractive && !isSelected && !isUserVote && !isWinning && (
+                  {isInteractive && !isUserVote && !isWinning && (
                     <div className="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-[#0046F4] transition-colors duration-200" />
                   )}
                   <span className="font-medium">{option.label}</span>
@@ -178,9 +239,11 @@ export default function ProposalCard({
                   </span>
                 </div>
               </div>
-              <div className="mt-1 text-sm text-gray-600">{option.votes.toLocaleString()} votes</div>
+              <div className="mt-1 text-sm text-gray-600">
+                {option.votes.toLocaleString()} votes
+              </div>
             </div>
-          )
+          );
         })}
 
         {/* View All Button */}
@@ -190,7 +253,12 @@ export default function ProposalCard({
             onClick={() => setShowAllOptions(!showAllOptions)}
           >
             {showAllOptions ? "Show less" : "View all"}
-            <ChevronDown className={`transition-transform ${showAllOptions ? "rotate-180" : ""}`} size={16} />
+            <ChevronDown
+              className={`transition-transform ${
+                showAllOptions ? "rotate-180" : ""
+              }`}
+              size={16}
+            />
           </button>
         )}
       </div>
@@ -226,5 +294,5 @@ export default function ProposalCard({
         message={notificationMessage}
       />
     </div>
-  )
+  );
 }

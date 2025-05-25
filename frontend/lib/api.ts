@@ -3,7 +3,7 @@ import axios from "axios";
 // Get environment variables
 const baseURL =
   process.env.NEXT_PUBLIC_API_URL ||
-  `http://${process.env.BE_HOST || "localhost"}:${
+  `http://${process.env.NEXT_PUBLIC_BE_HOST || "localhost"}:${
     process.env.BE_PORT || "3001"
   }`;
 // Create axios instance with default config

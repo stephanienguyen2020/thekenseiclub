@@ -1,11 +1,12 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useState } from "react";
-import { Sparkles, AlertCircle } from "lucide-react";
-import ImageUpload from "./image-upload";
-import { motion } from "framer-motion";
+import { VoteNotification } from "@/app/components/ui/vote-notification";
 import { useTokenGeneratingService } from "@/services/TokenGeneratingService";
 import { useCurrentAccount } from "@mysten/dapp-kit";
+import { motion } from "framer-motion";
+import { AlertCircle, Sparkles } from "lucide-react";
+import { FormEvent, useState } from "react";
+import ImageUpload from "./image-upload";
 
 interface ManualInputFormProps {
   tokenName: string;
@@ -47,6 +48,8 @@ export default function ManualInputForm({
   );
   const tokenGeneratingService = useTokenGeneratingService();
   const currentAccount = useCurrentAccount();
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
 
   const validateAndSubmitForm = async (e: FormEvent) => {
     e.preventDefault();
@@ -97,7 +100,8 @@ export default function ManualInputForm({
 
   const handleGenerateImage = async () => {
     if (!imagePrompt.trim()) {
-      alert("Please enter a description for your image");
+      setNotificationMessage("Please enter a description for your image");
+      setShowNotification(true);
       return;
     }
 
@@ -136,7 +140,8 @@ export default function ManualInputForm({
       }
     } catch (error) {
       console.error("Error generating image:", error);
-      alert("Failed to generate image. Please try again.");
+      setNotificationMessage("Failed to generate image. Please try again.");
+      setShowNotification(true);
     } finally {
       setIsGenerating(false);
     }
@@ -287,6 +292,11 @@ export default function ManualInputForm({
           )}
         </button>
       </form>
+      <VoteNotification
+        isOpen={showNotification}
+        onClose={() => setShowNotification(false)}
+        message={notificationMessage}
+      />
     </motion.div>
   );
 }

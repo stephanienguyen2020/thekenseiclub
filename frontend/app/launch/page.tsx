@@ -1,19 +1,23 @@
 "use client";
-import { useState, useEffect, type ChangeEvent } from "react";
-import Image from "next/image";
-import { Upload, Sparkles } from "lucide-react";
-import Navbar from "@/components/navbar";
-import axios, { AxiosResponse } from "axios";
-import api from "@/lib/api";
 import { CoinResponse } from "@/app/launch/types";
-import { useRouter } from "next/navigation";
+import Navbar from "@/components/navbar";
+import { VoteNotification } from "@/components/ui/vote-notification";
+import api from "@/lib/api";
+import { useTokenGeneratingService } from "@/services/TokenGeneratingService";
 import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import AIInputForm from "./components/ai-input-form";
 import InputMethodSelector, {
   LaunchMethod,
 } from "./components/input-method-selector";
-import AIInputForm from "./components/ai-input-form";
 import ManualInputForm from "./components/manual-input-form";
-import { useTokenGeneratingService } from "@/services/TokenGeneratingService";
+
+interface ImageUploadResponse {
+  image: {
+    gatewayUrl: string;
+  };
+}
 
 export default function LaunchTokenPage() {
   const router = useRouter();
@@ -29,6 +33,8 @@ export default function LaunchTokenPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
   const tokenGeneratingService = useTokenGeneratingService();
 
   // Add event listener for the custom event from manual form
@@ -51,8 +57,6 @@ export default function LaunchTokenPage() {
   }, []);
 
   const handleImageUpload = async (file: File) => {
-    // If the file is empty or has no size, it's likely a placeholder from our AI generation
-    // In this case, we don't want to trigger another upload
     if (file.size === 0) {
       return;
     }
@@ -62,7 +66,6 @@ export default function LaunchTokenPage() {
       setImagePreview(reader.result as string);
     };
     reader.readAsDataURL(file);
-    // Upload the file to the API
     setIsUploading(true);
     try {
       const formData = new FormData();
@@ -70,17 +73,18 @@ export default function LaunchTokenPage() {
       formData.append("type", "post");
       formData.append("userId", currentAccount?.address || "");
 
-      const response = await api.post("/images", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await api.post<ImageUploadResponse>(
+        "/images",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-      if (
-        response.data &&
-        response.data.blobId
-      ) {
-        setUploadedImageUrl(response.data.blobId);
+      if (response.data?.image?.gatewayUrl) {
+        setUploadedImageUrl(response.data.image.gatewayUrl);
       }
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -102,80 +106,124 @@ export default function LaunchTokenPage() {
 
   const handleCreateToken = async () => {
     setIsCreatingToken(true);
-    const result: AxiosResponse<CoinResponse> = await api.post("/coin", {
-      name: tokenName,
-      symbol: tokenSymbol,
-      description: tokenDescription,
-      iconUrl: uploadedImageUrl,
-      address: currentAccount?.address || "",
-    });
-    window.location.href = `/marketplace/${result?.data.coin.id}`;
+    try {
+      const result = await api.post<CoinResponse>("/coin", {
+        name: tokenName,
+        symbol: tokenSymbol,
+        description: tokenDescription,
+        iconUrl: uploadedImageUrl,
+        // address: currentAccount?.address || "",
+      });
+      setNotificationMessage("Token created successfully!");
+      setShowNotification(true);
+      setTimeout(() => {
+        window.location.href = `/marketplace/${result.data.coin.id}`;
+      }, 2000);
+    } catch (error) {
+      setNotificationMessage("Failed to create token. Please try again.");
+      setShowNotification(true);
+      setIsCreatingToken(false);
+    }
   };
+
   const handleCreateTokenAuto = async (description: string) => {
     setIsCreatingToken(true);
     try {
-      // Call the AI service to generate token details and upload the image
       const tokenDetails = await tokenGeneratingService.generateTokenWithAI(
         description,
-        currentAccount?.address // Pass the user address for attribution
+        currentAccount?.address
       );
 
-      // Use the gatewayUrl (IPFS URL) from the token details if available
       const imageUrl = tokenDetails.gatewayUrl || tokenDetails.imageUrl;
 
-      // Create the token with the generated details
-      const { data: result }: { data: CoinResponse } = await api.post("/coin", {
+      // Classify the token into a tribe
+      const tribeResponse = await fetch("/api/openai/tribe-classification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: tokenDetails.name,
+          symbol: tokenDetails.symbol,
+          description: tokenDetails.description,
+        }),
+      });
+
+      const tribeData = await tribeResponse.json();
+      console.log("tribe", tribeData);
+
+      const result = await api.post<CoinResponse>("/coin", {
         name: tokenDetails.name,
         symbol: tokenDetails.symbol,
         description: tokenDetails.description,
         iconUrl: imageUrl,
-        address: currentAccount?.address || "",
+        tribe: tribeData.classification,
+        // address: currentAccount?.address || "",
       });
 
-      // Navigate to the new token's marketplace page
-      const timer = setTimeout(() => {
-        router.push(`/marketplace/${result.coin.id}`);
+      setNotificationMessage("Token created successfully!");
+      setShowNotification(true);
+      setTimeout(() => {
+        router.push(`/marketplace/${result.data.coin.id}`);
       }, 5000);
-
-      return () => clearTimeout(timer);
     } catch (error) {
       console.error("Error creating token:", error);
+      setNotificationMessage("Failed to create token. Please try again.");
+      setShowNotification(true);
       setIsCreatingToken(false);
-      throw error; // Re-throw to let the form handle the error
+      throw error;
     }
   };
 
   const handleCreateTokenManual = async () => {
     setIsCreatingToken(true);
     try {
-      // Use the uploaded IPFS URL if available, otherwise use the local preview
       const iconUrl = uploadedImageUrl || imagePreview;
 
-      const { data: result }: { data: CoinResponse } = await api.post("/coin", {
+      // Classify the token into a tribe
+      const response = await fetch("/api/openai/tribe-classification", {
+        method: "POST",
+        body: JSON.stringify({
+          name: tokenName,
+          symbol: tokenSymbol,
+          description: tokenDescription,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to process query");
+      }
+
+      const tribe = await response.json();
+      console.log("tribe", tribe);
+
+      const result = await api.post<CoinResponse>("/coin", {
         name: tokenName,
         symbol: tokenSymbol,
         description: tokenDescription,
         iconUrl: iconUrl,
+        tribe: tribe.classification,
         address: currentAccount?.address || "",
       });
 
-      const timer = setTimeout(() => {
-        router.push(`/marketplace/${result.coin.id}`);
+      setNotificationMessage("Token created successfully!");
+      setShowNotification(true);
+      setTimeout(() => {
+        router.push(`/marketplace/${result.data.coin.id}`);
       }, 5000);
-
-      return () => clearTimeout(timer);
     } catch (error) {
       console.error("Error creating token:", error);
+      setNotificationMessage("Failed to create token. Please try again.");
+      setShowNotification(true);
       setIsCreatingToken(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#0039C6]">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header with authenticated navbar */}
-        <Navbar isAuthenticated={!!currentAccount} />
-
+      <Navbar isAuthenticated={!!currentAccount} />
+      <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
         <div className="bg-white rounded-3xl p-8 mt-8 max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-8 text-center">
             Launch Your Token
@@ -215,6 +263,13 @@ export default function LaunchTokenPage() {
           )}
         </div>
       </div>
+
+      {/* Success Notification */}
+      <VoteNotification
+        isOpen={showNotification}
+        onClose={() => setShowNotification(false)}
+        message={notificationMessage}
+      />
     </div>
   );
 }

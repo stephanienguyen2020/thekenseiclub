@@ -1,6 +1,6 @@
-import express, {Request, Response} from "express";
-import {db} from "../db/database";
-import {sql} from "kysely";
+import express, { Request, Response } from "express";
+import { sql } from "kysely";
+import { db } from "../db/database";
 
 const router = express.Router();
 
@@ -33,17 +33,17 @@ router.get("/ohlcv", async (req: any, res: any) => {
     if (!bondingCurveId) {
       return res
         .status(400)
-        .json({error: "Missing required parameter: bonding_curve_id"});
+        .json({ error: "Missing required parameter: bonding_curve_id" });
     }
 
     if (!from) {
       return res
         .status(400)
-        .json({error: "Missing required parameter: from"});
+        .json({ error: "Missing required parameter: from" });
     }
 
     if (!to) {
-      return res.status(400).json({error: "Missing required parameter: to"});
+      return res.status(400).json({ error: "Missing required parameter: to" });
     }
 
     // Use parameterized query with Kysely's sql tag to prevent SQL injection
@@ -88,7 +88,7 @@ router.get("/ohlcv", async (req: any, res: any) => {
       })
       .catch((error) => {
         console.error("Error executing query:", error);
-        res.status(500).json({error: "Internal Server Error"});
+        res.status(500).json({ error: "Internal Server Error" });
       });
   } catch (error) {
     console.error("Unexpected error:", error);

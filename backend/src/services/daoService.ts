@@ -1,27 +1,72 @@
 import Proposal, { IProposal } from '../models/Proposal';
 import Vote, { IVote } from '../models/Vote';
 import { balanceService } from './balanceService';
+import { tuskyService } from './tuskyService';
+import dotenv from 'dotenv';
+
+dotenv.config(); // Ensure environment variables are loaded
+
+// Define a more specific input type for proposal creation
+interface CreateProposalInput {
+    title: string;
+    description: string;
+    options: string[]; // Input options are just strings
+    createdBy: string;
+    tokenAddress: string;
+    startDate: Date;
+    endDate: Date;
+    tag: string;
+    image: Buffer; // Image is a Buffer
+}
 
 export class DaoService {
     // Create a new proposal
-    async createProposal(proposalData: Omit<IProposal, 'voteCount' | 'votePoint' | 'status'>): Promise<IProposal> {
+    async createProposal(proposalData: CreateProposalInput): Promise<IProposal> {
+        const imageVaultId = process.env.TUSKY_PROPOSAL_IMAGE_VAULT_ID;
+        const proposalVaultId = process.env.TUSKY_PROPOSAL_VAULT_ID;
+
+        if (!imageVaultId) {
+            console.error('TUSKY_PROPOSAL_IMAGE_VAULT_ID is not set in environment variables.');
+            throw new Error('Server configuration error: Tusky image vault ID missing.');
+        }
+        if (!proposalVaultId) {
+            console.error('TUSKY_PROPOSAL_VAULT_ID is not set in environment variables.');
+            throw new Error('Server configuration error: Tusky proposal vault ID missing.');
+        }
+
+        // 1. Upload image to Tusky
+        const imageFilename = `proposal_image_${Date.now()}_${proposalData.title.replace(/\s+/g, '_')}.png`;
+        const imageUploadId = await tuskyService.uploadDocumentToVault(imageVaultId, proposalData.image, imageFilename);
+
+        // 2. Prepare and upload proposal content (JSON) to Tusky
+        const { image, ...jsonDataToUpload } = proposalData;
+        const proposalContentBuffer = Buffer.from(JSON.stringify(jsonDataToUpload)); // Uploads proposalData excluding image
+        const proposalFilename = `proposal_content_${Date.now()}_${proposalData.title.replace(/\s+/g, '_')}.json`;
+        const contentUploadId = await tuskyService.uploadDocumentToVault(proposalVaultId, proposalContentBuffer, proposalFilename);
+
         const proposal = new Proposal({
-            ...proposalData,
+            title: proposalData.title,
+            description: proposalData.description,
             options: proposalData.options.map(option => ({
                 option,
                 votes: 0,
                 points: 0
             })),
+            createdBy: proposalData.createdBy,
+            tokenAddress: proposalData.tokenAddress,
+            startDate: proposalData.startDate,
+            endDate: proposalData.endDate,
+            tag: proposalData.tag,
             voteCount: 0,
             votePoint: 0,
-            status: 'open'
+            status: 'open',
+            upload_id: contentUploadId, // Tusky ID for proposal content
+            image_upload_id: imageUploadId, // Tusky ID for image
         });
-        return await proposal.save();
+
+        const savedProposal = await proposal.save();
+        return savedProposal;
     }
-
-    // update proposal's blob id
-    
-
 
     // Get all proposals
     async getAllProposals(): Promise<IProposal[]> {
@@ -251,6 +296,39 @@ export class DaoService {
             proposal.votePoint = proposal.options.reduce((sum, opt) => sum + opt.points, 0);
             
             await proposal.save();
+        }
+    }
+
+    // Get proposal image from Tusky
+    async getProposalImage(proposalId: string): Promise<Buffer | null> {
+        try {
+            const proposal = await Proposal.findById(proposalId);
+            if (!proposal || !proposal.image_upload_id) {
+                return null;
+            }
+
+            const imageBuffer = await tuskyService.downloadFile(proposal.image_upload_id);
+            return Buffer.from(imageBuffer);
+        } catch (error) {
+            console.error('Error fetching proposal image:', error);
+            throw error;
+        }
+    }
+
+    // Get proposal content from Tusky
+    async getProposalContent(proposalId: string): Promise<any | null> {
+        try {
+            const proposal = await Proposal.findById(proposalId);
+            if (!proposal || !proposal.upload_id) {
+                return null;
+            }
+
+            const contentBuffer = await tuskyService.downloadFile(proposal.upload_id);
+            const contentString = Buffer.from(contentBuffer).toString('utf-8');
+            return JSON.parse(contentString);
+        } catch (error) {
+            console.error('Error fetching proposal content:', error);
+            throw error;
         }
     }
 }

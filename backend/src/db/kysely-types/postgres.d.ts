@@ -318,6 +318,12 @@ export interface Coins {
   symbol: string;
 }
 
+export interface CoinTribes {
+  coinId: string;
+  id: Generated<Int8>;
+  tribe: string;
+}
+
 export interface Comments {
   content: string;
   createdAt: Timestamp;
@@ -342,6 +348,13 @@ export interface Likes {
   id: Generated<Int8>;
   postId: Int8;
   userId: string;
+}
+
+export interface Portfolios {
+  amount: number;
+  bondingCurveId: string;
+  timestamp: Timestamp;
+  userAddress: string;
 }
 
 export interface Posts {
@@ -576,10 +589,12 @@ export interface DB {
   "_TimescaledbInternal.hypertableChunkLocalSize": _TimescaledbInternalHypertableChunkLocalSize;
   bondingCurve: BondingCurve;
   coins: Coins;
+  coinTribes: CoinTribes;
   comments: Comments;
   cursors: Cursors;
   images: Images;
   likes: Likes;
+  portfolios: Portfolios;
   posts: Posts;
   rawPrices: RawPrices;
   reTweets: ReTweets;

@@ -1,27 +1,65 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import {
-  Search,
-  TrendingUp,
-  Clock,
-  Star,
-  ChevronUp,
-  ChevronDown,
-  Grid,
-  List,
-} from "lucide-react";
+import { Coin, CoinList } from "@/app/marketplace/types";
 import Navbar from "@/components/navbar";
 import api from "@/lib/api";
-import { Coin, CoinList } from "@/app/marketplace/types";
+import {
+  formatLargeNumber,
+  formatPercentage,
+  formatPrice,
+} from "@/lib/priceUtils";
 import { AxiosResponse } from "axios";
+import {
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Clock,
+  Grid,
+  List,
+  Search,
+  Star,
+  TrendingUp,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+
+// Define the available tribes (matching backend)
+const TRIBES = {
+  CANINE_CLANS: "canine_clans",
+  FELINE_SYNDICATES: "feline_syndicates",
+  AQUATIC_ORDERS: "aquatic_orders",
+  WILDCARDS: "wildcards",
+} as const;
+
+// Tribe metadata for UI display
+const TRIBE_METADATA = {
+  [TRIBES.CANINE_CLANS]: {
+    name: "Canine Clans",
+    emoji: "🐕",
+  },
+  [TRIBES.FELINE_SYNDICATES]: {
+    name: "Feline Syndicates",
+    emoji: "🐱",
+  },
+  [TRIBES.AQUATIC_ORDERS]: {
+    name: "Aquatic Orders",
+    emoji: "🐠",
+  },
+  [TRIBES.WILDCARDS]: {
+    name: "Wildcards",
+    emoji: "🃏",
+  },
+};
 
 export default function MarketplacePage() {
   const [sortBy, setSortBy] = useState("trending");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+  const [selectedChain, setSelectedChain] = useState("kensei");
+  const [isChainDropdownOpen, setIsChainDropdownOpen] = useState(false);
+  const [selectedTribe, setSelectedTribe] = useState<string>("all");
+  const [isTribeDropdownOpen, setIsTribeDropdownOpen] = useState(false);
   const [watchlist, setWatchlist] = useState<string[]>(() => {
     // Initialize from localStorage if available
     if (typeof window !== "undefined") {
@@ -31,23 +69,173 @@ export default function MarketplacePage() {
     return [];
   });
   const [coins, setCoins] = useState<Array<Coin>>([]);
+  const [loading, setLoading] = useState(false);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const tribeDropdownRef = useRef<HTMLDivElement>(null);
+
+  const chainOptions = [
+    { value: "kensei", label: "Kensei", color: "#0039C6" },
+    { value: "sui", label: "Sui", color: "#4DA2FF", image: "/sui.jpg" },
+    { value: "ethereum", label: "ETH", color: "#627EEA", image: "/eth.png" },
+    { value: "solana", label: "SOL", color: "#9945FF", image: "/sol.png" },
+  ];
+
+  // Tribe options for dropdown
+  const tribeOptions = [
+    { value: "all", label: "All Tribes", emoji: "🌟" },
+    {
+      value: TRIBES.CANINE_CLANS,
+      label: TRIBE_METADATA[TRIBES.CANINE_CLANS].name,
+      emoji: TRIBE_METADATA[TRIBES.CANINE_CLANS].emoji,
+    },
+    {
+      value: TRIBES.FELINE_SYNDICATES,
+      label: TRIBE_METADATA[TRIBES.FELINE_SYNDICATES].name,
+      emoji: TRIBE_METADATA[TRIBES.FELINE_SYNDICATES].emoji,
+    },
+    {
+      value: TRIBES.AQUATIC_ORDERS,
+      label: TRIBE_METADATA[TRIBES.AQUATIC_ORDERS].name,
+      emoji: TRIBE_METADATA[TRIBES.AQUATIC_ORDERS].emoji,
+    },
+    {
+      value: TRIBES.WILDCARDS,
+      label: TRIBE_METADATA[TRIBES.WILDCARDS].name,
+      emoji: TRIBE_METADATA[TRIBES.WILDCARDS].emoji,
+    },
+  ];
 
   // Save watchlist to localStorage when it changes
   useEffect(() => {
     localStorage.setItem("watchlist", JSON.stringify(watchlist));
   }, [watchlist]);
 
+  // Handle clicking outside the dropdown
   useEffect(() => {
-    const fetchCoins = async () => {
-      const rs: AxiosResponse<CoinList> = await api.get("/coins");
-      const coinList = rs.data.data.map((ele) => ({
-        ...ele,
-        proposals: 8,
-      }));
-      setCoins(coinList);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsChainDropdownOpen(false);
+      }
+      if (
+        tribeDropdownRef.current &&
+        !tribeDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsTribeDropdownOpen(false);
+      }
     };
-    fetchCoins();
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
+
+  useEffect(() => {
+    // Reset tribe filter when chain changes
+    if (selectedChain !== "kensei") {
+      setSelectedTribe("all");
+    }
+
+    const fetchCoins = async () => {
+      setLoading(true);
+      try {
+        if (selectedChain === "kensei") {
+          // Use existing coins API for Kensei
+          const rs: AxiosResponse<CoinList> = await api.get("/coins");
+          setCoins(rs.data.data);
+        } else {
+          // Use nonNativeToken API for Sui and ETH through Next.js API route
+          const platform = selectedChain === "sui" ? "sui" : "ethereum";
+          const response = await fetch(
+            `/api/non-native-token?platform=${platform}&limit=100`
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("API Error:", errorData);
+
+            // If we get an error that suggests empty database, try to initialize it
+            if (
+              response.status === 500 ||
+              errorData.error?.includes("Failed to fetch")
+            ) {
+              console.log("Attempting to initialize token database...");
+              try {
+                const initResponse = await fetch(
+                  "/api/non-native-token/initialize",
+                  {
+                    method: "POST",
+                  }
+                );
+
+                if (initResponse.ok) {
+                  console.log(
+                    "Database initialized successfully, retrying fetch..."
+                  );
+                  // Retry the original request
+                  const retryResponse = await fetch(
+                    `/api/non-native-token?platform=${platform}&limit=100`
+                  );
+                  if (retryResponse.ok) {
+                    const retryResult = await retryResponse.json();
+                    const coinList = retryResult.tokens.map((token: any) => ({
+                      id: token.coingeckoId,
+                      name: token.name,
+                      symbol: token.symbol.toUpperCase(),
+                      logo: token.image,
+                      price: token.current_price_usd || 0,
+                      change24h:
+                        token.market_cap_change_percentage_24h_usd || 0,
+                      marketCap: token.market_cap_usd || 0,
+                      holders: Math.floor(Math.random() * 10000) + 1000,
+                      proposals: Math.floor(Math.random() * 20) + 1,
+                    }));
+                    setCoins(coinList);
+                    return;
+                  }
+                }
+              } catch (initError) {
+                console.error("Failed to initialize database:", initError);
+              }
+            }
+
+            throw new Error(
+              `HTTP error! status: ${response.status} - ${
+                errorData.error || "Unknown error"
+              }`
+            );
+          }
+
+          const result = await response.json();
+
+          // Transform nonNativeToken data to match Coin interface
+          const coinList = result.tokens.map((token: any) => ({
+            id: token.coingeckoId,
+            name: token.name,
+            symbol: token.symbol.toUpperCase(),
+            logo: token.image,
+            price: token.current_price_usd || 0,
+            change24h: token.market_cap_change_percentage_24h_usd || 0,
+            marketCap: token.market_cap_usd || 0,
+            holders: Math.floor(Math.random() * 10000) + 1000, // Placeholder since API doesn't provide this
+            proposals: Math.floor(Math.random() * 20) + 1, // Placeholder
+          }));
+          setCoins(coinList);
+        }
+      } catch (error) {
+        console.error("Failed to fetch coins:", error);
+        setCoins([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCoins();
+  }, [selectedChain]);
 
   const toggleWatchlist = (coinId: string) => {
     setWatchlist((prev) =>
@@ -57,11 +245,30 @@ export default function MarketplacePage() {
     );
   };
 
-  const filteredCoins = coins.filter(
-    (coin: Coin) =>
+  const handleChainSelect = (chainValue: string) => {
+    setSelectedChain(chainValue);
+    setIsChainDropdownOpen(false);
+  };
+
+  const handleTribeSelect = (tribeValue: string) => {
+    setSelectedTribe(tribeValue);
+    setIsTribeDropdownOpen(false);
+  };
+
+  const filteredCoins = coins.filter((coin: Coin) => {
+    // Filter by search query
+    const matchesSearch =
       coin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      coin.symbol.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      coin.symbol.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Filter by tribe (only for Kensei tokens)
+    const matchesTribe =
+      selectedChain !== "kensei" ||
+      selectedTribe === "all" ||
+      coin.tribe === selectedTribe;
+
+    return matchesSearch && matchesTribe;
+  });
 
   const sortedCoins = [...filteredCoins].sort((a, b) => {
     switch (sortBy) {
@@ -78,12 +285,14 @@ export default function MarketplacePage() {
     }
   });
 
+  const selectedChainOption = chainOptions.find(
+    (option) => option.value === selectedChain
+  );
+
   return (
     <div className="min-h-screen bg-[#0039C6]">
-      <div className="max-w-8xl mx-auto px-4 py-8">
-        {/* Header with authenticated navbar */}
-        <Navbar isAuthenticated={true} />
-
+      <Navbar isAuthenticated={true} />
+      <div className="max-w-8xl mx-auto px-4 py-8 pt-24">
         {/* Search and Filter */}
         <div className="bg-white rounded-3xl p-6 mb-8 mt-8">
           <div className="flex flex-col md:flex-row gap-4 justify-between">
@@ -100,7 +309,121 @@ export default function MarketplacePage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex gap-2">
+            <div className="px-4 py-2 rounded-full flex items-center gap-1">
+              {/* Chain Selection Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsChainDropdownOpen(!isChainDropdownOpen)}
+                  className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center gap-1 font-medium transition-all"
+                >
+                  {selectedChainOption?.image ? (
+                    <Image
+                      src={selectedChainOption.image}
+                      width={16}
+                      height={16}
+                      alt={selectedChainOption.label}
+                      className="rounded-full flex-shrink-0"
+                    />
+                  ) : (
+                    <div
+                      className="w-4 h-4 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: selectedChainOption?.color }}
+                    ></div>
+                  )}
+                  <span>{selectedChainOption?.label}</span>
+                  <ChevronDown
+                    size={16}
+                    className={`transform transition-transform ${
+                      isChainDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {isChainDropdownOpen && (
+                  <div className="absolute top-full mt-2 w-full bg-white border-2 border-black rounded-xl shadow-lg z-50 overflow-hidden">
+                    {chainOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => handleChainSelect(option.value)}
+                        className={`w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors ${
+                          selectedChain === option.value ? "bg-gray-100" : ""
+                        }`}
+                      >
+                        {option.image ? (
+                          <Image
+                            src={option.image}
+                            width={16}
+                            height={16}
+                            alt={option.label}
+                            className="rounded-full flex-shrink-0"
+                          />
+                        ) : (
+                          <div
+                            className="w-4 h-4 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: option.color }}
+                          ></div>
+                        )}
+                        <span className="font-medium">{option.label}</span>
+                        {selectedChain === option.value && (
+                          <ChevronRight size={16} className="ml-auto" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Tribe Filter Dropdown */}
+              {selectedChain === "kensei" && (
+                <div className="relative" ref={tribeDropdownRef}>
+                  <button
+                    onClick={() => setIsTribeDropdownOpen(!isTribeDropdownOpen)}
+                    className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center gap-1 font-medium transition-all"
+                  >
+                    <span className="text-lg">
+                      {
+                        tribeOptions.find(
+                          (option) => option.value === selectedTribe
+                        )?.emoji
+                      }
+                    </span>
+                    <span>
+                      {
+                        tribeOptions.find(
+                          (option) => option.value === selectedTribe
+                        )?.label
+                      }
+                    </span>
+                    <ChevronDown
+                      size={16}
+                      className={`transform transition-transform ${
+                        isTribeDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {isTribeDropdownOpen && (
+                    <div className="absolute top-full mt-2 w-full bg-white border-2 border-black rounded-xl shadow-lg z-50 overflow-hidden">
+                      {tribeOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => handleTribeSelect(option.value)}
+                          className={`w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors ${
+                            selectedTribe === option.value ? "bg-gray-100" : ""
+                          }`}
+                        >
+                          <span className="text-lg">{option.emoji}</span>
+                          <span className="font-medium">{option.label}</span>
+                          {selectedTribe === option.value && (
+                            <ChevronRight size={16} className="ml-auto" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <button
                 className={`px-4 py-2 rounded-full flex items-center gap-1 ${
                   sortBy === "trending"
@@ -164,7 +487,14 @@ export default function MarketplacePage() {
 
         {/* Coins List */}
         <div className="bg-white rounded-3xl p-6">
-          {viewMode === "table" ? (
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0039C6]"></div>
+              <span className="ml-3 text-gray-600">
+                Loading {selectedChainOption?.label} coins...
+              </span>
+            </div>
+          ) : viewMode === "table" ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -227,7 +557,10 @@ export default function MarketplacePage() {
                         </div>
                       </td>
                       <td className="text-right py-4 px-2">
-                        ${coin.price.toFixed(8)}
+                        {formatPrice(coin.price, {
+                          minDecimals: 2,
+                          maxDecimals: 8,
+                        })}
                       </td>
                       <td className="text-right py-4 px-2">
                         <span
@@ -242,11 +575,11 @@ export default function MarketplacePage() {
                           ) : (
                             <ChevronDown size={16} />
                           )}
-                          {Math.abs(coin.change24h)}%
+                          {formatPercentage(coin.change24h)}
                         </span>
                       </td>
                       <td className="text-right py-4 px-2">
-                        ${coin.marketCap}M
+                        {formatLargeNumber(coin.marketCap, { suffix: "" })}
                       </td>
                       <td className="text-right py-4 px-2">
                         {coin.holders.toLocaleString()}
@@ -254,7 +587,11 @@ export default function MarketplacePage() {
                       <td className="text-right py-4 px-2">{coin.proposals}</td>
                       <td className="text-right py-4 px-2">
                         <Link
-                          href={`/marketplace/${coin.id}`}
+                          href={
+                            selectedChain === "kensei"
+                              ? `/marketplace/${coin.id}`
+                              : `/marketplace/external/${coin.id}?chain=${selectedChain}`
+                          }
                           className="bg-[#0039C6] text-white px-4 py-1 rounded-full text-sm hover:bg-opacity-90 transition-colors"
                         >
                           View
@@ -290,7 +627,11 @@ export default function MarketplacePage() {
                     />
                   </button>
                   <Link
-                    href={`/marketplace/${coin.id}`}
+                    href={
+                      selectedChain === "kensei"
+                        ? `/marketplace/${coin.id}`
+                        : `/marketplace/external/${coin.id}?chain=${selectedChain}`
+                    }
                     className="block h-full"
                   >
                     <div className="bg-white rounded-xl border-2 border-black p-4 hover:shadow-lg transition-shadow h-full flex flex-col">
@@ -313,7 +654,10 @@ export default function MarketplacePage() {
                         <div className="bg-gray-50 p-2 rounded-lg">
                           <p className="text-xs text-gray-500">Price</p>
                           <p className="font-medium truncate">
-                            ${coin.price.toFixed(8)}
+                            {formatPrice(coin.price, {
+                              minDecimals: 2,
+                              maxDecimals: 8,
+                            })}
                           </p>
                         </div>
                         <div className="bg-gray-50 p-2 rounded-lg">
@@ -330,13 +674,13 @@ export default function MarketplacePage() {
                             ) : (
                               <ChevronDown size={14} />
                             )}
-                            {Math.abs(coin.change24h)}%
+                            {formatPercentage(coin.change24h)}
                           </p>
                         </div>
                         <div className="bg-gray-50 p-2 rounded-lg">
                           <p className="text-xs text-gray-500">Market Cap</p>
                           <p className="font-medium">
-                            ${(coin.marketCap / 1000000).toFixed(1)}M
+                            {formatLargeNumber(coin.marketCap, { suffix: "" })}
                           </p>
                         </div>
                         <div className="bg-gray-50 p-2 rounded-lg">
@@ -355,6 +699,17 @@ export default function MarketplacePage() {
                   </Link>
                 </div>
               ))}
+            </div>
+          )}
+
+          {!loading && sortedCoins.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">
+                No coins found for {selectedChainOption?.label}
+              </p>
+              <p className="text-gray-400 text-sm mt-2">
+                Try adjusting your search or selecting a different chain
+              </p>
             </div>
           )}
         </div>

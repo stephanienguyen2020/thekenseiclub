@@ -9,7 +9,7 @@ class FileService {
     const keypair = await getFundedKeypair();
 
     // Upload to Walrus
-    return await this.walrusClient.writeBlob({
+    return this.walrusClient?.writeBlob({
       blob: buffer,
       deletable: false,
       epochs: 3,
@@ -20,10 +20,10 @@ class FileService {
 
   async getWalrusBuffer(blobId: string) {
     // Retrieve blob data
-    const blobBytes = await this.walrusClient.readBlob({blobId});
+    const blobBytes = await this.walrusClient?.readBlob({blobId});
 
     // Convert to Blob object
-    const blob = new Blob([new Uint8Array(blobBytes)]);
+    const blob = new Blob([new Uint8Array(blobBytes || new ArrayBuffer(0))]);
 
     // Convert blob to buffer for response
     const arrayBuffer = await blob.arrayBuffer();

@@ -1,30 +1,9 @@
-import OpenAI from "openai";
 import { fetchNewsItems } from "./news";
 import { tradeAgent } from "./tradingBot";
 
-const openai = new OpenAI({
-  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true, // Required for client-side usage
-});
-
 export async function agent(input: string) {
-  const tradingPrompt = ``;
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [
-      {
-        role: "user",
-        content: tradingPrompt,
-      },
-    ],
-  });
-  const content = response.choices[0].message.content;
-  if (!content) {
-    throw new Error("No content received from OpenAI");
-  }
-  // Parse the JSON response
-  return JSON.parse(content);
+  // This function appears to be a placeholder. For now, just delegate to processUserQuery
+  return await processUserQuery(input);
 }
 
 /**
@@ -64,25 +43,21 @@ User input: "${userInput}"
 `;
 
   try {
-    // Call OpenAI API to determine the query type
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "user",
-          content: queryTypePrompt,
-        },
-      ],
-      response_format: { type: "json_object" },
+    // Call our secure API to determine the query type
+    const response = await fetch("/api/openai/query-processor", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userInput, type: "query-type" }),
     });
 
-    const content = response.choices[0].message.content;
-    if (!content) {
-      throw new Error("No content received from OpenAI");
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to process query");
     }
 
-    // Parse the JSON response
-    const queryTypeResult = JSON.parse(content);
+    const queryTypeResult = await response.json();
 
     // Process the query based on its type
     if (queryTypeResult.queryType === "NEWS") {
@@ -90,14 +65,14 @@ User input: "${userInput}"
       const newsResult = await extractTermsAndFetchNews(userInput);
       return {
         queryType: "NEWS",
-        result: newsResult
+        result: newsResult,
       };
     } else {
       // If it's a token trading query, use the tradeAgent function
       const tradingResult = await tradeAgent(userInput);
       return {
         queryType: "TOKEN_TRADING",
-        result: tradingResult
+        result: tradingResult,
       };
     }
   } catch (error) {
@@ -140,25 +115,21 @@ User input: "${userInput}"
 `;
 
   try {
-    // Call OpenAI API to extract search and filter terms
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "user",
-          content: extractionPrompt,
-        },
-      ],
-      response_format: { type: "json_object" },
+    // Call our secure API to extract search and filter terms
+    const response = await fetch("/api/openai/query-processor", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userInput, type: "extract-terms" }),
     });
 
-    const content = response.choices[0].message.content;
-    if (!content) {
-      throw new Error("No content received from OpenAI");
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to extract terms");
     }
 
-    // Parse the JSON response
-    const extractedTerms = JSON.parse(content);
+    const extractedTerms = await response.json();
 
     // Fetch news items using the extracted terms
     const newsItems = await fetchNewsItems({
@@ -174,5 +145,60 @@ User input: "${userInput}"
   } catch (error) {
     console.error("Error extracting terms or fetching news:", error);
     throw error;
+  }
+}
+
+export async function getTokenTags(userInput: string) {
+  const prompt = `
+You are an AI classifier for meme tokens in the crypto space. Your task is to analyze the token information and classify it into tribes and provide relevant meme metadata.
+
+Token Information to analyze:
+${userInput}
+
+Classify the token into one of these primary tribes:
+1. Canine Clan (dog-related tokens)
+2. Feline Syndicate (cat-related tokens)
+3. Aquatic Order (sea/water-related tokens)
+4. Wildcard Degens (other meme tokens)
+
+Return the analysis in the following JSON format:
+{
+  "tribe": {
+    "name": "primary tribe name",
+    "confidence": "confidence score 1-100",
+    "subCategory": "specific category within tribe"
+  }
+}
+`;
+
+  try {
+    // Call our secure API to get token tags
+    const response = await fetch("/api/openai/query-processor", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userInput, type: "token-tags" }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to get token tags");
+    }
+
+    const result = await response.json();
+
+    // Add timestamp and version
+    return {
+      ...result,
+      timestamp: new Date().toISOString(),
+      version: "1.0",
+      analysisType: "meme-tribe-classification",
+    };
+  } catch (error: any) {
+    console.error("Error in getTokenTags:", error);
+    throw new Error(
+      `Failed to analyze token: ${error.message || "Unknown error"}`
+    );
   }
 }

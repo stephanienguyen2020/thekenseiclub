@@ -1,22 +1,21 @@
 "use client";
 
-import {CoinList} from "@/app/marketplace/types";
-import api from "@/lib/api";
-import {useCurrentAccount} from "@mysten/dapp-kit";
+import { fetchUserByAddress } from "@/app/api/users/route";
+import { TRIBE_METADATA } from "@/app/lib/utils";
+import { Coin, CoinList } from "@/app/marketplace/types";
+import { formatAddress, formatPercentage, formatPrice } from "@/lib/priceUtils";
 import {
-  ArrowDown,
-  ArrowUp,
-  ChevronDown,
-  ChevronUp,
-  Grid,
-  List,
-  Search,
-} from "lucide-react";
+  getChanges24h,
+  getCreatedToken,
+  getHoldingToken,
+  getTotalValue,
+} from "@/services/coinService";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { ChevronDown, ChevronUp, Grid, List, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import {useEffect, useState} from "react";
-import {getChanges24h, getCreatedToken, getHoldingToken, getTotalValue} from "@/services/coinService";
-import {fetchUserByAddress} from "@/app/api/users/route";
+import { useEffect, useState } from "react";
+import { AutoShillModal } from "../../components/ui/auto-shill-modal";
 
 export default function WalletPage() {
   const [activeTab, setActiveTab] = useState<"holdings" | "created">(
@@ -26,16 +25,21 @@ export default function WalletPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [holdings, setHoldings] = useState<CoinList>();
+  const [holdings, setHoldings] = useState<Coin[]>();
   const [createdTokens, setCreatedTokens] = useState<CoinList>();
-  const [user, setUser] = useState<{username: string}>({username: ""});
+  const [user, setUser] = useState<{ username: string }>({ username: "" });
+  const [isAutoShillModalOpen, setIsAutoShillModalOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<any>(null);
+  const [modalType, setModalType] = useState<"success" | "error">("success");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loadingTokens, setLoadingTokens] = useState<Set<string>>(new Set());
 
   const currentAccount = useCurrentAccount();
-
+  console.log("currentAccount", currentAccount);
   // Calculate total value and 24h change from holdings
-  const totalValue = getTotalValue(holdings?.data);
+  const totalValue = getTotalValue(holdings);
 
-  const change = getChanges24h(holdings?.data)
+  const change = getChanges24h(holdings);
 
   const changeIsPositive = parseFloat(change) >= 0;
 
@@ -43,6 +47,7 @@ export default function WalletPage() {
     if (activeTab === "holdings") {
       const fetchHoldings = async () => {
         const tokensHolding = await getHoldingToken(currentAccount);
+        console.log("tokensHolding", tokensHolding);
         setHoldings(tokensHolding);
       };
       fetchHoldings();
@@ -60,7 +65,14 @@ export default function WalletPage() {
     async function fetchUserData() {
       if (currentAccount?.address) {
         const userData = await fetchUserByAddress(currentAccount?.address);
-        setUser(userData);
+        if (
+          typeof userData.username === "string" &&
+          userData.username.startsWith("0x")
+        ) {
+          setUser({ username: formatAddress(userData.username) });
+        } else {
+          setUser(userData);
+        }
       }
     }
     fetchUserData();
@@ -68,7 +80,7 @@ export default function WalletPage() {
 
   // Filter and sort holdings
   const filteredHoldings =
-    holdings?.data.filter(
+    holdings?.filter(
       (holding) =>
         holding.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         holding.symbol.toLowerCase().includes(searchQuery.toLowerCase())
@@ -105,6 +117,126 @@ export default function WalletPage() {
     } else {
       setSortBy(column);
       setSortOrder("desc");
+    }
+  };
+
+  const handleAutoShill = async (token: any) => {
+    const tokenId = token.id || token.symbol;
+
+    // Add token to loading set
+    setLoadingTokens((prev) => new Set(prev).add(tokenId));
+
+    try {
+      // Generate shill content
+      const shillResponse = await fetch("/api/openai/coin-shill-script", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: token.name,
+          description: token.description,
+          price: token.price,
+          priceChange24h: token.change24h,
+          marketCap: token.marketCap,
+          tribe: token.tribe,
+          tribeMetadata:
+            TRIBE_METADATA[token.tribe as keyof typeof TRIBE_METADATA],
+        }),
+      });
+
+      if (!shillResponse.ok) {
+        throw new Error("Failed to generate shill content");
+      }
+
+      const { tweet } = await shillResponse.json();
+
+      // Create form data for Twitter post
+      const formData = new FormData();
+      formData.append("text", tweet);
+      formData.append("walletAddress", currentAccount?.address || "");
+
+      // Add token logo if available
+      if (token.logo) {
+        const logoResponse = await fetch(token.logo);
+        const logoBlob = await logoResponse.blob();
+        formData.append("images", logoBlob, "token-logo.png");
+      }
+
+      // Post to Twitter
+      const tweetResponse = await fetch("/api/twitter/tweet", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!tweetResponse.ok) {
+        throw new Error("Failed to post tweet");
+      }
+
+      // Show success modal instead of alert
+      // Convert token to asset format expected by modal
+      const asset = {
+        id: token.id || token.symbol,
+        symbol: token.symbol,
+        name: token.name,
+        category: token.tribe || "token",
+        price: token.price || 0,
+        priceChange: token.change24h || 0,
+        priceChangePercent: token.change24h || 0,
+        dailyPL: 0,
+        avgCost: 0,
+        pl: 0,
+        plPercent: 0,
+        value: token.value || 0,
+        holdings: token.holdings || 0,
+        address: token.address,
+      };
+      setSelectedAsset(asset);
+      setModalType("success");
+      setIsAutoShillModalOpen(true);
+
+      // Remove token from loading set
+      setLoadingTokens((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(tokenId);
+        return newSet;
+      });
+    } catch (error) {
+      console.error("Error auto-shilling:", error);
+
+      // Show error modal instead of alert
+      // Convert token to asset format expected by modal
+      const asset = {
+        id: token.id || token.symbol,
+        symbol: token.symbol,
+        name: token.name,
+        category: token.tribe || "token",
+        price: token.price || 0,
+        priceChange: token.change24h || 0,
+        priceChangePercent: token.change24h || 0,
+        dailyPL: 0,
+        avgCost: 0,
+        pl: 0,
+        plPercent: 0,
+        value: token.value || 0,
+        holdings: token.holdings || 0,
+        address: token.address,
+      };
+      setSelectedAsset(asset);
+      setModalType("error");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to auto-shill. Please try again."
+      );
+      setIsAutoShillModalOpen(true);
+
+      // Remove token from loading set
+      setLoadingTokens((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(tokenId);
+        return newSet;
+      });
     }
   };
 
@@ -221,7 +353,7 @@ export default function WalletPage() {
                 onClick={() => setViewMode("table")}
                 aria-label="Table view"
               >
-                <List size={24}/>
+                <List size={24} />
               </button>
               <button
                 className={`p-2 ${
@@ -230,7 +362,7 @@ export default function WalletPage() {
                 onClick={() => setViewMode("cards")}
                 aria-label="Card view"
               >
-                <Grid size={24}/>
+                <Grid size={24} />
               </button>
             </div>
           </div>
@@ -244,107 +376,110 @@ export default function WalletPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                <tr className="border-b-4 border-black">
-                  <th
-                    className="text-left py-4 px-2 cursor-pointer"
-                    onClick={() => handleSort("name")}
-                  >
-                    <div className="flex items-center gap-1">
-                      Asset
-                      {sortBy === "name" &&
-                        (sortOrder === "asc" ? (
-                          <ChevronUp size={16}/>
-                        ) : (
-                          <ChevronDown size={16}/>
-                        ))}
-                    </div>
-                  </th>
-                  <th
-                    className="text-right py-4 px-2 cursor-pointer"
-                    onClick={() => handleSort("price")}
-                  >
-                    <div className="flex items-center gap-1 justify-end">
-                      Price
-                      {sortBy === "price" &&
-                        (sortOrder === "asc" ? (
-                          <ChevronUp size={16}/>
-                        ) : (
-                          <ChevronDown size={16}/>
-                        ))}
-                    </div>
-                  </th>
-                  <th
-                    className="text-right py-4 px-2 cursor-pointer"
-                    onClick={() => handleSort("change24h")}
-                  >
-                    <div className="flex items-center gap-1 justify-end">
-                      24h P/L
-                      {sortBy === "change24h" &&
-                        (sortOrder === "asc" ? (
-                          <ChevronUp size={16}/>
-                        ) : (
-                          <ChevronDown size={16}/>
-                        ))}
-                    </div>
-                  </th>
-                  <th
-                    className="text-right py-4 px-2 cursor-pointer"
-                    onClick={() => handleSort("holdings")}
-                  >
-                    <div className="flex items-center gap-1 justify-end">
-                      Holdings
-                      {sortBy === "holdings" &&
-                        (sortOrder === "asc" ? (
-                          <ChevronUp size={16}/>
-                        ) : (
-                          <ChevronDown size={16}/>
-                        ))}
-                    </div>
-                  </th>
-                  <th
-                    className="text-right py-4 px-2 cursor-pointer"
-                    onClick={() => handleSort("value")}
-                  >
-                    <div className="flex items-center gap-1 justify-end">
-                      Value
-                      {sortBy === "value" &&
-                        (sortOrder === "asc" ? (
-                          <ChevronUp size={16}/>
-                        ) : (
-                          <ChevronDown size={16}/>
-                        ))}
-                    </div>
-                  </th>
-                  <th className="text-right py-4 px-2">Actions</th>
-                </tr>
+                  <tr className="border-b-4 border-black">
+                    <th
+                      className="text-left py-4 px-2 cursor-pointer"
+                      onClick={() => handleSort("name")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Asset
+                        {sortBy === "name" &&
+                          (sortOrder === "asc" ? (
+                            <ChevronUp size={16} />
+                          ) : (
+                            <ChevronDown size={16} />
+                          ))}
+                      </div>
+                    </th>
+                    <th
+                      className="text-right py-4 px-2 cursor-pointer"
+                      onClick={() => handleSort("price")}
+                    >
+                      <div className="flex items-center gap-1 justify-end">
+                        Price
+                        {sortBy === "price" &&
+                          (sortOrder === "asc" ? (
+                            <ChevronUp size={16} />
+                          ) : (
+                            <ChevronDown size={16} />
+                          ))}
+                      </div>
+                    </th>
+                    <th
+                      className="text-right py-4 px-2 cursor-pointer"
+                      onClick={() => handleSort("change24h")}
+                    >
+                      <div className="flex items-center gap-1 justify-end">
+                        24h P/L
+                        {sortBy === "change24h" &&
+                          (sortOrder === "asc" ? (
+                            <ChevronUp size={16} />
+                          ) : (
+                            <ChevronDown size={16} />
+                          ))}
+                      </div>
+                    </th>
+                    <th
+                      className="text-right py-4 px-2 cursor-pointer"
+                      onClick={() => handleSort("holdings")}
+                    >
+                      <div className="flex items-center gap-1 justify-end">
+                        Holdings
+                        {sortBy === "holdings" &&
+                          (sortOrder === "asc" ? (
+                            <ChevronUp size={16} />
+                          ) : (
+                            <ChevronDown size={16} />
+                          ))}
+                      </div>
+                    </th>
+                    <th
+                      className="text-right py-4 px-2 cursor-pointer"
+                      onClick={() => handleSort("value")}
+                    >
+                      <div className="flex items-center gap-1 justify-end">
+                        Value
+                        {sortBy === "value" &&
+                          (sortOrder === "asc" ? (
+                            <ChevronUp size={16} />
+                          ) : (
+                            <ChevronDown size={16} />
+                          ))}
+                      </div>
+                    </th>
+                    <th className="text-right py-4 px-2">Actions</th>
+                  </tr>
                 </thead>
                 <tbody>
-                {sortedHoldings.map((holding, index) => (
-                  <tr
-                    key={index}
-                    className="border-b border-gray-200 hover:bg-gray-50"
-                  >
-                    <td className="py-4 px-2">
-                      <div className="flex items-center gap-3">
-                        <Image
-                          src={holding.logo || "/placeholder.svg"}
-                          width={40}
-                          height={40}
-                          alt={holding.name}
-                          className="rounded-full border-2 border-black"
-                        />
-                        <div>
-                          <div className="font-medium">{holding.name}</div>
-                          <div className="text-sm text-gray-500">
-                            {holding.symbol}
+                  {sortedHoldings.map((holding, index) => (
+                    <tr
+                      key={index}
+                      className="border-b border-gray-200 hover:bg-gray-50"
+                    >
+                      <td className="py-4 px-2">
+                        <div className="flex items-center gap-3">
+                          <Image
+                            src={holding.logo || "/placeholder.svg"}
+                            width={40}
+                            height={40}
+                            alt={holding.name}
+                            className="rounded-full border-2 border-black"
+                          />
+                          <div>
+                            <div className="font-medium">{holding.name}</div>
+                            <div className="text-sm text-gray-500">
+                              {holding.symbol}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="text-right py-4 px-2 font-medium">
-                      ${holding?.price?.toFixed(8)}
-                    </td>
-                    <td className="text-right py-4 px-2">
+                      </td>
+                      <td className="text-right py-4 px-2">
+                        {formatPrice(holding.price, {
+                          minDecimals: 2,
+                          maxDecimals: 8,
+                        })}
+                      </td>
+                      <td className="text-right py-4 px-2">
                         <span
                           className={`flex items-center justify-end gap-1 ${
                             holding.change24h >= 0
@@ -353,35 +488,50 @@ export default function WalletPage() {
                           }`}
                         >
                           {holding.change24h >= 0 ? (
-                            <ArrowUp size={16}/>
+                            <ChevronUp size={16} />
                           ) : (
-                            <ArrowDown size={16}/>
+                            <ChevronDown size={16} />
                           )}
-                          {Math.abs(holding.change24h)}%
+                          {formatPercentage(holding.change24h)}
                         </span>
-                    </td>
-                    <td className="text-right py-4 px-2 font-medium">
-                      {holding.holdings?.toLocaleString() || "0"}
-                    </td>
-                    {/* <td className="text-right py-4 px-2 font-bold">
-                        ${holding.value.toLocaleString()}
-                      </td> */}
-                    <td className="text-right py-4 px-2">
-                      <div className="flex gap-2 justify-end">
-                        <Link
-                          href={`/marketplace/${holding.id}`}
-                          className="bg-[#0046F4] text-white px-4 py-1 rounded-xl text-sm font-bold border-2 border-black"
-                        >
-                          View
-                        </Link>
-                        <button
-                          className="bg-[#c0ff00] text-black px-4 py-1 rounded-xl text-sm font-bold border-2 border-black">
-                          AutoShill
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="text-right py-4 px-2 font-medium">
+                        {holding.holdings?.toLocaleString() || "0"}
+                      </td>
+                      <td className="text-right py-4 px-2">
+                        {formatPrice(String(holding.value || 0), {
+                          minDecimals: 2,
+                          maxDecimals: 2,
+                        })}
+                      </td>
+                      <td className="text-right py-4 px-2">
+                        <div className="flex gap-2 justify-end">
+                          <Link
+                            href={`/marketplace/${holding.id}`}
+                            className="bg-[#0046F4] text-white px-4 py-1 rounded-xl text-sm font-bold border-2 border-black"
+                          >
+                            View
+                          </Link>
+                          <button
+                            onClick={() => handleAutoShill(holding)}
+                            disabled={loadingTokens.has(
+                              holding.id || holding.symbol
+                            )}
+                            className="bg-[#c0ff00] text-black px-4 py-1 rounded-xl text-sm font-bold border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {loadingTokens.has(holding.id || holding.symbol) ? (
+                              <div className="flex items-center gap-1">
+                                <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-black"></div>
+                                <span>Shilling...</span>
+                              </div>
+                            ) : (
+                              "AutoShill"
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -408,13 +558,25 @@ export default function WalletPage() {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2 mb-4">
-                    <div className="bg-white p-2 rounded-lg border-2 border-black">
+                    <div className="bg-gray-50 p-2 rounded-lg">
                       <p className="text-xs text-gray-500">Price</p>
                       <p className="font-medium truncate">
-                        ${holding?.price?.toFixed(8)}
+                        {formatPrice(String(holding.price || 0), {
+                          minDecimals: 2,
+                          maxDecimals: 8,
+                        })}
                       </p>
                     </div>
-                    <div className="bg-white p-2 rounded-lg border-2 border-black">
+                    <div className="bg-gray-50 p-2 rounded-lg">
+                      <p className="text-xs text-gray-500">Value</p>
+                      <p className="font-medium">
+                        {formatPrice(String(holding.value || 0), {
+                          minDecimals: 2,
+                          maxDecimals: 2,
+                        })}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded-lg">
                       <p className="text-xs text-gray-500">24h</p>
                       <p
                         className={`font-medium flex items-center ${
@@ -424,21 +586,15 @@ export default function WalletPage() {
                         }`}
                       >
                         {holding.change24h >= 0 ? (
-                          <ArrowUp size={14}/>
+                          <ChevronUp size={14} />
                         ) : (
-                          <ArrowDown size={14}/>
+                          <ChevronDown size={14} />
                         )}
-                        {Math.abs(holding.change24h)}%
+                        {formatPercentage(holding.change24h)}
                       </p>
                     </div>
-                    <div className="bg-white p-2 rounded-lg border-2 border-black">
+                    <div className="bg-gray-50 p-2 rounded-lg">
                       <p className="text-xs text-gray-500">Holdings</p>
-                      <p className="font-medium">
-                        {holding.holdings?.toLocaleString() || "0"}
-                      </p>
-                    </div>
-                    <div className="bg-white p-2 rounded-lg border-2 border-black">
-                      <p className="text-xs text-gray-500">Value</p>
                       <p className="font-medium">
                         {holding.holdings?.toLocaleString() || "0"}
                       </p>
@@ -452,8 +608,18 @@ export default function WalletPage() {
                       View
                     </Link>
                     <button
-                      className="flex-1 bg-[#c0ff00] text-black py-2 rounded-xl text-sm font-bold border-2 border-black">
-                      AutoShill
+                      onClick={() => handleAutoShill(holding)}
+                      disabled={loadingTokens.has(holding.id || holding.symbol)}
+                      className="flex-1 bg-[#c0ff00] text-black py-2 rounded-xl text-sm font-bold border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loadingTokens.has(holding.id || holding.symbol) ? (
+                        <div className="flex items-center gap-1 justify-center">
+                          <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-black"></div>
+                          <span>Shilling...</span>
+                        </div>
+                      ) : (
+                        "AutoShill"
+                      )}
                     </button>
                   </div>
                 </div>
@@ -495,58 +661,58 @@ export default function WalletPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                <tr className="border-b-4 border-black">
-                  <th className="text-left py-4 px-2">Token</th>
-                  <th className="text-right py-4 px-2">Price</th>
-                  <th className="text-right py-4 px-2">Market Cap</th>
-                  <th className="text-right py-4 px-2">Holders</th>
-                  <th className="text-right py-4 px-2">24h Volume</th>
-                  <th className="text-center py-4 px-2">Launch Date</th>
-                  <th className="text-center py-4 px-2">Status</th>
-                  <th className="text-right py-4 px-2">Actions</th>
-                </tr>
+                  <tr className="border-b-4 border-black">
+                    <th className="text-left py-4 px-2">Token</th>
+                    <th className="text-right py-4 px-2">Price</th>
+                    <th className="text-right py-4 px-2">Market Cap</th>
+                    <th className="text-right py-4 px-2">Holders</th>
+                    <th className="text-right py-4 px-2">24h Volume</th>
+                    <th className="text-center py-4 px-2">Launch Date</th>
+                    <th className="text-center py-4 px-2">Status</th>
+                    <th className="text-right py-4 px-2">Actions</th>
+                  </tr>
                 </thead>
                 <tbody>
-                {filteredCreatedTokens.map((token, index) => (
-                  <tr
-                    key={index}
-                    className="border-b border-gray-200 hover:bg-gray-50"
-                  >
-                    <td className="py-4 px-2">
-                      <div className="flex items-center gap-3">
-                        <Image
-                          src={token.logo || "/placeholder.svg"}
-                          width={40}
-                          height={40}
-                          alt={token.name}
-                          className="rounded-full border-2 border-black"
-                        />
-                        <div>
-                          <div className="font-medium">{token.name}</div>
-                          <div className="text-sm text-gray-500">
-                            {token.symbol}
+                  {filteredCreatedTokens.map((token, index) => (
+                    <tr
+                      key={index}
+                      className="border-b border-gray-200 hover:bg-gray-50"
+                    >
+                      <td className="py-4 px-2">
+                        <div className="flex items-center gap-3">
+                          <Image
+                            src={token.logo || "/placeholder.svg"}
+                            width={40}
+                            height={40}
+                            alt={token.name}
+                            className="rounded-full border-2 border-black"
+                          />
+                          <div>
+                            <div className="font-medium">{token.name}</div>
+                            <div className="text-sm text-gray-500">
+                              {token.symbol}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="text-right py-4 px-2">
-                      <div className="font-medium">
-                        ${token.price.toFixed(4)}
-                      </div>
-                      <div className="text-sm text-green-500">
-                        +{token.change24h}%
-                      </div>
-                    </td>
-                    <td className="text-right py-4 px-2 font-medium">
-                      ${token.marketCap.toLocaleString()}
-                    </td>
-                    <td className="text-right py-4 px-2 font-medium">
-                      {token.holders.toLocaleString()}
-                    </td>
-                    <td className="text-right py-4 px-2 font-medium">
-                      $1,000.00
-                    </td>
-                    {/* <td className="text-center py-4 px-2">
+                      </td>
+                      <td className="text-right py-4 px-2">
+                        <div className="font-medium">
+                          ${token.price.toFixed(4)}
+                        </div>
+                        <div className="text-sm text-green-500">
+                          +{token.change24h}%
+                        </div>
+                      </td>
+                      <td className="text-right py-4 px-2 font-medium">
+                        ${token.marketCap.toLocaleString()}
+                      </td>
+                      <td className="text-right py-4 px-2 font-medium">
+                        {token.holders.toLocaleString()}
+                      </td>
+                      <td className="text-right py-4 px-2 font-medium">
+                        $1,000.00
+                      </td>
+                      {/* <td className="text-center py-4 px-2">
                         {token.launchDate}
                       </td>
                       <td className="text-center py-4 px-2">
@@ -555,22 +721,34 @@ export default function WalletPage() {
                             token.status.slice(1)}
                         </span>
                       </td> */}
-                    <td className="text-right py-4 px-2">
-                      <div className="flex gap-2 justify-end">
-                        <Link
-                          href={`/marketplace/${token.id.toLowerCase()}`}
-                          className="bg-[#0046F4] text-white px-3 py-1 rounded-xl text-sm font-bold border-2 border-black"
-                        >
-                          View
-                        </Link>
-                        <button
-                          className="bg-[#c0ff00] text-black px-3 py-1 rounded-xl text-sm font-bold border-2 border-black">
-                          AutoShill
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      <td className="text-right py-4 px-2">
+                        <div className="flex gap-2 justify-end">
+                          <Link
+                            href={`/marketplace/${token.id.toLowerCase()}`}
+                            className="bg-[#0046F4] text-white px-3 py-1 rounded-xl text-sm font-bold border-2 border-black"
+                          >
+                            View
+                          </Link>
+                          <button
+                            onClick={() => handleAutoShill(token)}
+                            disabled={loadingTokens.has(
+                              token.id || token.symbol
+                            )}
+                            className="bg-[#c0ff00] text-black px-3 py-1 rounded-xl text-sm font-bold border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {loadingTokens.has(token.id || token.symbol) ? (
+                              <div className="flex items-center gap-1">
+                                <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-black"></div>
+                                <span>Shilling...</span>
+                              </div>
+                            ) : (
+                              "AutoShill"
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -599,9 +777,8 @@ export default function WalletPage() {
                   <div className="grid grid-cols-2 gap-2 mb-4">
                     <div className="bg-white p-2 rounded-lg border-2 border-black">
                       <p className="text-xs text-gray-500">Price</p>
-                      <p className="font-medium">${token.price.toFixed(4)}</p>
-                      <p className="text-xs text-green-500">
-                        +{token.change24h}%
+                      <p className="font-medium truncate">
+                        ${token.price.toFixed(4)}
                       </p>
                     </div>
                     <div className="bg-white p-2 rounded-lg border-2 border-black">
@@ -629,8 +806,18 @@ export default function WalletPage() {
                       View
                     </Link>
                     <button
-                      className="flex-1 bg-[#c0ff00] text-black py-2 rounded-xl text-sm font-bold border-2 border-black">
-                      AutoShill
+                      onClick={() => handleAutoShill(token)}
+                      disabled={loadingTokens.has(token.id || token.symbol)}
+                      className="flex-1 bg-[#c0ff00] text-black py-2 rounded-xl text-sm font-bold border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loadingTokens.has(token.id || token.symbol) ? (
+                        <div className="flex items-center gap-1 justify-center">
+                          <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-black"></div>
+                          <span>Shilling...</span>
+                        </div>
+                      ) : (
+                        "AutoShill"
+                      )}
                     </button>
                   </div>
                 </div>
@@ -638,6 +825,21 @@ export default function WalletPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Auto Shill Modal */}
+      {selectedAsset && (
+        <AutoShillModal
+          isOpen={isAutoShillModalOpen}
+          onClose={() => {
+            setIsAutoShillModalOpen(false);
+            setSelectedAsset(null);
+            setErrorMessage("");
+          }}
+          asset={selectedAsset}
+          modalType={modalType}
+          errorMessage={errorMessage}
+        />
       )}
     </div>
   );

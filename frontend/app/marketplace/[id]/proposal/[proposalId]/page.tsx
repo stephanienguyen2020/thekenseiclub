@@ -1,12 +1,19 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { FileText, Check, ChevronDown, ExternalLink, Info, Send } from "lucide-react"
-import Navbar from "@/components/navbar"
-import React from "react"
-import { getObject } from "@/lib/utils"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  FileText,
+  Check,
+  ChevronDown,
+  ExternalLink,
+  Info,
+  Send,
+} from "lucide-react";
+import Navbar from "@/components/navbar";
+import React from "react";
+import { getObject } from "@/lib/utils";
 
 interface Option {
   option: string;
@@ -36,31 +43,32 @@ interface ProposalResponse {
 export default function ProposalDetailPage({
   params: paramsPromise,
 }: {
-  params: Promise<{ id: string; proposalId: string }>
+  params: Promise<{ id: string; proposalId: string }>;
 }) {
   const params = React.use(paramsPromise);
-  const [loading, setLoading] = useState(true)
-  const [proposal, setProposal] = useState<any>(null)
-  const [coin, setCoin] = useState<any>(null)
-  const [selectedOption, setSelectedOption] = useState<number | null>(null)
-  const [isVoting, setIsVoting] = useState(false)
-  const [showAllOptions, setShowAllOptions] = useState(true)
-  const [showAllVotes, setShowAllVotes] = useState(false)
-  const [comment, setComment] = useState("")
-  const [comments, setComments] = useState<any[]>([])
+  const [loading, setLoading] = useState(true);
+  const [proposal, setProposal] = useState<any>(null);
+  const [coin, setCoin] = useState<any>(null);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [isVoting, setIsVoting] = useState(false);
+  const [showAllOptions, setShowAllOptions] = useState(true);
+  const [showAllVotes, setShowAllVotes] = useState(false);
+  const [comment, setComment] = useState("");
+  const [comments, setComments] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProposal = async () => {
       try {
         const response = await fetch(`/api/daos/${params.proposalId}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch proposal');
+          throw new Error("Failed to fetch proposal");
         }
-        const { data } = await response.json() as { data: ProposalResponse };
+        const { data } = (await response.json()) as { data: ProposalResponse };
 
         // Fetch token metadata
         const coinMetadata = (await getObject(data.tokenAddress)) as any;
-        const tokenName = coinMetadata?.data?.content?.fields?.name || data.tokenAddress;
+        const tokenName =
+          coinMetadata?.data?.content?.fields?.name || data.tokenAddress;
 
         // Map API data to match the expected structure
         const mappedProposal = {
@@ -75,8 +83,8 @@ export default function ProposalDetailPage({
           options: data.options.map((opt: Option) => ({
             label: opt.option,
             votes: opt.votes,
-            percentage: (opt.points / data.votePoint) * 100 || 0,
-            isSelected: opt.option === data.winningOption
+            percentage: (opt.points / data.votePoint) * 100,
+            isSelected: opt.option === data.winningOption,
           })),
           quorum: 0, // Not provided in API
           totalVotes: data.voteCount,
@@ -99,7 +107,9 @@ export default function ProposalDetailPage({
         });
 
         // Set the selected option based on the proposal data
-        const selectedIndex = mappedProposal.options.findIndex((option) => option.isSelected);
+        const selectedIndex = mappedProposal.options.findIndex(
+          (option) => option.isSelected
+        );
         setSelectedOption(selectedIndex !== -1 ? selectedIndex : null);
 
         // Mock comments (keeping this for now since it's not provided by API)
@@ -111,7 +121,8 @@ export default function ProposalDetailPage({
               handle: "whale.sui",
               avatar: "/pixel-cool-cat.png",
             },
-            content: "I strongly support this proposal. The legal structure will help us reach new audiences and grow our community.",
+            content:
+              "I strongly support this proposal. The legal structure will help us reach new audiences and grow our community.",
             timestamp: "2 days ago",
             votes: 24,
           },
@@ -122,7 +133,8 @@ export default function ProposalDetailPage({
               handle: "sage.sui",
               avatar: "/stylized-shiba-inu.png",
             },
-            content: "While I agree with the intent, I think we should clarify the governance process more. How will voting power be calculated?",
+            content:
+              "While I agree with the intent, I think we should clarify the governance process more. How will voting power be calculated?",
             timestamp: "1 day ago",
             votes: 18,
           },
@@ -130,7 +142,7 @@ export default function ProposalDetailPage({
 
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching proposal:', error);
+        console.error("Error fetching proposal:", error);
         setLoading(false);
       }
     };
@@ -139,33 +151,36 @@ export default function ProposalDetailPage({
   }, [params.id, params.proposalId]);
 
   const handleVote = () => {
-    if (selectedOption === null) return
+    if (selectedOption === null) return;
 
-    setIsVoting(true)
+    setIsVoting(true);
 
     // Simulate voting
     setTimeout(() => {
       // Update the proposal with the new vote
-      const updatedOptions = [...proposal.options]
-      updatedOptions[selectedOption].votes += 10000
+      const updatedOptions = [...proposal.options];
+      updatedOptions[selectedOption].votes += 10000;
 
       // Recalculate percentages
-      const totalVotes = updatedOptions.reduce((sum, option) => sum + option.votes, 0)
+      const totalVotes = updatedOptions.reduce(
+        (sum, option) => sum + option.votes,
+        0
+      );
       updatedOptions.forEach((option) => {
-        option.percentage = (option.votes / totalVotes) * 100
-      })
+        option.percentage = (option.votes / totalVotes) * 100;
+      });
 
       setProposal({
         ...proposal,
         options: updatedOptions,
-      })
+      });
 
-      setIsVoting(false)
-    }, 1500)
-  }
+      setIsVoting(false);
+    }, 1500);
+  };
 
   const handleSubmitComment = () => {
-    if (!comment.trim()) return
+    if (!comment.trim()) return;
 
     const newComment = {
       id: `comment-${comments.length + 1}`,
@@ -177,20 +192,25 @@ export default function ProposalDetailPage({
       content: comment,
       timestamp: "Just now",
       votes: 0,
-    }
+    };
 
-    setComments([...comments, newComment])
-    setComment("")
-  }
+    setComments([...comments, newComment]);
+    setComment("");
+  };
 
   // Sort options by percentage (highest first)
-  const sortedOptions = proposal?.options ? [...proposal.options].sort((a, b) => b.percentage - a.percentage) : []
+  const sortedOptions = proposal?.options
+    ? [...proposal.options].sort((a, b) => b.percentage - a.percentage)
+    : [];
 
   // Determine if we should show the "View all" button
-  const hasMoreThanTwoOptions = sortedOptions.length > 2
+  const hasMoreThanTwoOptions = sortedOptions.length > 2;
 
   // Display only the first 2 options if not showing all and there are more than 2
-  const displayedOptions = showAllOptions || !hasMoreThanTwoOptions ? sortedOptions : sortedOptions.slice(0, 2)
+  const displayedOptions =
+    showAllOptions || !hasMoreThanTwoOptions
+      ? sortedOptions
+      : sortedOptions.slice(0, 2);
 
   if (loading) {
     return (
@@ -198,19 +218,19 @@ export default function ProposalDetailPage({
         <div className="bg-white p-8 rounded-3xl shadow-lg border-2 border-black">
           <div className="flex flex-col items-center">
             <div className="w-16 h-16 border-4 border-t-[#c0ff00] border-r-[#c0ff00] border-b-transparent border-l-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 text-lg font-medium">Loading proposal details...</p>
+            <p className="mt-4 text-lg font-medium">
+              Loading proposal details...
+            </p>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen bg-[#0039C6]">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <Navbar isAuthenticated={true} />
-
+      <Navbar isAuthenticated={true} />
+      <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
         {/* Breadcrumb */}
         <div className="flex items-center mb-4 mt-4 text-white">
           <Link href="/marketplace" className="hover:underline">
@@ -244,11 +264,12 @@ export default function ProposalDetailPage({
                     proposal.status === "open"
                       ? "bg-[#c0ff00] text-black"
                       : proposal.status === "closed"
-                        ? "bg-red-500 text-white"
-                        : "bg-blue-200 text-blue-800"
+                      ? "bg-red-500 text-white"
+                      : "bg-blue-200 text-blue-800"
                   }`}
                 >
-                  {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
+                  {proposal.status.charAt(0).toUpperCase() +
+                    proposal.status.slice(1)}
                 </div>
               </div>
 
@@ -257,46 +278,54 @@ export default function ProposalDetailPage({
                 <h1 className="text-3xl font-bold mb-6">{proposal.title}</h1>
 
                 <div className="prose max-w-none mb-6">
-                  {proposal.fullDescription.split("\n\n").map((paragraph, idx) => {
-                    // Handle headings
-                    if (paragraph.startsWith("##")) {
-                      const headingText = paragraph.replace(/^## /, "")
-                      return (
-                        <h2 key={idx} className="text-2xl font-bold mt-6 mb-3">
-                          {headingText}
-                        </h2>
-                      )
-                    } else if (paragraph.startsWith("###")) {
-                      const headingText = paragraph.replace(/^### /, "")
-                      return (
-                        <h3 key={idx} className="text-xl font-bold mt-4 mb-2">
-                          {headingText}
-                        </h3>
-                      )
-                    }
-                    // Handle bullet points
-                    else if (paragraph.startsWith("-")) {
-                      return (
-                        <div key={idx} className="ml-4 mb-2">
-                          <span className="inline-block w-2 h-2 bg-black rounded-full mr-2"></span>
-                          {paragraph.replace(/^- /, "")}
-                        </div>
-                      )
-                    }
-                    // Regular paragraph
-                    else if (paragraph.trim()) {
-                      return (
-                        <p key={idx} className="mb-4">
-                          {paragraph}
-                        </p>
-                      )
-                    }
-                    return null
-                  })}
+                  {proposal.fullDescription
+                    .split("\n\n")
+                    .map((paragraph, idx) => {
+                      // Handle headings
+                      if (paragraph.startsWith("##")) {
+                        const headingText = paragraph.replace(/^## /, "");
+                        return (
+                          <h2
+                            key={idx}
+                            className="text-2xl font-bold mt-6 mb-3"
+                          >
+                            {headingText}
+                          </h2>
+                        );
+                      } else if (paragraph.startsWith("###")) {
+                        const headingText = paragraph.replace(/^### /, "");
+                        return (
+                          <h3 key={idx} className="text-xl font-bold mt-4 mb-2">
+                            {headingText}
+                          </h3>
+                        );
+                      }
+                      // Handle bullet points
+                      else if (paragraph.startsWith("-")) {
+                        return (
+                          <div key={idx} className="ml-4 mb-2">
+                            <span className="inline-block w-2 h-2 bg-black rounded-full mr-2"></span>
+                            {paragraph.replace(/^- /, "")}
+                          </div>
+                        );
+                      }
+                      // Regular paragraph
+                      else if (paragraph.trim()) {
+                        return (
+                          <p key={idx} className="mb-4">
+                            {paragraph}
+                          </p>
+                        );
+                      }
+                      return null;
+                    })}
                 </div>
 
                 <div className="mt-6">
-                  <Link href="#" className="text-[#0046F4] flex items-center gap-1 font-medium">
+                  <Link
+                    href="#"
+                    className="text-[#0046F4] flex items-center gap-1 font-medium"
+                  >
                     <FileText size={16} />
                     <span>Read the full proposal on IPFS</span>
                     <ExternalLink size={14} />
@@ -316,10 +345,14 @@ export default function ProposalDetailPage({
                       <div>
                         <p className="font-bold">No voting power</p>
                         <p className="text-sm">
-                          Voting power is determined based on the snapshot of {coin.symbol} tokens (including those held
-                          in LPs and Staking).
+                          Voting power is determined based on the snapshot of{" "}
+                          {coin.symbol} tokens (including those held in LPs and
+                          Staking).
                         </p>
-                        <Link href="#" className="text-sm underline flex items-center gap-1 mt-1">
+                        <Link
+                          href="#"
+                          className="text-sm underline flex items-center gap-1 mt-1"
+                        >
                           More details
                           <ExternalLink size={12} />
                         </Link>
@@ -331,8 +364,10 @@ export default function ProposalDetailPage({
                   <div className="space-y-4 mb-6">
                     {displayedOptions.map((option, index) => {
                       // Find the original index of this option in the unsorted array
-                      const originalIndex = proposal.options.findIndex((o) => o.label === option.label)
-                      const isSelected = selectedOption === originalIndex
+                      const originalIndex = proposal.options.findIndex(
+                        (o) => o.label === option.label
+                      );
+                      const isSelected = selectedOption === originalIndex;
 
                       return (
                         <div
@@ -342,30 +377,47 @@ export default function ProposalDetailPage({
                               ? "bg-[#0046F4] bg-opacity-10 border-2 border-[#0046F4]"
                               : "bg-white border-2 border-gray-200"
                           }`}
-                          onClick={() => proposal.status === "open" && setSelectedOption(originalIndex)}
+                          onClick={() =>
+                            proposal.status === "open" &&
+                            setSelectedOption(originalIndex)
+                          }
                         >
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-3">
                               {proposal.status === "open" && (
                                 <div
                                   className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                    isSelected ? "bg-[#0046F4]" : "border-2 border-gray-300"
+                                    isSelected
+                                      ? "bg-[#0046F4]"
+                                      : "border-2 border-gray-300"
                                   }`}
                                 >
-                                  {isSelected && <Check className="text-white" size={16} />}
+                                  {isSelected && (
+                                    <Check className="text-white" size={16} />
+                                  )}
                                 </div>
                               )}
-                              <label className={`font-medium ${isSelected ? "text-[#0046F4]" : ""}`}>
+                              <label
+                                className={`font-medium ${
+                                  isSelected ? "text-[#0046F4]" : ""
+                                }`}
+                              >
                                 {option.label}
                               </label>
                             </div>
-                            <span className={`font-bold ${isSelected ? "text-[#0046F4]" : ""}`}>
+                            <span
+                              className={`font-bold ${
+                                isSelected ? "text-[#0046F4]" : ""
+                              }`}
+                            >
                               {option.percentage.toFixed(2)}%
                             </span>
                           </div>
-                          <div className="mt-2 text-sm text-gray-600">{option.votes} votes</div>
+                          <div className="mt-2 text-sm text-gray-600">
+                            {option.votes} votes
+                          </div>
                         </div>
-                      )
+                      );
                     })}
 
                     {/* View All Button */}
@@ -375,7 +427,12 @@ export default function ProposalDetailPage({
                         onClick={() => setShowAllOptions(!showAllOptions)}
                       >
                         {showAllOptions ? "Show less" : "View all"}
-                        <ChevronDown className={`transition-transform ${showAllOptions ? "rotate-180" : ""}`} size={16} />
+                        <ChevronDown
+                          className={`transition-transform ${
+                            showAllOptions ? "rotate-180" : ""
+                          }`}
+                          size={16}
+                        />
                       </button>
                     )}
                   </div>
@@ -399,12 +456,19 @@ export default function ProposalDetailPage({
                 <h3 className="text-xl font-bold mb-4">Results</h3>
                 <div className="space-y-4 mb-6">
                   {sortedOptions.map((option, index) => (
-                    <div key={index} className="bg-white p-4 rounded-xl border-2 border-gray-200">
+                    <div
+                      key={index}
+                      className="bg-white p-4 rounded-xl border-2 border-gray-200"
+                    >
                       <div className="flex justify-between items-center">
                         <span className="font-medium">{option.label}</span>
                         <div className="flex items-center gap-3">
-                          <span className="text-gray-600">{option.votes} votes</span>
-                          <span className="font-bold">{option.percentage.toFixed(2)}%</span>
+                          <span className="text-gray-600">
+                            {option.votes} votes
+                          </span>
+                          <span className="font-bold">
+                            {option.percentage.toFixed(2)}%
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -415,13 +479,17 @@ export default function ProposalDetailPage({
               {/* Discussion Section */}
               <div className="border-t-2 border-black p-6 bg-gray-50">
                 <h3 className="text-xl font-bold mb-4">
-                  Discussion <span className="text-gray-500">({comments.length})</span>
+                  Discussion{" "}
+                  <span className="text-gray-500">({comments.length})</span>
                 </h3>
 
                 {/* Comments */}
                 <div className="space-y-6 mb-8">
                   {comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-4 bg-white p-4 rounded-2xl border-2 border-gray-200">
+                    <div
+                      key={comment.id}
+                      className="flex gap-4 bg-white p-4 rounded-2xl border-2 border-gray-200"
+                    >
                       <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-black">
                         <Image
                           src={comment.user.avatar || "/placeholder.svg"}
@@ -434,8 +502,12 @@ export default function ProposalDetailPage({
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-bold">{comment.user.name}</span>
-                          <span className="text-gray-500 text-sm">@{comment.user.handle}</span>
-                          <span className="text-gray-400 text-xs">{comment.timestamp}</span>
+                          <span className="text-gray-500 text-sm">
+                            @{comment.user.handle}
+                          </span>
+                          <span className="text-gray-400 text-xs">
+                            {comment.timestamp}
+                          </span>
                         </div>
                         <p className="text-gray-800 mb-2">{comment.content}</p>
                         <div className="flex items-center gap-4">
@@ -455,7 +527,9 @@ export default function ProposalDetailPage({
                             </svg>
                             <span>Upvote ({comment.votes})</span>
                           </button>
-                          <button className="text-gray-700 text-sm hover:text-[#0039C6] font-medium">Reply</button>
+                          <button className="text-gray-700 text-sm hover:text-[#0039C6] font-medium">
+                            Reply
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -532,7 +606,10 @@ export default function ProposalDetailPage({
 
                   <div className="flex justify-between">
                     <span className="text-gray-600">IPFS</span>
-                    <Link href="#" className="text-[#0046F4] flex items-center gap-1">
+                    <Link
+                      href="#"
+                      className="text-[#0046F4] flex items-center gap-1"
+                    >
                       #QmP7uVa
                       <ExternalLink size={14} />
                     </Link>
@@ -566,7 +643,8 @@ export default function ProposalDetailPage({
                   <div className="flex justify-between">
                     <span className="text-gray-600">Quorum</span>
                     <span className="font-medium">
-                      {(proposal.quorum / 1000000).toFixed(3)}M / {(proposal.totalVotes / 1000000).toFixed(3)}M
+                      {(proposal.quorum / 1000000).toFixed(3)}M /{" "}
+                      {(proposal.totalVotes / 1000000).toFixed(3)}M
                     </span>
                   </div>
                 </div>
@@ -575,10 +653,16 @@ export default function ProposalDetailPage({
               {/* Votes Section */}
               <div className="p-4 border-t-2 border-black">
                 <h3 className="text-xl font-bold mb-4">
-                  Votes <span className="text-gray-500">({proposal.votes.length})</span>
+                  Votes{" "}
+                  <span className="text-gray-500">
+                    ({proposal.votes.length})
+                  </span>
                 </h3>
                 <div className="space-y-3">
-                  {(showAllVotes ? proposal.votes : proposal.votes.slice(0, 5)).map((vote, index) => (
+                  {(showAllVotes
+                    ? proposal.votes
+                    : proposal.votes.slice(0, 5)
+                  ).map((vote, index) => (
                     <div
                       key={index}
                       className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200"
@@ -597,7 +681,9 @@ export default function ProposalDetailPage({
                           <p className="text-xs text-gray-500">{vote.vote}</p>
                         </div>
                       </div>
-                      <div className="font-medium">{(vote.power / 1000).toFixed(3)}K</div>
+                      <div className="font-medium">
+                        {(vote.power / 1000).toFixed(3)}K
+                      </div>
                     </div>
                   ))}
 
@@ -607,7 +693,12 @@ export default function ProposalDetailPage({
                       onClick={() => setShowAllVotes(!showAllVotes)}
                     >
                       {showAllVotes ? "Show less" : "View more"}
-                      <ChevronDown className={`transition-transform ${showAllVotes ? "rotate-180" : ""}`} size={16} />
+                      <ChevronDown
+                        className={`transition-transform ${
+                          showAllVotes ? "rotate-180" : ""
+                        }`}
+                        size={16}
+                      />
                     </button>
                   )}
                 </div>
@@ -617,5 +708,5 @@ export default function ProposalDetailPage({
         </div>
       </div>
     </div>
-  )
+  );
 }

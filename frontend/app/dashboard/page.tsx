@@ -11,24 +11,29 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import {useEffect, useState} from "react";
-import {getChanges24h, getHoldingToken, getTotalValue} from "@/services/coinService";
-import {useCurrentAccount} from "@mysten/dapp-kit";
-import {Coin} from "@/app/marketplace/types";
-import {getObject} from "@/lib/utils";
-import {Proposal} from "@/app/dashboard/proposals/page";
+import { useEffect, useState, useRef } from "react";
+import { getChanges24h, getHoldingToken, getTotalValue } from "@/services/coinService";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { Coin } from "@/app/marketplace/types";
+import { getObject } from "@/lib/utils";
+import { Proposal } from "@/app/dashboard/proposals/page";
+import PortfolioChart from "../components/PortfolioChart";
+import api from "@/lib/api";
+
 
 export default function DashboardPage() {
   const [timeframe, setTimeframe] = useState("1W");
   const [topHoldings, setTopHoldings] = useState<Coin[]>([]);
   const [recentProposals, setRecentProposals] = useState<Proposal[]>([]);
   const currentAccount = useCurrentAccount();
+  const [chartData, setChartData] = useState<{ timestamp: string; value: number }[]>([]);
+  const [loadingChart, setLoadingChart] = useState(false);
 
   useEffect(() => {
     if (currentAccount?.address) {
       const fetchTopHoldings = async () => {
         const topHoldings = await getHoldingToken(currentAccount);
-        setTopHoldings(topHoldings.data);
+        setTopHoldings(topHoldings);
       }
       fetchTopHoldings()
     }
@@ -105,6 +110,57 @@ export default function DashboardPage() {
     }
   ];
 
+  useEffect(() => {
+    if (!currentAccount?.address) return;
+    setLoadingChart(true);
+
+    // Calculate from/to based on timeframe
+    const now = new Date();
+    let from: Date;
+    switch (timeframe) {
+      case "1D":
+        from = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case "1W":
+        from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case "1M":
+        from = new Date(now.setMonth(now.getMonth() - 1));
+        break;
+      case "1Y":
+        from = new Date(now.setFullYear(now.getFullYear() - 1));
+        break;
+      default:
+        from = new Date(0);
+    }
+
+    api.get(`/api/history`, {
+      params: {
+        user_address: currentAccount.address,
+        from: from.toISOString(),
+        to: now.toISOString(),
+      }
+    })
+      .then((res: any) => res.data)
+      .then((data) => {
+        // Aggregate value per timestamp (sum all coins)
+        const grouped: { [timestamp: string]: number } = {};
+        data.forEach((entry: any) => {
+          // Use the full timestamp (no grouping by day)
+          const ts = entry.timestamp;
+          grouped[ts] = (grouped[ts] || 0) + (entry.amount * (entry.price || 1));
+        });
+        console.log("grouped", grouped);
+        setChartData(
+          Object.entries(grouped).map(([timestamp, value]) => ({
+            timestamp,
+            value,
+          }))
+        );
+      })
+      .finally(() => setLoadingChart(false));
+  }, [currentAccount, timeframe]);
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
@@ -119,9 +175,8 @@ export default function DashboardPage() {
             {["1D", "1W", "1M", "1Y", "ALL"].map((time) => (
               <button
                 key={time}
-                className={`px-3 py-1 rounded-xl font-bold border-2 border-black text-black ${
-                  timeframe === time ? "bg-[#c0ff00]" : "bg-gray-100"
-                }`}
+                className={`px-3 py-1 rounded-xl font-bold border-2 border-black text-black ${timeframe === time ? "bg-[#c0ff00]" : "bg-gray-100"
+                  }`}
                 onClick={() => setTimeframe(time)}
               >
                 {time}
@@ -138,14 +193,13 @@ export default function DashboardPage() {
                 ${portfolioValue.toLocaleString()}
               </div>
               <div
-                className={`flex items-center ${
-                  portfolioChange >= 0 ? "text-green-500" : "text-red-500"
-                }`}
+                className={`flex items-center ${portfolioChange >= 0 ? "text-green-500" : "text-red-500"
+                  }`}
               >
                 {portfolioChange >= 0 ? (
-                  <ArrowUp size={16}/>
+                  <ArrowUp size={16} />
                 ) : (
-                  <ArrowDown size={16}/>
+                  <ArrowDown size={16} />
                 )}
                 <span className="font-bold">
                   {Math.abs(portfolioChange).toFixed(2)}%
@@ -157,7 +211,11 @@ export default function DashboardPage() {
             </div>
 
             <div className="h-[200px] bg-gray-100 rounded-xl border-4 border-black flex items-center justify-center">
-              <div className="text-gray-400">Portfolio Chart</div>
+              {loadingChart ? (
+                <div className="text-gray-400">Loading chart...</div>
+              ) : (
+                <PortfolioChart data={chartData.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())} />
+              )}
             </div>
           </div>
 
@@ -169,28 +227,28 @@ export default function DashboardPage() {
                   href="/dashboard/wallet"
                   className="bg-[#c0ff00] text-black p-3 rounded-xl border-2 border-black flex flex-col items-center"
                 >
-                  <Wallet size={24}/>
+                  <Wallet size={24} />
                   <span className="text-xs font-bold mt-1">My Wallet</span>
                 </Link>
                 <Link
                   href="/dashboard/proposals"
                   className="bg-[#c0ff00] text-black p-3 rounded-xl border-2 border-black flex flex-col items-center"
                 >
-                  <FileText size={24}/>
+                  <FileText size={24} />
                   <span className="text-xs font-bold mt-1">Proposals</span>
                 </Link>
                 <Link
                   href="/dashboard/tweets"
                   className="bg-[#c0ff00] text-black p-3 rounded-xl border-2 border-black flex flex-col items-center"
                 >
-                  <Twitter size={24}/>
+                  <Twitter size={24} />
                   <span className="text-xs font-bold mt-1">Tweets</span>
                 </Link>
                 <Link
                   href="/dashboard/chatbot"
                   className="bg-[#c0ff00] text-black p-3 rounded-xl border-2 border-black flex flex-col items-center"
                 >
-                  <MessageSquare size={24}/>
+                  <MessageSquare size={24} />
                   <span className="text-xs font-bold mt-1">Chat Bot</span>
                 </Link>
               </div>
@@ -210,7 +268,7 @@ export default function DashboardPage() {
               <div
                 className={`${stat.color} p-3 rounded-xl border-2 border-black`}
               >
-                <stat.icon size={24} className="text-black"/>
+                <stat.icon size={24} className="text-black" />
               </div>
               <div>
                 <div className="text-gray-500 text-sm">{stat.title}</div>
@@ -271,9 +329,8 @@ export default function DashboardPage() {
                     ${((holding?.holdings || 1) * (holding?.price)).toLocaleString()}
                   </div>
                   <div
-                    className={`text-sm ${
-                      holding.change24h >= 0 ? "text-green-500" : "text-red-500"
-                    }`}
+                    className={`text-sm ${holding.change24h >= 0 ? "text-green-500" : "text-red-500"
+                      }`}
                   >
                     {holding.change24h >= 0 ? "+" : ""}
                     {holding.change24h.toFixed(2)}%
@@ -322,13 +379,12 @@ export default function DashboardPage() {
                     </div>
                     <div className="font-bold text-black">{proposal.tokenName}</div>
                     <div
-                      className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                        proposal.status === "active"
-                          ? "bg-[#c0ff00] text-black"
-                          : proposal.status === "closed"
-                            ? "bg-red-500 text-white"
-                            : "bg-blue-200 text-blue-800"
-                      }`}
+                      className={`px-2 py-0.5 rounded-full text-xs font-bold ${proposal.status === "active"
+                        ? "bg-[#c0ff00] text-black"
+                        : proposal.status === "closed"
+                          ? "bg-red-500 text-white"
+                          : "bg-blue-200 text-blue-800"
+                        }`}
                     >
                       {proposal.status.charAt(0).toUpperCase() +
                         proposal.status.slice(1)}
@@ -341,9 +397,8 @@ export default function DashboardPage() {
                 <div className="font-medium text-black">{proposal.title}</div>
                 <div className="mt-2">
                   <Link
-                    href={`/marketplace/${proposal.tokenName.toLowerCase()}/proposal/${
-                      proposal._id
-                    }`}
+                    href={`/marketplace/${proposal.tokenName.toLowerCase()}/proposal/${proposal._id
+                      }`}
                     className="text-[#0039C6] text-sm font-bold hover:underline"
                   >
                     View Details →

@@ -45,7 +45,7 @@ const executeEventJob = async (
   cursor: SuiEventsCursor
 ): Promise<EventExecutionResult> => {
   try {
-    const { data, hasNextPage, nextCursor } = await client.queryEvents({
+    const { data, hasNextPage, nextCursor } =  await client.queryEvents({
       query: tracker.filter,
       cursor,
       order: "ascending",

@@ -2,8 +2,8 @@ module meme::bonding_curve;
 
 use sui::balance;
 use sui::coin::{Self, Coin};
-use sui::sui::SUI;
 use sui::event;
+use sui::sui::SUI;
 
 const ETotalSupplyNotEqualZero: u64 = 0;
 const EOutputAmountLessThanMin: u64 = 1;
@@ -71,7 +71,7 @@ public fun create_bonding_curve<T>(
         id: object::new(ctx),
         sui_balance: balance::zero<SUI>(),
         token_balance: coin::mint_balance<T>(treasury_cap, 1_000_000_000_000_000_000),
-        virtual_sui_amt: 30_000_000_000,
+        virtual_sui_amt: 1_000_000_000_000,
         target_supply_threshold: 300_000_000_000_000_000,
         migration_fee: 3_000_000_000,
         listing_fee: 1_000_000_000,
@@ -81,15 +81,13 @@ public fun create_bonding_curve<T>(
         migration_target,
     };
 
-    event::emit(
-        BondingCurveCreatedEvent {
-            bonding_curve_id: object::id(&bonding_curve),
-            issuer: tx_context::sender(ctx),
-            treasury_cap: object::id(treasury_cap),
-            coin_metadata: object::id(coin_metadata),
-            migration_target,
-        }
-    );
+    event::emit(BondingCurveCreatedEvent {
+        bonding_curve_id: object::id(&bonding_curve),
+        issuer: tx_context::sender(ctx),
+        treasury_cap: object::id(treasury_cap),
+        coin_metadata: object::id(coin_metadata),
+        migration_target,
+    });
     transfer::public_share_object<BondingCurve<T>>(bonding_curve);
 }
 
@@ -122,15 +120,19 @@ public fun buy<T>(
     transfer::public_transfer(token, sender);
     return_back_or_delete<SUI>(balance, ctx);
 
-    event::emit(
-        BuyEvent {
-            bonding_curve_id: object::id(bonding_curve),
-            issuer: sender,
-            amount_in: original_amount,
-            amount_out: token_received,
-            price: original_amount / token_received,
-        }
-    );
+    // Calculate marginal price after trade
+    let marginal_price =
+        (
+            (((curr_sui_balance as u128) + (bonding_curve.virtual_sui_amt as u128)) * 1_000_000_000_000) / (curr_token_balance as u128),
+        ) as u64;
+
+    event::emit(BuyEvent {
+        bonding_curve_id: object::id(bonding_curve),
+        issuer: sender,
+        amount_in: original_amount,
+        amount_out: token_received,
+        price: marginal_price,
+    });
 }
 
 public fun sell<T>(
@@ -156,22 +158,27 @@ public fun sell<T>(
     transfer::public_transfer(token, sender);
     return_back_or_delete<T>(balance, ctx);
 
-    event::emit(
-        SellEvent {
-            bonding_curve_id: object::id(bonding_curve),
-            issuer: sender,
-            amount_in: amount,
-            amount_out: sui_received,
-            price: sui_received / amount,
-        }
-    );
+    // Calculate marginal price after trade
+    let (new_sui_balance, new_token_balance) = get_token_in_pool(bonding_curve);
+    let marginal_price =
+        (
+            (((new_sui_balance as u128) + (bonding_curve.virtual_sui_amt as u128)) * 1_000_000_000_000) / (new_token_balance as u128),
+        ) as u64;
+
+    event::emit(SellEvent {
+        bonding_curve_id: object::id(bonding_curve),
+        issuer: sender,
+        amount_in: amount,
+        amount_out: sui_received,
+        price: marginal_price,
+    });
 }
 
 // Add this function to your bonding_curve.move file
 public entry fun withdraw_for_migration<T>(
     bonding_curve: &mut BondingCurve<T>,
     recipient: address,
-    ctx: &mut TxContext
+    ctx: &mut TxContext,
 ) {
     assert!(tx_context::sender(ctx) == bonding_curve.creator, 0);
 

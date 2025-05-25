@@ -1,6 +1,16 @@
-import { db } from "../db/database";
+import BigNumber from "bignumber.js";
 import { sql } from "kysely";
+import { db } from "../db/database";
 import { ACTIVE_NETWORK, getClient } from "../utils";
+import { daoService } from "./daoService";
+
+// Configure BigNumber
+const DECIMALS = 9;
+BigNumber.config({
+  DECIMAL_PLACES: DECIMALS,
+  ROUNDING_MODE: BigNumber.ROUND_DOWN,
+  EXPONENTIAL_AT: [-DECIMALS, DECIMALS],
+});
 
 // Cache for SUI to USD rate to avoid frequent API calls
 interface RateCache {
@@ -18,17 +28,27 @@ export async function getSuiToUsdRate(): Promise<number> {
   try {
     // Check if we have a valid cached rate
     const now = Date.now();
-    if (rateCache && (now - rateCache.timestamp) < rateCache.expiresIn) {
-      console.log(`Using cached SUI to USD rate: ${rateCache.rate} (expires in ${Math.round((rateCache.timestamp + rateCache.expiresIn - now) / 1000)}s)`);
+    if (rateCache && now - rateCache.timestamp < rateCache.expiresIn) {
+      console.log(
+        `Using cached SUI to USD rate: ${
+          rateCache.rate
+        } (expires in ${Math.round(
+          (rateCache.timestamp + rateCache.expiresIn - now) / 1000
+        )}s)`
+      );
       return rateCache.rate;
     }
 
     // If no valid cache, fetch from CoinGecko API
-    console.log('Fetching fresh SUI to USD rate from CoinGecko API...');
-    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=sui&vs_currencies=usd');
+    console.log("Fetching fresh SUI to USD rate from CoinGecko API...");
+    const response = await fetch(
+      "https://api.coingecko.com/api/v3/simple/price?ids=sui&vs_currencies=usd"
+    );
 
     if (!response.ok) {
-      throw new Error(`CoinGecko API responded with status: ${response.status}`);
+      throw new Error(
+        `CoinGecko API responded with status: ${response.status}`
+      );
     }
 
     const data = await response.json();
@@ -42,23 +62,27 @@ export async function getSuiToUsdRate(): Promise<number> {
       rateCache = {
         rate,
         timestamp: now,
-        expiresIn: CACHE_DURATION
+        expiresIn: CACHE_DURATION,
       };
 
       return rate;
     } else {
-      throw new Error('Invalid response format from CoinGecko API');
+      throw new Error("Invalid response format from CoinGecko API");
     }
   } catch (error) {
     // Log the error and fallback to a default value or cached value if available
-    console.error('Error fetching SUI to USD rate:', error);
+    console.error("Error fetching SUI to USD rate:", error);
 
     if (rateCache) {
-      console.warn(`Using expired cached rate: ${rateCache.rate} (expired ${Math.round((Date.now() - rateCache.timestamp - rateCache.expiresIn) / 1000)}s ago)`);
+      console.warn(
+        `Using expired cached rate: ${rateCache.rate} (expired ${Math.round(
+          (Date.now() - rateCache.timestamp - rateCache.expiresIn) / 1000
+        )}s ago)`
+      );
       return rateCache.rate;
     }
 
-    console.warn('Using fallback SUI to USD rate: 0.85');
+    console.warn("Using fallback SUI to USD rate: 0.85");
     return 0.85; // Fallback rate: 1 SUI = 0.85 USD
   }
 }
@@ -70,12 +94,26 @@ export interface MarketData {
   holders: number;
   suiPrice: number;
   price: number; // USD price
+  proposals: number;
 }
 
 export interface PriceHistoryPoint {
   timestamp: Date;
   price: string;
   direction: string;
+}
+
+/**
+ * Get the number of proposals for a specific token
+ */
+async function getProposalCount(tokenAddress: string): Promise<number> {
+  try {
+    const proposals = await daoService.getProposalsByToken(tokenAddress);
+    return proposals.length;
+  } catch (error) {
+    console.error("Error getting proposal count:", error);
+    return 0;
+  }
 }
 
 export async function getMarketData(
@@ -87,11 +125,17 @@ export async function getMarketData(
     // Get SUI to USD conversion rate
     const suiToUsdRate = await getSuiToUsdRate();
 
-    // Calculate USD price
-    const usdPrice = suiPrice * suiToUsdRate;
+    // Calculate USD price using BigNumber
+    const bnSuiPrice = new BigNumber(suiPrice);
+    const bnSuiToUsdRate = new BigNumber(suiToUsdRate);
+    const usdPrice = bnSuiPrice.times(bnSuiToUsdRate).toNumber();
 
     // Calculate 24h price change based on USD price
-    const change24h = await calculate24hChange(bondingCurveId, suiPrice, suiToUsdRate);
+    const change24h = await calculate24hChange(
+      bondingCurveId,
+      suiPrice,
+      suiToUsdRate
+    );
 
     // Calculate 24h volume (already in USD)
     const volume24h = await calculate24hVolume(bondingCurveId);
@@ -102,6 +146,9 @@ export async function getMarketData(
     // Get holders count (this would ideally come from blockchain data)
     const holders = await estimateHolders(bondingCurveId);
 
+    // Get proposal count for this token
+    const proposals = await getProposalCount(coinId);
+
     return {
       change24h,
       volume24h,
@@ -109,6 +156,7 @@ export async function getMarketData(
       holders,
       suiPrice,
       price: usdPrice,
+      proposals,
     };
   } catch (error) {
     console.error("Error calculating market data:", error);
@@ -119,6 +167,7 @@ export async function getMarketData(
       holders: 0,
       suiPrice: 0,
       price: 0,
+      proposals: 0,
     };
   }
 }
@@ -143,15 +192,21 @@ async function calculate24hChange(
       .executeTakeFirst();
 
     if (currentSuiPrice && price24hAgo) {
-      // Convert current SUI price to USD
-      const currentUsdPrice = currentSuiPrice * suiToUsdRate;
+      // Convert prices to BigNumber for precise calculations
+      const bnCurrentSuiPrice = new BigNumber(currentSuiPrice);
+      const bnSuiToUsdRate = new BigNumber(suiToUsdRate);
+      const bnPastSuiPrice = new BigNumber(price24hAgo.price);
 
-      // Parse and adjust past SUI price, then convert to USD
-      const pastSuiPrice = price24hAgo.price;
-      const pastUsdPrice = pastSuiPrice * suiToUsdRate;
+      // Calculate USD prices
+      const currentUsdPrice = bnCurrentSuiPrice.times(bnSuiToUsdRate);
+      const pastUsdPrice = bnPastSuiPrice.times(bnSuiToUsdRate);
 
-      if (pastUsdPrice > 0) {
-        return ((currentUsdPrice - pastUsdPrice) / pastUsdPrice) * 100;
+      if (pastUsdPrice.gt(0)) {
+        return currentUsdPrice
+          .minus(pastUsdPrice)
+          .dividedBy(pastUsdPrice)
+          .times(100)
+          .toNumber();
       }
     }
 
@@ -188,15 +243,14 @@ async function calculate24hVolume(bondingCurveId: string): Promise<string> {
       .where("timestamp", ">", oneDayAgo)
       .executeTakeFirst();
 
-    const buyVolume = resultBuy?.volume
-      ? parseFloat(resultBuy.volume.toString())
-      : 0;
-    const sellVolume = resultSell?.volume
-      ? parseFloat(resultSell.volume.toString())
-      : 0;
-    const totalVolume = (buyVolume + sellVolume) / Math.pow(10, 9);
+    const bnBuyVolume = new BigNumber(resultBuy?.volume?.toString() || "0");
+    const bnSellVolume = new BigNumber(resultSell?.volume?.toString() || "0");
+    const totalVolume = bnBuyVolume
+      .plus(bnSellVolume)
+      .dividedBy(new BigNumber(10).pow(9))
+      .toString();
 
-    return totalVolume.toString();
+    return totalVolume;
   } catch (error) {
     console.error("Error calculating 24h volume:", error);
     return "0";
@@ -210,12 +264,16 @@ async function estimateMarketCap(
   try {
     if (currentUsdPrice) {
       const rawSupply = await getCirculatingSupply(bondingCurveId);
-      console.log("currentUsdPrice", currentUsdPrice);
+      const bnSupply = new BigNumber(rawSupply);
+      const bnPrice = new BigNumber(currentUsdPrice);
 
-      // Calculate market cap using the USD price and supply
-      const marketCap = (rawSupply * currentUsdPrice) / Math.pow(10, 9);
+      // Calculate market cap using BigNumber
+      const marketCap = bnSupply
+        .times(bnPrice)
+        .dividedBy(new BigNumber(10).pow(9))
+        .toString();
 
-      return marketCap.toString();
+      return marketCap;
     }
 
     return "0";
@@ -264,12 +322,21 @@ export const getCurrentPrice = async (bondingCurveId: string) => {
       return 0;
     }
 
-    // Calculate raw price
-    const rawPrice =
-      (parseFloat(bondingCurveField.virtual_sui_amt) +
-        parseFloat(bondingCurveField.sui_balance)) /
-      parseFloat(bondingCurveField.token_balance);
-    // Round to a reasonable number of decimal places (e.g., 6)
+    // Calculate raw price using BigNumber
+    const virtualSuiAmt = new BigNumber(bondingCurveField.virtual_sui_amt);
+    const suiBalance = new BigNumber(bondingCurveField.sui_balance);
+    const tokenBalance = new BigNumber(bondingCurveField.token_balance);
+
+    if (tokenBalance.isZero()) {
+      console.error("Token balance is zero");
+      return 0;
+    }
+
+    const rawPrice = virtualSuiAmt
+      .plus(suiBalance)
+      .dividedBy(tokenBalance)
+      .toNumber();
+
     return rawPrice;
   } catch (error) {
     console.error("Error getting current price:", error);

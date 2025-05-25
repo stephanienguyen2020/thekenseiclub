@@ -1,22 +1,29 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import { ArrowUp, ArrowDown, RefreshCw, ChevronDown, Send } from "lucide-react";
-import CryptoChart, { CandleData } from "./CryptoChart";
+import { tradeAgent } from "@/app/lib/tradingBot";
+import api from "@/lib/api";
+import {
+  fromBlockchainAmount,
+  safeDivide,
+  safeMultiply,
+  toBlockchainAmount,
+} from "@/lib/priceUtils";
 import {
   useCurrentAccount,
   useSignAndExecuteTransaction,
   useSuiClient,
 } from "@mysten/dapp-kit";
-import api from "@/lib/api";
-import { getClient, Network } from "coin-sdk/dist/src/utils/sui-utils";
-import BondingCurveSDK from "coin-sdk/dist/src/bonding_curve";
-import { getObject } from "@/lib/utils";
-import { tradeAgent } from "@/app/lib/tradingBot";
 import { SuiClient } from "@mysten/sui/client";
-import axios from "axios";
+import BigNumber from "bignumber.js";
+import BondingCurveSDK from "coin-sdk/dist/src/bonding_curve";
+import { buildSwapTransaction, getRoutes } from "coin-sdk/dist/src/flowx";
+import { getClient, Network } from "coin-sdk/dist/src/utils/sui-utils";
+import { ArrowDown, ArrowUp, ChevronDown, RefreshCw, Send } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+import CryptoChart, { CandleData } from "./CryptoChart";
 import { TransactionSuccess } from "./ui/transaction-success";
+import { VoteNotification } from "./ui/vote-notification";
 
 interface TradingViewProps {
   tokenSymbol: string;
@@ -29,6 +36,31 @@ interface TradingViewProps {
   suiPrice: number;
 }
 
+// Helper function to format numbers in a user-friendly way
+const formatAmount = (value: number | string): string => {
+  const num = typeof value === "string" ? parseFloat(value) : value;
+
+  if (isNaN(num) || num === 0) return "0.00";
+
+  // For very small numbers (< 0.0001), show up to 8 decimal places
+  if (Math.abs(num) < 0.0001) {
+    return num.toFixed(8).replace(/\.?0+$/, "");
+  }
+
+  // For small numbers (< 1), show up to 6 decimal places
+  if (Math.abs(num) < 1) {
+    return num.toFixed(6).replace(/\.?0+$/, "");
+  }
+
+  // For larger numbers, show up to 4 decimal places
+  if (Math.abs(num) < 1000) {
+    return num.toFixed(4).replace(/\.?0+$/, "");
+  }
+
+  // For very large numbers, show up to 2 decimal places
+  return num.toFixed(2).replace(/\.?0+$/, "");
+};
+
 export default function TradingView({
   tokenSymbol,
   tokenName,
@@ -40,6 +72,7 @@ export default function TradingView({
   suiPrice,
 }: TradingViewProps) {
   const [amount, setAmount] = useState("");
+  const [suiAmount, setSuiAmount] = useState("");
   const [activeTradeTab, setActiveTradeTab] = useState<
     "buy" | "sell" | "swap" | "assistant"
   >("buy");
@@ -61,6 +94,9 @@ export default function TradingView({
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const client = useSuiClient();
 
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
     execute: async ({ bytes, signature }) =>
       await client.executeTransactionBlock({
@@ -75,21 +111,17 @@ export default function TradingView({
       }),
   });
 
-  const [digest, setDigest] = useState("");
   const [transactionHash, setTransactionHash] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [lastAction, setLastAction] = useState<"buy" | "sell" | "swap" | null>(
     null
   );
 
-  // Simulate chart loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
+  const [selectedCurrency, setSelectedCurrency] = useState("SUI");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-    return () => clearTimeout(timer);
-  }, []);
+  // Add state for search input
+  const [currencySearch, setCurrencySearch] = useState("");
 
   useEffect(() => {
     // Fetch chart data with error handling
@@ -100,12 +132,20 @@ export default function TradingView({
           params: {
             bonding_curve_id: bondingCurveId,
             from: "2025-04-10 15:08:00.000000",
-            to: "2025-05-19 16:08:00.000000",
+            to: new Date().toLocaleString(),
             resolution: timeframe,
           },
         });
-        const data: CandleData[] = response.data || [];
+        const data: CandleData[] =
+          response.data.map((item: any) => ({
+            ...item,
+            open: fromBlockchainAmount(item.open),
+            high: fromBlockchainAmount(item.high),
+            low: fromBlockchainAmount(item.low),
+            close: fromBlockchainAmount(item.close),
+          })) || [];
         setChartData(data);
+        setIsLoading(false);
       } catch (error) {
         console.error("Error fetching chart data:", error);
         // Continue with periodic fetching despite errors
@@ -197,8 +237,29 @@ export default function TradingView({
     return { coinType, packageId, bondingCurveSdk };
   }
 
-  const handleBuy = async (buyAmount = amount, coinName?: string) => {
+  console.log("selectedCurrency", selectedCurrency);
+
+  const handleSwap = async (buyAmount = amount, coinName?: string) => {
     const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
+    if (selectedCurrency === "SOL") {
+      const swapTx = await buildSwapTransaction(
+        "0xbc03aaab4c11eb84df8bf39fdc714fa5d5b65b16eb7d155e22c74a68c8d4e17f::coin::COIN",
+        "0x2::sui::SUI",
+        toBlockchainAmount(buyAmount, new BigNumber(10).pow(8)).toString(),
+        currentAccount?.address || "",
+        network
+      );
+      return swapTx;
+    }
+  };
+
+  const handleBuySui = async (
+    buyAmount = amount,
+    coinName?: string,
+    tx?: any
+  ) => {
+    const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
+
     const client = getClient(network);
     const { coinType, packageId, bondingCurveSdk } =
       await retrieveBondingCurveData(client);
@@ -210,45 +271,80 @@ export default function TradingView({
       coinName || "default"
     );
     const parsedAmount = parseFloat(buyAmount) * 1000000000;
-    const tx = bondingCurveSdk.buildBuyTransaction({
+    const bondingTx = bondingCurveSdk.buildBuyTransaction({
       amount: BigInt(parsedAmount),
       minTokenRequired: BigInt(0),
       type: coinType,
       address: currentAccount?.address || "",
+      transaction: tx,
     });
-    try {
-      signAndExecuteTransaction(
-        {
-          transaction: tx,
-          chain: `sui:${network}`,
+
+    // Execute the bonding curve transaction with explicit gas budget
+    signAndExecuteTransaction(
+      {
+        transaction: bondingTx,
+        chain: `sui:${network}`,
+        options: {
+          showEffects: true,
+          showEvents: true,
+          gasBudget: 100000000, // Set a higher gas budget (0.1 SUI)
         },
-        {
-          onSuccess: (result: any) => {
-            api
-              .get<{ message: string }>(`/migrate`, {
-                params: {
-                  bondingCurveId,
-                  packageId,
-                },
-              })
-              .then((result) => {
-                if (result.data.message === "Migration successful") {
+      },
+      {
+        onSuccess: (result: any) => {
+          api
+            .get<{ message: string }>(`/migrate`, {
+              params: {
+                bondingCurveId,
+                packageId,
+              },
+            })
+            .then((result) => {
+              if (result.data.message === "Migration successful") {
                 console.log("migration status", result.data.message);
-                  window.location.href = `/marketplace`;
-                }
-              });
-            console.log("Buy successfully", result);
-            setTransactionHash(result.digest);
-            setLastAction("buy");
-            setShowSuccess(true);
-          },
-          onError: (error: any) => {
-            console.log("error", error);
-          },
-        }
+                setNotificationMessage("Migration successful");
+                setShowNotification(true);
+                window.location.href = `/marketplace`;
+              }
+            });
+          console.log("Buy successfully", result);
+          setTransactionHash(result.digest);
+          setLastAction("buy");
+          setShowSuccess(true);
+        },
+        onError: (error: any) => {
+          console.log("Bonding curve transaction error:", error);
+          // Add user-friendly error message
+          setNotificationMessage(
+            "Failed to execute bonding curve transaction. Please try again."
+          );
+          setShowNotification(true);
+        },
+      }
+    );
+  };
+
+  const handleBuy = async (buyAmount = amount, coinName?: string) => {
+    const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
+    if (selectedCurrency === "SOL") {
+      const routes = await getRoutes(
+        "0xbc03aaab4c11eb84df8bf39fdc714fa5d5b65b16eb7d155e22c74a68c8d4e17f::coin::COIN",
+        "0x2::sui::SUI",
+        toBlockchainAmount(buyAmount, new BigNumber(10).pow(8)).toString(),
+        currentAccount?.address || ""
       );
-    } catch (e) {
-      console.log("error", e);
+      setSuiAmount(
+        fromBlockchainAmount(routes.amountOut.toString()).toString()
+      );
+      const swapTx = await handleSwap(buyAmount, coinName);
+      await handleBuySui(
+        fromBlockchainAmount(routes.amountOut.toString()).toString(),
+        coinName,
+        swapTx
+      );
+    } else {
+      setSuiAmount(buyAmount);
+      await handleBuySui(buyAmount, coinName);
     }
   };
 
@@ -257,7 +353,8 @@ export default function TradingView({
     const client = getClient(network);
     const { coinType, packageId, bondingCurveSdk } =
       await retrieveBondingCurveData(client);
-
+    console.log("sellAmount", sellAmount);
+    console.log("coinType", coinType);
     const parsedAmount = BigInt(sellAmount) * BigInt(1000000000);
     const tx = await bondingCurveSdk.buildSellTransaction({
       amount: parsedAmount,
@@ -300,7 +397,6 @@ export default function TradingView({
     // Clear input
     setChatMessage("");
     const result = await tradeAgent(chatMessage);
-    console.log("result", result);
     if (result.action === "BUY") {
       setAmount(result.amount); // Update state for UI consistency
       handleBuy(result.amount, result.coinName); // Pass amount and coinName directly to avoid async state issues
@@ -311,6 +407,9 @@ export default function TradingView({
       setAmount("");
     }
   };
+
+  // The backend/event price is an integer scaled by 1e9 (fixed-point math). Divide by 1e9 for display.
+  const displayPrice = currentPrice / 1e9;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -336,7 +435,7 @@ export default function TradingView({
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold">
-                ${currentPrice.toFixed(15)}
+                ${formatAmount(currentPrice)}
               </div>
               <div
                 className={`flex items-center justify-end ${
@@ -432,7 +531,7 @@ export default function TradingView({
             >
               SELL
             </button>
-            <button
+            {/* <button
               className={`flex-1 py-3 font-black text-lg ${
                 activeTradeTab === "swap"
                   ? "bg-[#0039C6] text-white"
@@ -441,7 +540,7 @@ export default function TradingView({
               onClick={() => setActiveTradeTab("swap")}
             >
               SWAP
-            </button>
+            </button> */}
             <button
               className={`flex-1 py-3 font-black text-lg ${
                 activeTradeTab === "assistant"
@@ -462,16 +561,56 @@ export default function TradingView({
                   <label className="block text-sm font-bold mb-2 uppercase">
                     Amount
                   </label>
-                  <div className="flex">
+                  <div className="flex border-4 border-black rounded-xl">
                     <input
                       type="number"
-                      className="flex-1 rounded-l-xl border-4 border-r-0 border-black p-3 focus:outline-none focus:ring-4 focus:ring-[#c0ff00] text-lg font-bold"
+                      className="flex-1 p-3 text-lg font-bold rounded-l-xl focus:outline-none focus:ring-4 focus:ring-[#c0ff00] placeholder:text-gray-400 border-none"
                       placeholder="0.00"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                     />
-                    <div className="bg-gray-100 px-4 py-3 rounded-r-xl border-4 border-l-0 border-black font-bold">
-                      {"SUI"}
+                    <div className="relative">
+                      <button
+                        className="bg-gray-100 px-4 py-3 font-bold flex items-center gap-1 border-l-4 border-black h-full rounded-r-xl"
+                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                        type="button"
+                      >
+                        {selectedCurrency} <ChevronDown size={16} />
+                      </button>
+                      {dropdownOpen && (
+                        <div className="absolute right-0 mt-1 w-40 rounded-xl shadow-lg z-10 bg-white border-2 border-black">
+                          <div className="p-2">
+                            <input
+                              type="text"
+                              placeholder="Search..."
+                              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#c0ff00] text-sm mb-2"
+                              value={currencySearch}
+                              onChange={(e) =>
+                                setCurrencySearch(e.target.value)
+                              }
+                            />
+                            {["SUI", "SOL"]
+                              .filter((c) =>
+                                c
+                                  .toLowerCase()
+                                  .includes(currencySearch.toLowerCase())
+                              )
+                              .map((c) => (
+                                <button
+                                  key={c}
+                                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 font-bold text-base"
+                                  onClick={() => {
+                                    setSelectedCurrency(c);
+                                    setDropdownOpen(false);
+                                    setCurrencySearch("");
+                                  }}
+                                >
+                                  {c}
+                                </button>
+                              ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -482,7 +621,7 @@ export default function TradingView({
                   </label>
                   <div className="bg-gray-100 p-3 rounded-xl border-4 border-black font-bold">
                     {amount
-                      ? (Number.parseFloat(amount) / suiPrice).toFixed(2)
+                      ? formatAmount(safeDivide(amount, suiPrice))
                       : "0.00"}
                   </div>
                 </div>
@@ -530,7 +669,7 @@ export default function TradingView({
                   </label>
                   <div className="bg-gray-100 p-3 rounded-xl border-4 border-black font-bold">
                     {amount
-                      ? (Number.parseFloat(amount) * suiPrice).toFixed(15)
+                      ? formatAmount(safeMultiply(amount, suiPrice))
                       : "0.00"}
                   </div>
                 </div>
@@ -588,9 +727,7 @@ export default function TradingView({
                       placeholder="0.00"
                       value={
                         amount
-                          ? (Number.parseFloat(amount) / currentPrice).toFixed(
-                              8
-                            )
+                          ? formatAmount(safeDivide(amount, currentPrice))
                           : ""
                       }
                       readOnly
@@ -606,7 +743,8 @@ export default function TradingView({
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Rate</span>
                     <span className="font-bold">
-                      1 {tokenSymbol} = ${currentPrice.toFixed(8)}
+                      1 {tokenSymbol} = ${formatAmount(displayPrice)}
+                      {/* This is the canonical marginal price from the contract event, scaled to 9 decimals */}
                     </span>
                   </div>
                   <div className="flex justify-between mt-1">
@@ -689,8 +827,16 @@ export default function TradingView({
             setAmount("");
             setActiveTradeTab(lastAction || "buy");
           }}
+          recipient={currentAccount?.address || ""}
         />
       )}
+
+      {/* Notification */}
+      <VoteNotification
+        isOpen={showNotification}
+        onClose={() => setShowNotification(false)}
+        message={notificationMessage}
+      />
     </div>
   );
 }

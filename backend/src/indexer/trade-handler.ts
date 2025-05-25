@@ -1,7 +1,8 @@
 // File: src/indexer/trade-handler.ts
-import { db } from "../db/database";
-import { BondingCurve, RawPrices } from "../db/kysely-types/postgres";
 import { SuiEvent } from "@mysten/sui/client";
+import BigNumber from "bignumber.js";
+import { db } from "../db/database";
+import { BondingCurve } from "../db/kysely-types/postgres";
 import { getClient } from "../utils";
 
 // Define interfaces for the parsed JSON data
@@ -87,15 +88,18 @@ export const handleBondingCurveEvent = async (
           showContent: true,
         },
       });
-      console.log("coinMetadata", JSON.stringify(coinMetadata, null, 2));
+
+      // Add type assertion for the fields
+      const fields = (coinMetadata.data?.content as any)?.fields;
+
       await db
         .insertInto("coins")
         .values({
           id: payload.coin_metadata,
-          name: coinMetadata.data?.content?.fields?.name,
-          symbol: coinMetadata.data?.content?.fields?.symbol,
-          description: coinMetadata.data?.content?.fields?.description,
-          logo: coinMetadata.data?.content?.fields?.icon_url,
+          name: fields?.name,
+          symbol: fields?.symbol,
+          description: fields?.description,
+          logo: fields?.icon_url,
           address: event.sender,
           createdAt: new Date(),
         })
@@ -130,22 +134,53 @@ export const handleBondingCurveEvent = async (
     } else {
       timestamp = new Date();
     }
-    const amountIn = parseFloat(payload.amount_in);
-    const amountOut = parseFloat(payload.amount_out);
 
+    const amountIn = new BigNumber(payload.amount_in);
+    const amountOut = new BigNumber(payload.amount_out);
+
+    // Use the price field from the event payload (marginal price emitted by the contract)
+    const price = Number(payload.price);
+
+    // Insert raw price data
     await db
       .insertInto("rawPrices")
       .values({
         bondingCurveId: payload.bonding_curve_id,
         timestamp: timestamp,
-        price:
-          payload.direction == "BUY"
-            ? amountIn / amountOut
-            : amountOut / amountIn,
-        amountIn: amountIn,
-        amountOut: amountOut,
+        price: price,
+        amountIn: amountIn.toNumber(),
+        amountOut: amountOut.toNumber(),
         direction: payload.direction,
         sender: event.sender,
+      })
+      .execute();
+
+    // Update portfolio data
+    const portfolioChange =
+      payload.direction === "BUY" ? amountOut.toNumber() : -amountIn.toNumber();
+
+    // Get the latest portfolio entry for this user and bonding curve
+    const latestPortfolio = await db
+      .selectFrom("portfolios")
+      .select(["amount"])
+      .where("userAddress", "=", event.sender)
+      .where("bondingCurveId", "=", payload.bonding_curve_id)
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .executeTakeFirst();
+
+    // Calculate new amount
+    const currentAmount = latestPortfolio?.amount || 0;
+    const newAmount = currentAmount + portfolioChange;
+
+    // Insert new portfolio entry
+    await db
+      .insertInto("portfolios")
+      .values({
+        userAddress: event.sender,
+        bondingCurveId: payload.bonding_curve_id,
+        amount: newAmount,
+        timestamp: timestamp,
       })
       .execute();
   }

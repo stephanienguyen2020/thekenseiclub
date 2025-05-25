@@ -1,5 +1,3 @@
-import { generateTokenConcept } from "@/app/lib/genToken";
-import OpenAI from "openai";
 import api from "@/lib/api";
 
 interface TokenAIGeneratedDetails {
@@ -11,12 +9,6 @@ interface TokenAIGeneratedDetails {
   image_description?: string;
   gatewayUrl?: string;
 }
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true, // Required for client-side usage
-});
 
 export const useTokenGeneratingService = () => {
   const generateImageFromPrompt = async (
@@ -31,20 +23,21 @@ export const useTokenGeneratingService = () => {
       throw new Error("Prompt is required");
     }
     try {
-      const response = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: prompt,
-        n: 1,
-        size: "1024x1024",
-        quality: "standard",
-        response_format: "b64_json",
+      const response = await fetch("/api/openai/generate-image", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
       });
 
-      if (!response.data?.[0]?.b64_json) {
-        throw new Error("No image data received from OpenAI");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to generate image");
       }
 
-      const imageBase64 = response.data[0].b64_json;
+      const data = await response.json();
+      const imageBase64 = data.imageBase64;
 
       // For browser context, create a blob URL
       if (typeof window !== "undefined") {
@@ -116,7 +109,21 @@ export const useTokenGeneratingService = () => {
     userId?: string
   ): Promise<TokenAIGeneratedDetails> => {
     try {
-      const response = await generateTokenConcept(input, openai);
+      // Call our secure API to generate token concept
+      const conceptResponse = await fetch("/api/openai/generate-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ input }),
+      });
+
+      if (!conceptResponse.ok) {
+        const errorData = await conceptResponse.json();
+        throw new Error(errorData.error || "Failed to generate token concept");
+      }
+
+      const response = await conceptResponse.json();
 
       if (!response.image_description) {
         throw new Error("No image description generated");

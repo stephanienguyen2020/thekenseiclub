@@ -12,6 +12,7 @@ import {
   Eye,
   Bookmark,
   Share2,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import api from "@/lib/api";
@@ -50,6 +51,7 @@ export default function PostCard({ post }: PostCardProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [likes, setLikes] = useState(post.likes);
   const [boosts, setBoosts] = useState(post.boosts);
+  const [showImageModal, setShowImageModal] = useState(false);
   const views = post.views || Math.floor(Math.random() * 10000) + 1000;
 
   useEffect(() => {
@@ -85,7 +87,6 @@ export default function PostCard({ post }: PostCardProps) {
     fetchIsSaved();
   }, []);
 
-
   const handleLike = () => {
     const likePost = async () => {
       await api.post("/likes", {
@@ -103,14 +104,14 @@ export default function PostCard({ post }: PostCardProps) {
   const handleBoost = () => {
     const retweetPost = async () => {
       await api.post("/posts/reTweet", {
-          postId: post.id,
-          userId: post.user.id,
+        postId: post.id,
+        userId: post.user.id,
         isReTweet: !isBoosted,
       });
 
       setBoosts(isBoosted ? boosts - 1 : boosts + 1);
       setIsBoosted(!isBoosted);
-    }
+    };
     retweetPost();
   };
 
@@ -122,7 +123,7 @@ export default function PostCard({ post }: PostCardProps) {
         userId: post.user.id,
         isSave: !isBookmarked,
       });
-    }
+    };
     setIsBookmarked(!isBookmarked);
     bookmarkPost();
   };
@@ -180,15 +181,46 @@ export default function PostCard({ post }: PostCardProps) {
       <div className="mt-3">
         <p className="whitespace-pre-wrap">{post.content}</p>
         {post.image && (
-          <div className="mt-3 rounded-2xl overflow-hidden border-2 border-black">
-            <Image
-              src={post.image || "/placeholder.svg"}
-              alt="Post image"
-              width={500}
-              height={300}
-              className="w-full object-cover max-h-[300px]"
-            />
-          </div>
+          <>
+            <div
+              className="mt-3 rounded-2xl overflow-hidden border-2 border-black relative w-full cursor-pointer"
+              onClick={() => setShowImageModal(true)}
+            >
+              <Image
+                src={post.image || "/placeholder.svg"}
+                alt="Post image"
+                width={800}
+                height={450}
+                className="w-full h-auto object-contain"
+                priority
+              />
+            </div>
+
+            {/* Image Modal */}
+            {showImageModal && (
+              <div
+                className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+                onClick={() => setShowImageModal(false)}
+              >
+                <div className="relative max-w-4xl w-full max-h-[90vh]">
+                  <button
+                    className="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 z-10 hover:bg-opacity-75"
+                    onClick={() => setShowImageModal(false)}
+                  >
+                    <X size={24} />
+                  </button>
+                  <Image
+                    src={post.image || "/placeholder.svg"}
+                    alt="Post image"
+                    width={1200}
+                    height={675}
+                    className="w-full h-auto object-contain"
+                    priority
+                  />
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 

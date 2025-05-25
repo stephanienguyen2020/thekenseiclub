@@ -12,6 +12,14 @@ import {
 import {AddLiquidityV2} from "@flowx-finance/sdk";
 import {SUI_COIN_TYPE} from "./constant";
 import {Network} from "../sui-utils";
+import BigNumber from 'bignumber.js';
+import {toBlockchainAmount, fromBlockchainAmount, safeDivide, safeMultiply} from './utils/number-utils';
+
+interface BondingCurveFields {
+  virtual_sui_amt: string;
+  sui_balance: string;
+  token_balance: string;
+}
 
 class BondingCurveSDK {
   private bondingCurveId: string;
@@ -65,16 +73,19 @@ class BondingCurveSDK {
                         minTokenRequired,
                         type,
                         address,
+                        transaction
                       }: {
     amount: bigint;
     minTokenRequired: bigint;
     type: string;
     address: string;
+    transaction?: Transaction;
   }): Transaction {
-    const tx = new Transaction();
-
+    console.log("Brfore transaction:", transaction)
+    const tx = transaction ? transaction : new Transaction();
+    console.log("After transaction:", tx)
     const [suiCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(amount)]);
-
+    console.log("After split:", tx)
     tx.moveCall({
       target: `${this.packageId}::bonding_curve::buy`,
       typeArguments: [type],
@@ -89,6 +100,49 @@ class BondingCurveSDK {
     return tx;
   }
 
+  async getCurrentPrice(): Promise<number> {
+    try {
+      const bondingCurveObj = await this.client.getObject({
+        id: this.bondingCurveId,
+        options: {
+          showType: true,
+          showContent: true,
+        },
+      });
+
+      if (!bondingCurveObj.data?.content) {
+        throw new Error("Failed to retrieve bonding curve data");
+      }
+
+      const fields = (bondingCurveObj.data.content as any).fields as BondingCurveFields;
+      const virtualSuiAmt = new BigNumber(fields.virtual_sui_amt);
+      const suiBalance = new BigNumber(fields.sui_balance);
+      const tokenBalance = new BigNumber(fields.token_balance);
+
+      if (tokenBalance.isZero()) {
+        throw new Error("Token balance is zero");
+      }
+
+      return virtualSuiAmt
+        .plus(suiBalance)
+        .dividedBy(tokenBalance)
+        .toNumber();
+    } catch (error) {
+      console.error("Error getting current price:", error);
+      throw error;
+    }
+  }
+
+  async calculateTokenAmount(suiAmount: string | number): Promise<number> {
+    const price = await this.getCurrentPrice();
+    return safeDivide(suiAmount, price);
+  }
+
+  async calculateSuiAmount(tokenAmount: string | number): Promise<number> {
+    const price = await this.getCurrentPrice();
+    return safeMultiply(tokenAmount, price);
+  }
+
   async buy({
               amount,
               minTokenRequired,
@@ -100,19 +154,11 @@ class BondingCurveSDK {
     type: string;
     address: string;
   }): Promise<SuiTransactionBlockResponse> {
-    const tx = new Transaction();
-
-    const [suiCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(amount)]);
-
-    tx.moveCall({
-      target: `${this.packageId}::bonding_curve::buy`,
-      typeArguments: [type],
-      arguments: [
-        tx.object(this.bondingCurveId),
-        suiCoin,
-        tx.pure.u64(amount),
-        tx.pure.u64(minTokenRequired),
-      ],
+    const tx = this.buildBuyTransaction({
+      amount,
+      minTokenRequired,
+      type,
+      address,
     });
 
     return await signAndExecute(tx, ACTIVE_NETWORK, address);
@@ -124,23 +170,34 @@ class BondingCurveSDK {
                                type,
                                address,
                                network,
+                               transaction
                              }: {
     amount: bigint;
     minSuiRequired: bigint;
     type: string;
     address: string;
     network: Network;
+    transaction?: Transaction;
   }): Promise<Transaction> {
-    const tx = new Transaction();
 
     const coins = await getCoinsByType(address, type, network);
     if (coins.length === 0) {
       throw new Error(`No coin of type ${type} found in wallet`);
     }
-    const destinationCoin = tx.object(coins[0].coinObjectId);
-    const sourceCoins = coins.slice(1).map((coin) => tx.object(coin.coinObjectId));
-    tx.mergeCoins(destinationCoin, sourceCoins)
+    const tx = transaction ? transaction : new Transaction();
+    const [coin] = tx.splitCoins(tx.gas, [tx.pure.u64(0)]);
+    tx.transferObjects([coin], tx.pure.address(address));
 
+    // Create a transaction input for the first coin
+    const destinationCoin = tx.object(coins[0].coinObjectId);
+
+    // If there are multiple coins, merge them
+    if (coins.length > 1) {
+      const sourceCoins = coins.slice(1).map((coin) => tx.object(coin.coinObjectId));
+      tx.mergeCoins(destinationCoin, sourceCoins);
+    }
+
+    // Split the coin to get the amount to sell
     const [splitCoin] = tx.splitCoins(destinationCoin, [
       tx.pure.u64(amount),
     ]);
@@ -328,6 +385,110 @@ class BondingCurveSDK {
       console.error("Error migrating to FlowX:", error);
       throw error;
     }
+  }
+
+  /**
+   * Calculate the expected slippage for a buy (SUI -> Token) trade.
+   * @param suiAmount Amount of SUI to spend (in human-readable units, e.g., 1 SUI = 1)
+   * @returns Slippage percentage (e.g., 0.5 for 0.5%)
+   */
+  async getExpectedBuySlippage(suiAmount: number | string): Promise<number> {
+    const bondingCurveObj = await this.client.getObject({
+      id: this.bondingCurveId,
+      options: {showType: true, showContent: true},
+    });
+    if (!bondingCurveObj.data?.content) throw new Error("Failed to retrieve bonding curve data");
+    const fields = (bondingCurveObj.data.content as any).fields as BondingCurveFields;
+    const virtualSuiAmt = new BigNumber(fields.virtual_sui_amt);
+    const suiBalance = new BigNumber(fields.sui_balance);
+    const tokenBalance = new BigNumber(fields.token_balance);
+    const input = new BigNumber(suiAmount).times(1e9); // convert to on-chain units
+    // Marginal price before trade
+    const priceBefore = virtualSuiAmt.plus(suiBalance).div(tokenBalance);
+    // Simulate buy: get tokens out
+    const tokensOut = input.times(tokenBalance).div(virtualSuiAmt.plus(suiBalance).plus(input));
+    // Marginal price after trade
+    const priceAfter = virtualSuiAmt.plus(suiBalance).plus(input).div(tokenBalance.minus(tokensOut));
+    // Average execution price
+    const avgPrice = input.div(tokensOut);
+    // Slippage = (avgPrice - priceBefore) / priceBefore
+    return avgPrice.minus(priceBefore).div(priceBefore).times(100).toNumber();
+  }
+
+  /**
+   * Calculate the expected slippage for a sell (Token -> SUI) trade.
+   * @param tokenAmount Amount of tokens to sell (in human-readable units)
+   * @returns Slippage percentage (e.g., 0.5 for 0.5%)
+   */
+  async getExpectedSellSlippage(tokenAmount: number | string): Promise<number> {
+    const bondingCurveObj = await this.client.getObject({
+      id: this.bondingCurveId,
+      options: {showType: true, showContent: true},
+    });
+    if (!bondingCurveObj.data?.content) throw new Error("Failed to retrieve bonding curve data");
+    const fields = (bondingCurveObj.data.content as any).fields as BondingCurveFields;
+    const virtualSuiAmt = new BigNumber(fields.virtual_sui_amt);
+    const suiBalance = new BigNumber(fields.sui_balance);
+    const tokenBalance = new BigNumber(fields.token_balance);
+    const input = new BigNumber(tokenAmount).times(1e9); // convert to on-chain units
+    // Marginal price before trade
+    const priceBefore = virtualSuiAmt.plus(suiBalance).div(tokenBalance);
+    // Simulate sell: get SUI out
+    const suiOut = input.times(virtualSuiAmt.plus(suiBalance)).div(tokenBalance.plus(input));
+    // Marginal price after trade
+    const priceAfter = virtualSuiAmt.plus(suiBalance).minus(suiOut).div(tokenBalance.plus(input).minus(input));
+    // Average execution price
+    const avgPrice = suiOut.div(input);
+    // Slippage = (priceBefore - avgPrice) / priceBefore
+    return priceBefore.minus(avgPrice).div(priceBefore).times(100).toNumber();
+  }
+
+  /**
+   * Calculate the price impact for a buy (SUI -> Token) trade.
+   * @param suiAmount Amount of SUI to spend (in human-readable units)
+   * @returns Price impact percentage
+   */
+  async getExpectedBuyPriceImpact(suiAmount: number | string): Promise<number> {
+    const bondingCurveObj = await this.client.getObject({
+      id: this.bondingCurveId,
+      options: {showType: true, showContent: true},
+    });
+    if (!bondingCurveObj.data?.content) throw new Error("Failed to retrieve bonding curve data");
+    const fields = (bondingCurveObj.data.content as any).fields as BondingCurveFields;
+    const virtualSuiAmt = new BigNumber(fields.virtual_sui_amt);
+    const suiBalance = new BigNumber(fields.sui_balance);
+    const tokenBalance = new BigNumber(fields.token_balance);
+    const input = new BigNumber(suiAmount).times(1e9); // convert to on-chain units
+    // Marginal price before trade
+    const priceBefore = virtualSuiAmt.plus(suiBalance).div(tokenBalance);
+    // Marginal price after trade
+    const priceAfter = virtualSuiAmt.plus(suiBalance).plus(input).div(tokenBalance);
+    // Price impact = (priceAfter - priceBefore) / priceBefore
+    return priceAfter.minus(priceBefore).div(priceBefore).times(100).toNumber();
+  }
+
+  /**
+   * Calculate the price impact for a sell (Token -> SUI) trade.
+   * @param tokenAmount Amount of tokens to sell (in human-readable units)
+   * @returns Price impact percentage
+   */
+  async getExpectedSellPriceImpact(tokenAmount: number | string): Promise<number> {
+    const bondingCurveObj = await this.client.getObject({
+      id: this.bondingCurveId,
+      options: {showType: true, showContent: true},
+    });
+    if (!bondingCurveObj.data?.content) throw new Error("Failed to retrieve bonding curve data");
+    const fields = (bondingCurveObj.data.content as any).fields as BondingCurveFields;
+    const virtualSuiAmt = new BigNumber(fields.virtual_sui_amt);
+    const suiBalance = new BigNumber(fields.sui_balance);
+    const tokenBalance = new BigNumber(fields.token_balance);
+    const input = new BigNumber(tokenAmount).times(1e9); // convert to on-chain units
+    // Marginal price before trade
+    const priceBefore = virtualSuiAmt.plus(suiBalance).div(tokenBalance);
+    // Marginal price after trade
+    const priceAfter = virtualSuiAmt.plus(suiBalance).div(tokenBalance.plus(input));
+    // Price impact = (priceBefore - priceAfter) / priceBefore
+    return priceBefore.minus(priceAfter).div(priceBefore).times(100).toNumber();
   }
 }
 
