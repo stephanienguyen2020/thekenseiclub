@@ -108,7 +108,7 @@ router.post("/coin", async (req: any, res: any) => {
       network: ACTIVE_NETWORK,
       coin: {
         id: rs.coinMetadata,
-        tribe: tribe || "wildcards"
+        tribe: tribe || "wildcards",
       },
     });
   } catch (error) {
@@ -310,7 +310,6 @@ router.get("/coin/:id", async (req: any, res: any) => {
       .selectFrom("coins as c")
       .leftJoin("bondingCurve as b", "c.id", "b.coinMetadata")
       .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
-      .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
       .select([
         "c.id",
         "c.name",
@@ -394,9 +393,8 @@ router.get("/allCoins", async (req: any, res: any) => {
     // Enrich each coin with default tribe if missing
     const enrichedCoins = coins.map(enrichCoinWithTribe);
 
-
     return res.status(200).json({
-      data: enrichedCoins
+      data: enrichedCoins,
     });
   } catch (error) {
     console.error("Error fetching all coins:", error);
