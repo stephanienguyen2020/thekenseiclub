@@ -403,13 +403,6 @@ export default function TokenDetailPage() {
                           ].emoji
                         }
                       </span>
-                      <span className="text-sm font-medium text-blue-800">
-                        {
-                          TRIBE_METADATA[
-                            coin.tribe as keyof typeof TRIBE_METADATA
-                          ].name
-                        }
-                      </span>
                     </div>
                   )}
                 {/* Tribe Tag */}

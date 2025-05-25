@@ -98,13 +98,13 @@ export default function TradingView({
   const [currencySearch, setCurrencySearch] = useState("");
 
   // Simulate chart loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setIsLoading(false);
+  //   }, 1500);
 
-    return () => clearTimeout(timer);
-  }, []);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   useEffect(() => {
     // Fetch chart data with error handling
@@ -121,6 +121,7 @@ export default function TradingView({
         });
         const data: CandleData[] = response.data || [];
         setChartData(data);
+        setIsLoading(false);
       } catch (error) {
         console.error("Error fetching chart data:", error);
         // Continue with periodic fetching despite errors
