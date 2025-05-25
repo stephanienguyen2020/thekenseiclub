@@ -23,6 +23,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import CryptoChart, { CandleData } from "./CryptoChart";
 import { TransactionSuccess } from "./ui/transaction-success";
+import { VoteNotification } from "./ui/vote-notification";
 
 interface TradingViewProps {
   tokenSymbol: string;
@@ -314,9 +315,10 @@ export default function TradingView({
         onError: (error: any) => {
           console.log("Bonding curve transaction error:", error);
           // Add user-friendly error message
-          alert(
+          setNotificationMessage(
             "Failed to execute bonding curve transaction. Please try again."
           );
+          setShowNotification(true);
         },
       }
     );
@@ -828,6 +830,13 @@ export default function TradingView({
           recipient={currentAccount?.address || ""}
         />
       )}
+
+      {/* Notification */}
+      <VoteNotification
+        isOpen={showNotification}
+        onClose={() => setShowNotification(false)}
+        message={notificationMessage}
+      />
     </div>
   );
 }
