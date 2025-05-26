@@ -31,7 +31,7 @@ export const app = express();
 const corsOptions = {
   origin:
     process.env.NODE_ENV === "production"
-      ? ["https://your-frontend-domain.com"]
+      ? ["https://thekenseiclub.vercel.app", "https://betothemoon.xyz"]
       : ["http://localhost:3000"],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
