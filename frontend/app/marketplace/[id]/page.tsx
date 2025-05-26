@@ -139,7 +139,7 @@ export default function TokenDetailPage() {
     if (!currentAccount?.address) return null;
     try {
       const response = await fetch(
-        `http://localhost:3000/api/daos/votes/user/${proposalId}/${currentAccount.address}`
+        `/api/daos/votes/user/${proposalId}/${currentAccount.address}`
       );
       if (!response.ok) {
         if (response.status === 404) {
@@ -165,7 +165,7 @@ export default function TokenDetailPage() {
       setVotingProposals((prev) => new Set(prev).add(proposalId));
       const signature = "0x" + Math.random().toString(16).substring(2, 66); // Mock signature for now
 
-      const response = await fetch("http://localhost:3000/api/daos/votes", {
+      const response = await fetch("/api/daos/votes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -250,9 +250,7 @@ export default function TokenDetailPage() {
       }
 
       // Refresh proposals to get updated vote counts
-      const proposalsResponse = await fetch(
-        `http://localhost:3000/api/daos/token/${id}`
-      );
+      const proposalsResponse = await fetch(`/api/daos/token/${id}`);
       if (!proposalsResponse.ok) {
         throw new Error("Failed to fetch proposals");
       }
@@ -290,9 +288,7 @@ export default function TokenDetailPage() {
         console.log("coin: ", coinData);
 
         // Fetch proposals
-        const proposalsResponse = await fetch(
-          `http://localhost:3000/api/daos/token/${id}`
-        );
+        const proposalsResponse = await fetch(`/api/daos/token/${id}`);
         if (!proposalsResponse.ok) {
           throw new Error("Failed to fetch proposals");
         }
