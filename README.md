@@ -17,11 +17,17 @@ Meme coins often lack structure, transparency, and post-launch governance. They'
 
 ![Image 2](https://drive.google.com/uc?export=view&id=1IdTcE4A2YujTB0cP1roeGp7fsDbUq6Ax)
 
-## 🚀 Contract Address
+## 🚀 Package Address
 
-Contracts on testnet:
+Mainnet:
 
-- **Bonding curve**: 0x913fe46c07dc2fac627f94a9727a26e8e671f0e816b83d1bd5096e2889f1d2d5
+- **Bonding curve and DAO**: 0x2110b5c7eac2a11c01e8ad1be8933554671419d09814456d0dfec423df0b6122
+- **NFT**: 0x91876c2c67ee355704e16efd833094ff23b8edd447a7becbd3a3fe2c988da5cc
+
+Testnet:
+
+- **Bonding curve and DAO**: 0x8a0e842265d44e3063405bd575cc9e22f10c86fa707858dbf00bdfa506d93aed
+- **NFT**: 0x67661bda314285259138adfa3f9852dc755b11ec322f8b82810ebfc5aec98603
 
 ## 🧱 Core Features
 
