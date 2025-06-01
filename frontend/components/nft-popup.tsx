@@ -2,6 +2,7 @@
 
 import { Check, ExternalLink, X } from "lucide-react";
 import Image from "next/image";
+import {formatAddress} from "@mysten/sui/utils";
 
 interface NFTData {
   id: string;
@@ -88,7 +89,7 @@ export default function NFTPopup({
         <div className="bg-gray-100 p-4 rounded-xl border-2 border-black mb-6">
           <p className="text-sm font-bold text-gray-600 mb-1">NFT Object ID:</p>
           <p className="text-xs font-mono text-black break-all bg-white p-2 rounded border">
-            {nft.id}
+            {formatAddress(nft.id)}
           </p>
         </div>
 
@@ -109,14 +110,6 @@ export default function NFTPopup({
           >
             CLOSE
           </button>
-        </div>
-
-        {/* Additional Info */}
-        <div className="mt-6 bg-yellow-100 p-4 rounded-xl border-2 border-black">
-          <p className="text-sm font-bold text-black text-center">
-            💡 This NFT proves your participation in governance and is
-            permanently stored on the Sui blockchain!
-          </p>
         </div>
       </div>
     </div>
