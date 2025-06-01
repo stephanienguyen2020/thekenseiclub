@@ -308,6 +308,8 @@ export default function TradingView({
               }
             });
           console.log("Buy successfully", result);
+          activeTradeTab === "assistant" && setChatHistory(prevHistory => [...prevHistory, { role: "bot", message: `Successfully purchase ${tokenName} with ${buyAmount} SUI` }]);
+
           setTransactionHash(result.digest);
           setLastAction("buy");
           setShowSuccess(true);
@@ -373,6 +375,7 @@ export default function TradingView({
         {
           onSuccess: (result: any) => {
             console.log("success", result);
+            activeTradeTab === "assistant" && setChatHistory(prevHistory => [...prevHistory, { role: "bot", message: `Successfully sell ${sellAmount} ${tokenName}` }]);
             setTransactionHash(result.digest);
             setLastAction("sell");
             setShowSuccess(true);
@@ -392,7 +395,7 @@ export default function TradingView({
     if (!chatMessage.trim()) return;
 
     // Add user message to chat
-    setChatHistory([...chatHistory, { role: "user", message: chatMessage }]);
+    setChatHistory(prevHistory => [...prevHistory, { role: "user", message: chatMessage }]);
 
     // Clear input
     setChatMessage("");
