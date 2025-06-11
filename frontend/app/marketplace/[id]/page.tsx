@@ -522,10 +522,11 @@ export default function TokenDetailPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button className="bg-[#c0ff00] text-black px-4 py-2 rounded-full text-sm font-bold border-2 border-black"
-                      onClick={handleWithDrawFee}>
+              {currentAccount?.address === bondingCurve.creator && <button
+                className="bg-[#c0ff00] text-black px-4 py-2 rounded-full text-sm font-bold border-2 border-black"
+                onClick={handleWithDrawFee}>
                 Withdraw {fromBlockchainAmount(bondingCurve?.fee_sui)} SUI
-              </button>
+              </button>}
               <button
                 className="bg-[#c0ff00] text-black px-4 py-2 rounded-full text-sm font-bold border-2 border-black">
                 Follow
