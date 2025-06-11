@@ -272,6 +272,38 @@ class BondingCurveSDK {
     return tx;
   }
 
+  async buildGetFeeTransaction(): Promise<Transaction> {
+    const tx = new Transaction();
+    const bondingCurveObj = await this.client.getObject({
+      id: this.bondingCurveId,
+      options: {
+        showType: true,
+        showContent: true,
+      },
+    });
+    if (!bondingCurveObj.data || !bondingCurveObj.data.content) {
+      throw new Error("Failed to get bonding curve data");
+    }
+
+    const content = bondingCurveObj.data.content as unknown as {
+      fields: { token_balance: string; sui_balance: string };
+    };
+    const objectType = bondingCurveObj.data.type as string;
+
+    const tokenTypeMatch = objectType.match(/<(.+)>/);
+    const tokenType = tokenTypeMatch ? tokenTypeMatch[1] : null;
+    if (!tokenType) {
+      throw new Error("Could not determine token type from bonding curve");
+    }
+    tx.moveCall({
+      target: `${this.packageId}::bonding_curve::with_draw_sui_fee`,
+      typeArguments: [tokenType],
+      arguments: [tx.object(this.bondingCurveId)],
+    });
+
+    return tx;
+  }
+
   async buildMigrateToFlowxTransaction(address: string): Promise<Transaction> {
     const bondingCurveObj = await this.client.getObject({
       id: this.bondingCurveId,

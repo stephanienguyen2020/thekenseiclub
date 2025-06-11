@@ -150,6 +150,19 @@ class TwitterService {
       throw new Error('Failed to get Twitter account status');
     }
   }
+
+  async extractFields(input: string) {
+    const regex = /@creatcoin\s+\$(\w+)\(([^)]+)\)\s*\n([^\n]+)/i;
+    const match = input.match(regex);
+
+    if (!match) return null;
+
+    return {
+      token: match[1],
+      tokenName: match[2],
+      description: match[3]
+    };
+  }
 }
 
 export default new TwitterService();

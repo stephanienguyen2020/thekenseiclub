@@ -590,6 +590,7 @@ router.get("/migrate", async (req: any, res: any) => {
       },
     });
     const bondingCurveData = bondingCurve.data?.content.fields;
+    console.log("Bonding Curve Data:", bondingCurveData);
 
     if (
       bondingCurveData.token_balance <= bondingCurveData.target_supply_threshold
