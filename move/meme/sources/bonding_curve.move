@@ -55,6 +55,11 @@ public struct BondingCurveCreatedEvent has copy, drop, store {
     migration_target: u64,
 }
 
+public struct WithDrawSuiFeeEvent has copy, drop, store {
+    bonding_curve_id: ID,
+    amount: u64,
+}
+
 fun init(_witness: BONDING_CURVE, ctx: &mut TxContext) {
     let admin_cap = AdminCap { id: object::new(ctx) };
     transfer::transfer<AdminCap>(admin_cap, tx_context::sender(ctx));
@@ -207,6 +212,22 @@ public entry fun with_draw_fee<T>(
     let sui_amount = bonding_curve.fee_sui / 2;
     let sui_coin = coin::take(&mut bonding_curve.sui_balance, sui_amount, ctx);
     transfer::public_transfer(sui_coin, recipient);
+}
+
+public entry fun with_draw_sui_fee<T>(
+    bonding_curve: &mut BondingCurve<T>,
+    ctx: &mut TxContext,
+) {
+    assert!(tx_context::sender(ctx) == bonding_curve.creator, 0);
+    let sui_amount = bonding_curve.fee_sui;
+    bonding_curve.fee_sui = 0;
+    let sui_coin = coin::take(&mut bonding_curve.sui_balance, sui_amount, ctx);
+    transfer::public_transfer(sui_coin, tx_context::sender(ctx));
+
+    event::emit(WithDrawSuiFeeEvent {
+        bonding_curve_id: object::id(bonding_curve),
+        amount: sui_amount,
+    });
 }
 
 fun get_token_receive(
