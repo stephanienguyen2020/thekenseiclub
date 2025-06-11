@@ -272,7 +272,7 @@ class BondingCurveSDK {
     return tx;
   }
 
-  async buildGetFeeTransaction(address: string): Promise<Transaction> {
+  async buildGetFeeTransaction(): Promise<Transaction> {
     const tx = new Transaction();
     const bondingCurveObj = await this.client.getObject({
       id: this.bondingCurveId,
@@ -296,9 +296,9 @@ class BondingCurveSDK {
       throw new Error("Could not determine token type from bonding curve");
     }
     tx.moveCall({
-      target: `${this.packageId}::bonding_curve::with_draw_fee`,
+      target: `${this.packageId}::bonding_curve::with_draw_sui_fee`,
       typeArguments: [tokenType],
-      arguments: [tx.object(this.bondingCurveId), tx.pure.address(address)],
+      arguments: [tx.object(this.bondingCurveId)],
     });
 
     return tx;

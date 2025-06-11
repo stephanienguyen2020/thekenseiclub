@@ -1,6 +1,6 @@
 "use client";
 
-import { Coin } from "@/app/marketplace/types";
+import {Coin} from "@/app/marketplace/types";
 import Navbar from "@/components/navbar";
 import ProposalCard from "@/components/proposal-card";
 import TokenFeed from "@/components/token-feed";
@@ -9,22 +9,24 @@ import api from "@/lib/api";
 import {
   formatLargeNumber,
   formatPercentage,
-  formatPrice,
+  formatPrice, fromBlockchainAmount,
 } from "@/lib/priceUtils";
 import {
   useCurrentAccount,
   useSignAndExecuteTransaction,
   useSuiClient,
 } from "@mysten/dapp-kit";
-import { AxiosResponse } from "axios";
-import { Network } from "coin-sdk/dist/src/utils/sui-utils";
-import { ArrowLeft, Building, LineChart, Users } from "lucide-react";
+import {AxiosResponse} from "axios";
+import {getClient, Network} from "coin-sdk/dist/src/utils/sui-utils";
+import {ArrowLeft, Building, LineChart, Users} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import {useParams} from "next/navigation";
+import {useEffect, useState} from "react";
 import NFTPopup from "../../../components/nft-popup";
-import { nftService } from "../../../services/nftService";
+import {nftService} from "../../../services/nftService";
+import BondingCurveSDK from "coin-sdk/dist/src/bonding_curve";
+import {VoteNotification} from "@/components/ui/vote-notification";
 
 // Define the available tribes (matching backend)
 const TRIBES = {
@@ -109,9 +111,14 @@ export default function TokenDetailPage() {
   const [showNFTPopup, setShowNFTPopup] = useState(false);
   const [mintedNFT, setMintedNFT] = useState<any>(null);
   const [nftTransactionHash, setNFTTransactionHash] = useState<string>("");
+  const [bondingCurve, setBondingCurve] = useState<any>(null);
+
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+
   const client = useSuiClient();
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
-    execute: async ({ bytes, signature }) =>
+  const {mutate: signAndExecuteTransaction} = useSignAndExecuteTransaction({
+    execute: async ({bytes, signature}) =>
       await client.executeTransactionBlock({
         transactionBlock: bytes,
         signature,
@@ -268,6 +275,8 @@ export default function TokenDetailPage() {
     }
   };
 
+  console.log("???", bondingCurve)
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -283,6 +292,7 @@ export default function TokenDetailPage() {
           image: data.logo,
           value: data.price * (data.holdings || 0),
         };
+        console.log({coinData})
         setCoin(coinData);
 
         console.log("coin: ", coinData);
@@ -318,6 +328,37 @@ export default function TokenDetailPage() {
     fetchData();
   }, [id, currentAccount?.address]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!coin?.id || !coin?.bondingCurveId) return;
+      const coinMetadata = await client.getObject({
+        id: coin?.id,
+        options: {
+          showType: true,
+          showContent: true,
+        },
+      });
+
+      const coinMetadataType = coinMetadata.data?.type || "";
+      const match = coinMetadataType.match(/CoinMetadata<(.+)>/);
+      const coinType = match ? match[1] : "";
+      const packageId =
+        process.env.NEXT_PUBLIC_PACKAGE_ID ||
+        "0x8193d051bd13fb4336ad595bbb78dac06fa64ff1c3c3c184483ced397c9d2116";
+
+      const bondingCurveData = await client.getObject({
+        id: coin?.bondingCurveId || "",
+        options: {
+          showType: true,
+          showContent: true,
+        },
+      })
+      setBondingCurve(bondingCurveData?.data?.content?.fields || null);
+    }
+    fetchData();
+  }, [coin?.id, coin?.bondingCurveId, client]);
+
+  console.log("bondingCurve", bondingCurve);
   // Filter proposals based on selected filter
   const filteredProposals = proposals.filter(
     (proposal) =>
@@ -329,7 +370,8 @@ export default function TokenDetailPage() {
       <div className="min-h-screen bg-[#0039C6] flex items-center justify-center">
         <div className="bg-white p-8 rounded-3xl shadow-lg">
           <div className="flex flex-col items-center">
-            <div className="w-16 h-16 border-4 border-t-[#c0ff00] border-r-[#c0ff00] border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+            <div
+              className="w-16 h-16 border-4 border-t-[#c0ff00] border-r-[#c0ff00] border-b-transparent border-l-transparent rounded-full animate-spin"></div>
             <p className="mt-4 text-lg font-medium">Loading token details...</p>
           </div>
         </div>
@@ -349,13 +391,49 @@ export default function TokenDetailPage() {
     );
   }
 
+  async function handleWithDrawFee() {
+    const network = (process.env.NEXT_PUBLIC_NETWORK || "devnet") as Network;
+
+    const client = getClient(network);
+    const bondingCurveSdk = new BondingCurveSDK(
+      bondingCurve.id.id || "",
+      client,
+      process.env.NEXT_PUBLIC_PACKAGE_ID || ""
+    );
+
+    const withDrawFeeTx = await bondingCurveSdk.buildGetFeeTransaction();
+
+    try {
+      const response = signAndExecuteTransaction({
+        transaction: withDrawFeeTx,
+        chain: `sui:${network}`,
+        options: {
+          showEffects: true,
+          showEvents: true,
+          gasBudget: 100000000, // Set a higher gas budget (0.1 SUI)
+        },
+      }, {
+        onSuccess: async (response) => {
+          setNotificationMessage("Fee withdrawn successfully!");
+          setShowNotification(true);
+        },
+        onError: async (error) => {
+          setNotificationMessage("Failed to withdraw fee. Please try again.");
+          setShowNotification(true);
+        }
+      });
+    } catch (error) {
+      console.error("Error withdrawing fee:", error.toString());
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#0039C6]">
-      <Navbar isAuthenticated={true} />
+      <Navbar isAuthenticated={true}/>
       <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
         <div className="flex items-center mb-8 mt-4">
           <Link href="/marketplace" className="flex items-center gap-2">
-            <ArrowLeft className="text-white" />
+            <ArrowLeft className="text-white"/>
             <div className="bg-white text-black px-3 py-1 rounded-full text-sm font-bold">
               SUI
             </div>
@@ -389,21 +467,21 @@ export default function TokenDetailPage() {
                       title={
                         TRIBE_METADATA[
                           coin.tribe as keyof typeof TRIBE_METADATA
-                        ].description
+                          ].description
                       }
                     >
                       <span className="text-lg">
                         {
                           TRIBE_METADATA[
                             coin.tribe as keyof typeof TRIBE_METADATA
-                          ].emoji
+                            ].emoji
                         }
                       </span>
                       <span className="text-sm font-medium text-blue-800">
                         {
                           TRIBE_METADATA[
                             coin.tribe as keyof typeof TRIBE_METADATA
-                          ].name
+                            ].name
                         }
                       </span>
                     </div>
@@ -412,7 +490,7 @@ export default function TokenDetailPage() {
               <p className="text-gray-600 mb-4">{coin?.description}</p>
               <div className="flex flex-wrap gap-4">
                 <div className="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
-                  <LineChart size={16} />
+                  <LineChart size={16}/>
                   <div>
                     {formatPrice(coin?.price || 0, {
                       minDecimals: 2,
@@ -431,20 +509,25 @@ export default function TokenDetailPage() {
                   </div>
                 </div>
                 <div className="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
-                  <Building size={16} />
+                  <Building size={16}/>
                   <span>
                     Market Cap:{" "}
-                    {formatLargeNumber(coin?.marketCap || 0, { suffix: "" })}
+                    {formatLargeNumber(coin?.marketCap || 0, {suffix: ""})}
                   </span>
                 </div>
                 <div className="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
-                  <Users size={16} />
+                  <Users size={16}/>
                   <span>{coin?.holders.toLocaleString() || 0} holders</span>
                 </div>
               </div>
             </div>
             <div className="flex gap-2">
-              <button className="bg-[#c0ff00] text-black px-4 py-2 rounded-full text-sm font-bold border-2 border-black">
+              <button className="bg-[#c0ff00] text-black px-4 py-2 rounded-full text-sm font-bold border-2 border-black"
+                      onClick={handleWithDrawFee}>
+                Withdraw {fromBlockchainAmount(bondingCurve?.fee_sui)} SUI
+              </button>
+              <button
+                className="bg-[#c0ff00] text-black px-4 py-2 rounded-full text-sm font-bold border-2 border-black">
                 Follow
               </button>
               {coin?.website && (
@@ -556,7 +639,7 @@ export default function TokenDetailPage() {
             <div>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold flex items-center gap-2">
-                  <Building size={20} className="text-[#0039C6]" />
+                  <Building size={20} className="text-[#0039C6]"/>
                   Proposals
                 </h2>
                 <Link
@@ -645,7 +728,7 @@ export default function TokenDetailPage() {
               ) : (
                 <div className="text-center py-10">
                   <div className="text-gray-400 mb-4">
-                    <Building size={48} className="mx-auto opacity-50" />
+                    <Building size={48} className="mx-auto opacity-50"/>
                   </div>
                   <h3 className="text-xl font-bold mb-2">
                     No {governanceFilter} proposals found
@@ -654,10 +737,10 @@ export default function TokenDetailPage() {
                     {governanceFilter === "open"
                       ? "There are no active proposals at the moment."
                       : governanceFilter === "closed"
-                      ? "No proposals have been closed yet."
-                      : governanceFilter === "upcoming"
-                      ? "There are no upcoming proposals scheduled."
-                      : "No proposals have been created yet."}
+                        ? "No proposals have been closed yet."
+                        : governanceFilter === "upcoming"
+                          ? "There are no upcoming proposals scheduled."
+                          : "No proposals have been created yet."}
                   </p>
                   <Link
                     href={`/marketplace/${id}/create-proposal`}
@@ -691,6 +774,12 @@ export default function TokenDetailPage() {
           )}
         </div>
       </div>
+      {/* Notification */}
+      <VoteNotification
+        isOpen={showNotification}
+        onClose={() => setShowNotification(false)}
+        message={notificationMessage}
+      />
       {showNFTPopup && (
         <NFTPopup
           isVisible={showNFTPopup}
