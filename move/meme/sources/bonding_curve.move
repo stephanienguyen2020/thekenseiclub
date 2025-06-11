@@ -22,6 +22,7 @@ public struct BondingCurve<phantom T> has key, store {
     token_balance: balance::Balance<T>,
     virtual_sui_amt: u64,
     target_supply_threshold: u64,
+    fee_sui: u64,
     swap_fee: u64,
     listing_fee: u64,
     migration_fee: u64,
@@ -75,6 +76,7 @@ public fun create_bonding_curve<T>(
         target_supply_threshold: 300_000_000_000_000_000,
         migration_fee: 3_000_000_000,
         listing_fee: 1_000_000_000,
+        fee_sui: 0,
         swap_fee: 1,
         is_active: true,
         creator: tx_context::sender(ctx),
@@ -102,10 +104,12 @@ public fun buy<T>(
     let sender = tx_context::sender(ctx);
     let original_amount = amount;
     let amount = amount - take_fee(bonding_curve.swap_fee, amount);
+    let curr_fee = take_fee(bonding_curve.swap_fee, amount);
+    bonding_curve.fee_sui = bonding_curve.fee_sui + curr_fee;
     let (curr_sui_balance, curr_token_balance) = get_token_in_pool(bonding_curve);
     let token_received = get_token_receive(
         amount,
-        curr_sui_balance + bonding_curve.virtual_sui_amt,
+        curr_sui_balance + bonding_curve.virtual_sui_amt - bonding_curve.fee_sui,
         curr_token_balance,
     );
     assert!(token_received >= min_token_required, EOutputAmountLessThanMin);
@@ -148,9 +152,11 @@ public fun sell<T>(
     let mut sui_received = get_token_receive(
         amount,
         curr_token_balance,
-        curr_sui_balance + bonding_curve.virtual_sui_amt,
+        curr_sui_balance + bonding_curve.virtual_sui_amt - bonding_curve.fee_sui,
     );
     assert!(sui_received >= min_token_required, EOutputAmountLessThanMin);
+    let fee = take_fee(bonding_curve.swap_fee, sui_received);
+    bonding_curve.fee_sui = bonding_curve.fee_sui + fee;
     sui_received = sui_received - take_fee(bonding_curve.swap_fee, sui_received);
     let mut balance = coin::into_balance<T>(coin);
     bonding_curve.token_balance.join(balance.split(amount));
@@ -190,6 +196,17 @@ public entry fun withdraw_for_migration<T>(
 
     transfer::public_transfer(sui_coin, recipient);
     transfer::public_transfer(token_coin, recipient);
+}
+
+public entry fun with_draw_fee<T>(
+    bonding_curve: &mut BondingCurve<T>,
+    recipient: address,
+    ctx: &mut TxContext,
+) {
+    assert!(tx_context::sender(ctx) == bonding_curve.creator, 0);
+    let sui_amount = bonding_curve.fee_sui / 2;
+    let sui_coin = coin::take(&mut bonding_curve.sui_balance, sui_amount, ctx);
+    transfer::public_transfer(sui_coin, recipient);
 }
 
 fun get_token_receive(
