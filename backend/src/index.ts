@@ -62,7 +62,7 @@ setupListeners();
 connectMongoDB();
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, "../public")));

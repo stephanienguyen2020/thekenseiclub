@@ -5,8 +5,8 @@ import multer from 'multer';
 const router = Router();
 const upload = multer({
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-    files: 4 // Max 4 images (Twitter's limit)
+    fileSize: 100 * 1024 * 1024, // 100MB limit for videos
+    files: 4 // Max 4 files (images or video)
   }
 });
 
@@ -74,10 +74,13 @@ router.get('/auth/callback', async (req, res) => {
 });
 
 // Post a tweet
-router.post('/tweet', upload.array('images', 4), async (req, res) => {
+router.post('/tweet', upload.fields([
+  { name: 'images', maxCount: 4 },
+  { name: 'video', maxCount: 1 }
+]), async (req, res) => {
   try {
     const { walletAddress, text } = req.body;
-    const files = req.files as Express.Multer.File[];
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
     if (!text) {
       return res.status(400).json({ error: 'Tweet text is required' });
@@ -87,10 +90,11 @@ router.post('/tweet', upload.array('images', 4), async (req, res) => {
       return res.status(400).json({ error: 'Wallet address is required' });
     }
 
-    // Convert uploaded files to buffers if they exist
-    const imageBuffers = files?.length > 0 ? files.map(file => file.buffer) : undefined;
+    // Convert uploaded files to buffers
+    const imageBuffers = files?.images?.map(file => file.buffer);
+    const videoBuffer = files?.video?.[0]?.buffer;
 
-    const tweet = await twitterService.postTweet(walletAddress, text, imageBuffers);
+    const tweet = await twitterService.postTweet(walletAddress, text, imageBuffers, videoBuffer);
     res.json(tweet);
   } catch (error) {
     res.status(500).json({ error: 'Failed to post tweet, ' + error });

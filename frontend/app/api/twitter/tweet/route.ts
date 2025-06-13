@@ -8,6 +8,7 @@ export async function POST(request: NextRequest) {
     const text = formData.get('text');
     const walletAddress = formData.get('walletAddress');
     const images = formData.getAll('images');
+    const video = formData.get('video');
 
     if (!text || !walletAddress) {
       return NextResponse.json(
@@ -21,12 +22,21 @@ export async function POST(request: NextRequest) {
     backendFormData.append('text', text as string);
     backendFormData.append('walletAddress', walletAddress as string);
 
-    // Append images if they exist
-    images.forEach((image) => {
-      if (image instanceof File) {
-        backendFormData.append('images', image);
-      }
-    });
+    // Handle video upload first (if present)
+    if (video instanceof File) {
+      console.log("uploading videos")
+      backendFormData.append('video', video);
+    }
+    // Handle images if no video is present
+    else {
+      console.log("uploading images")
+      // Append images if they exist
+      images.forEach((image) => {
+        if (image instanceof File) {
+          backendFormData.append('images', image);
+        }
+      });
+    }
 
     const response = await fetch(`${BACKEND_URL}/api/twitter/tweet`, {
       method: 'POST',

@@ -72,7 +72,7 @@ class TwitterService {
     }
   }
 
-  async postTweet(walletAddress: string, text: string, images?: Buffer[]) {
+  async postTweet(walletAddress: string, text: string, images?: Buffer[], video?: Buffer) {
     try {
       const twitterAccount = await Twitter.findOne({ walletAddress });
       if (!twitterAccount) {
@@ -81,45 +81,56 @@ class TwitterService {
 
       const client = this.getClient(twitterAccount.accessToken, twitterAccount.accessSecret);
 
-      if (images && images.length > 0) {
-        console.log("uploading images", images);
+      let mediaIds: string[] = [];
+
+      // Handle video upload if present
+      if (video) {
+        console.log("Uploading video");
+        const videoMediaId = await client.v1.uploadMedia(video, { 
+          type: 'longmp4',
+          mimeType: 'video/mp4',
+          target: 'tweet'
+        });
+        mediaIds.push(videoMediaId);
+      }
+      // Handle image uploads if present and no video
+      else if (images && images.length > 0) {
+        console.log("Uploading images", images.length);
         
         // Upload images using v1
-        const mediaIds = await Promise.all(
+        const uploadedMediaIds = await Promise.all(
           images.slice(0, 4).map(image => 
             client.v1.uploadMedia(image, { mimeType: "image/jpeg" })
           )
         );
-
-        // Convert mediaIds array to properly typed tuple based on length
-        let typedMediaIds: [string] | [string, string] | [string, string, string] | [string, string, string, string];
-        switch (mediaIds.length) {
-          case 1:
-            typedMediaIds = [mediaIds[0]];
-            break;
-          case 2:
-            typedMediaIds = [mediaIds[0], mediaIds[1]];
-            break;
-          case 3:
-            typedMediaIds = [mediaIds[0], mediaIds[1], mediaIds[2]];
-            break;
-          case 4:
-            typedMediaIds = [mediaIds[0], mediaIds[1], mediaIds[2], mediaIds[3]];
-            break;
-          default:
-            typedMediaIds = [mediaIds[0]];
-        }
-
-        console.log("posting tweet with media");
-        // Post tweet using v2
-        return await client.v2.tweet({
-          text,
-          media: { media_ids: typedMediaIds }
-        });
-      } else {
-        // Post text-only tweet using v2
-        return await client.v2.tweet({ text });
+        mediaIds = uploadedMediaIds;
       }
+
+      // Convert mediaIds array to properly typed tuple based on length
+      let typedMediaIds: [string] | [string, string] | [string, string, string] | [string, string, string, string];
+      switch (mediaIds.length) {
+        case 1:
+          typedMediaIds = [mediaIds[0]];
+          break;
+        case 2:
+          typedMediaIds = [mediaIds[0], mediaIds[1]];
+          break;
+        case 3:
+          typedMediaIds = [mediaIds[0], mediaIds[1], mediaIds[2]];
+          break;
+        case 4:
+          typedMediaIds = [mediaIds[0], mediaIds[1], mediaIds[2], mediaIds[3]];
+          break;
+        default:
+          typedMediaIds = [mediaIds[0]];
+      }
+
+      console.log("Posting tweet with media");
+      // Post tweet using v2
+      return await client.v2.tweet({
+        text,
+        media: mediaIds.length > 0 ? { media_ids: typedMediaIds } : undefined
+      });
     } catch (error: any) {
       if (error?.code === 401) {
         throw new Error('Twitter authentication expired, ' + error);

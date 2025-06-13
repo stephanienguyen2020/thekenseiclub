@@ -1,6 +1,6 @@
 import express from "express";
-import {db} from "../db/database";
-import {z} from "zod";
+import { db } from "../db/database";
+import { z } from "zod";
 
 const router = express.Router();
 
@@ -18,10 +18,10 @@ router.post("/posts", async (req: any, res: any) => {
     const parsed = postSchema.safeParse(req.body);
 
     if (!parsed.success) {
-      return res.status(400).json({error: parsed.error.flatten()});
+      return res.status(400).json({ error: parsed.error.flatten() });
     }
 
-    const {content, userId, mediaUrls, coinId} = parsed.data;
+    const { content, userId, mediaUrls, coinId } = parsed.data;
     console.log("Parsed data:", parsed.data);
 
     // Insert post
@@ -40,7 +40,7 @@ router.post("/posts", async (req: any, res: any) => {
     return res.status(201).json(result);
   } catch (error) {
     console.error("Error creating post:", error);
-    return res.status(500).json({message: "Internal server error"});
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -51,12 +51,16 @@ router.get("/posts", async (req: any, res: any) => {
     const limit = parseInt(req.query.limit || "10");
     const coinId = req.query.coinId;
     const userId = req.query.userId;
+    const tribe = req.query.tribe;
+
+    console.log("Tribe:", tribe);
 
     // Build query for posts with user info, like counts, and comment counts
     let postsQuery = db
       .selectFrom("posts as p")
       .leftJoin("users as u", "p.userId", "u.suiAddress")
       .leftJoin("coins as c", "p.coinId", "c.id")
+      .leftJoin("coinTribes as ct", "c.id", "ct.coinId")
       .select([
         "p.id",
         "p.content",
@@ -69,22 +73,23 @@ router.get("/posts", async (req: any, res: any) => {
         "c.name as coinName",
         "c.symbol as coinSymbol",
         "c.logo as coinImageUrl",
+        "ct.tribe as coinTribe",
       ])
-      .select(({selectFrom}) => [
+      .select(({ selectFrom }) => [
         selectFrom("likes")
-          .select(({fn}) => fn.count("id").as("likesCount"))
+          .select(({ fn }) => fn.count("id").as("likesCount"))
           .whereRef("postId", "=", "p.id")
           .as("likesCount"),
         selectFrom("comments")
-          .select(({fn}) => fn.count("id").as("commentsCount"))
+          .select(({ fn }) => fn.count("id").as("commentsCount"))
           .whereRef("postId", "=", "p.id")
           .as("commentsCount"),
         selectFrom("reTweets")
-          .select(({fn}) => fn.count("id").as("reTweetsCount"))
+          .select(({ fn }) => fn.count("id").as("reTweetsCount"))
           .whereRef("postId", "=", "p.id")
           .as("reTweetsCount"),
         selectFrom("savePosts")
-          .select(({fn}) => fn.count("id").as("savePostsCount"))
+          .select(({ fn }) => fn.count("id").as("savePostsCount"))
           .whereRef("postId", "=", "p.id")
           .as("savePostsCount"),
       ]);
@@ -98,12 +103,19 @@ router.get("/posts", async (req: any, res: any) => {
       postsQuery = postsQuery.where("p.userId", "=", userId);
     }
 
+    // Filter by tribe if provided
+    if (tribe) {
+      postsQuery = postsQuery.where("ct.tribe", "=", tribe);
+    }
+
     // Execute the query with ordering, limit and offset
     const posts = await postsQuery
       .where("p.createdAt", "<=", startDate || new Date())
       .orderBy("p.createdAt", "desc")
       .limit(limit)
       .execute();
+
+    console.log("Posts:", posts);
 
     // Transform the data to match the required format
     const transformedPosts = posts.map((post) => ({
@@ -116,11 +128,12 @@ router.get("/posts", async (req: any, res: any) => {
       },
       token: post.coinId
         ? {
-          id: post.coinId,
-          name: post.coinName,
-          symbol: post.coinSymbol,
-          logo: post.coinImageUrl,
-        }
+            id: post.coinId,
+            name: post.coinName,
+            symbol: post.coinSymbol,
+            logo: post.coinImageUrl,
+            tribe: post.coinTribe,
+          }
         : undefined,
       content: post.content,
       image:
@@ -142,10 +155,8 @@ router.get("/posts", async (req: any, res: any) => {
     });
   } catch (error) {
     console.error("Error fetching posts:", error);
-    return res.status(500).json({message: "Internal server error"});
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
-
-
 
 export default router;
