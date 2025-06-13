@@ -8,6 +8,7 @@ import {
   formatPercentage,
   formatPrice,
 } from "@/lib/priceUtils";
+import { TRIBES, TRIBE_METADATA } from "@/lib/tribes";
 import { AxiosResponse } from "axios";
 import {
   ChevronDown,
@@ -23,34 +24,6 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-
-// Define the available tribes (matching backend)
-const TRIBES = {
-  CANINE_CLANS: "canine_clans",
-  FELINE_SYNDICATES: "feline_syndicates",
-  AQUATIC_ORDERS: "aquatic_orders",
-  WILDCARDS: "wildcards",
-} as const;
-
-// Tribe metadata for UI display
-const TRIBE_METADATA = {
-  [TRIBES.CANINE_CLANS]: {
-    name: "Canine Clans",
-    emoji: "🐕",
-  },
-  [TRIBES.FELINE_SYNDICATES]: {
-    name: "Feline Syndicates",
-    emoji: "🐱",
-  },
-  [TRIBES.AQUATIC_ORDERS]: {
-    name: "Aquatic Orders",
-    emoji: "🐠",
-  },
-  [TRIBES.WILDCARDS]: {
-    name: "Wildcards",
-    emoji: "🃏",
-  },
-};
 
 export default function MarketplacePage() {
   const [sortBy, setSortBy] = useState("trending");

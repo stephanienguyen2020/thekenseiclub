@@ -68,40 +68,46 @@ class CoinSDK {
       coin_description: description,
       coin_icon_url: iconUrl,
     });
-    const publishResult: SuiTransactionBlockResponse = await publishPackage({
-      packagePath: path.resolve(__dirname, "../coin-create"),
-      network: ACTIVE_NETWORK,
-      exportFileName: "coin",
-      address,
-    });
-    const treasuryCap = publishResult.objectChanges?.find(
-      (change): change is Extract<SuiObjectChange, { type: "created" }> =>
-        change.type === "created" &&
-        change.objectType.includes(`::coin::TreasuryCap`)
-    )?.objectId as string;
 
-    const coinMetadata = publishResult.objectChanges?.find(
-      (change): change is Extract<SuiObjectChange, { type: "created" }> =>
-        change.type === "created" &&
-        change.objectType.includes(`::coin::CoinMetadata`)
-    )?.objectId as string;
+    try {
+      const publishResult: SuiTransactionBlockResponse = await publishPackage({
+        packagePath: path.resolve(__dirname, "../coin-create"),
+        network: ACTIVE_NETWORK,
+        exportFileName: "coin",
+        address,
+      });
+      const treasuryCap = publishResult.objectChanges?.find(
+        (change): change is Extract<SuiObjectChange, { type: "created" }> =>
+          change.type === "created" &&
+          change.objectType.includes(`::coin::TreasuryCap`)
+      )?.objectId as string;
 
-    const packageId = publishResult.objectChanges?.find(
-      (change): change is Extract<SuiObjectChange, { type: "published" }> =>
-        change.type === "published"
-    )?.packageId as string;
+      const coinMetadata = publishResult.objectChanges?.find(
+        (change): change is Extract<SuiObjectChange, { type: "created" }> =>
+          change.type === "created" &&
+          change.objectType.includes(`::coin::CoinMetadata`)
+      )?.objectId as string;
 
-    await BondingCurveSDK.createBondingCurve(
-      treasuryCap,
-      coinMetadata,
-      10000000000000000000,
-      getClient(ACTIVE_NETWORK),
-      BONDING_CURVE_MODULE_PACKAGE_ID,
-      `${packageId}::${name}::${name.toUpperCase()}`,
-      address
-    );
-    deleteFile(movePath);
-    return new CoinSDK(treasuryCap, client, packageId, coinMetadata);
+      const packageId = publishResult.objectChanges?.find(
+        (change): change is Extract<SuiObjectChange, { type: "published" }> =>
+          change.type === "published"
+      )?.packageId as string;
+
+      await BondingCurveSDK.createBondingCurve(
+        treasuryCap,
+        coinMetadata,
+        10000000000000000000,
+        getClient(ACTIVE_NETWORK),
+        BONDING_CURVE_MODULE_PACKAGE_ID,
+        `${packageId}::${name}::${name.toUpperCase()}`,
+        address
+      );
+      return new CoinSDK(treasuryCap, client, packageId, coinMetadata);
+
+    } finally {
+      deleteFile(movePath);
+    }
+
   }
 
   async updateCoinInfo({
