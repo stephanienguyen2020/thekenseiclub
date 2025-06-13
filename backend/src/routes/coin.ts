@@ -313,6 +313,7 @@ router.get("/coin/:id", async (req: any, res: any) => {
         "c.createdAt",
         "ct.tribe",
         "b.id as bondingCurveId",
+        "b.issuer as issuer",
       ])
       .where("c.id", "=", id)
       .executeTakeFirst();
