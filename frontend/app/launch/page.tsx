@@ -112,7 +112,7 @@ export default function LaunchTokenPage() {
         symbol: tokenSymbol,
         description: tokenDescription,
         iconUrl: uploadedImageUrl,
-        // address: currentAccount?.address || "",
+        address: currentAccount?.address || "",
       });
       setNotificationMessage("Token created successfully!");
       setShowNotification(true);
@@ -158,7 +158,7 @@ export default function LaunchTokenPage() {
         description: tokenDetails.description,
         iconUrl: imageUrl,
         tribe: tribeData.classification,
-        // address: currentAccount?.address || "",
+        address: currentAccount?.address || "",
       });
 
       setNotificationMessage("Token created successfully!");
