@@ -55,17 +55,9 @@ router.post("/coin", async (req: any, res: any) => {
 
     const suiClient = getClient(ACTIVE_NETWORK);
     const rs = await CoinSDK.deployNewCoin({ ...req.body, client: suiClient });
-    console.log("Coin deployed successfully:", rs);
-
-    console.log("tribe", tribe);
-    console.log("rs.coinMetadata", rs.coinMetadata);
 
     // Insert the coin-tribe relationship if provided
     if (tribe && rs.coinMetadata) {
-      console.log("Inserting coin-tribe relationship:", {
-        coinId: rs.coinMetadata,
-        tribe,
-      });
       try {
         await db
           .insertInto("coinTribes")
@@ -80,26 +72,75 @@ router.post("/coin", async (req: any, res: any) => {
       }
     }
 
-    console.log("tribe", tribe);
-    console.log("rs.coinMetadata", rs.coinMetadata);
-
-    // Insert the coin-tribe relationship if provided
-    if (tribe && rs.coinMetadata) {
-      console.log("Inserting coin-tribe relationship:", {
-        coinId: rs.coinMetadata,
-        tribe,
-      });
+    // Update bonding curve issuer field if bonding curve exists and address is provided
+    // Note: We need to wait for bonding curve to be created and indexed before updating
+    if (address && rs.coinMetadata) {
       try {
-        await db
-          .insertInto("coinTribes")
-          .values({
-            coinId: rs.coinMetadata,
-            tribe: tribe,
-          })
-          .execute();
+        // Retry mechanism to wait for bonding curve to be indexed
+        let retryCount = 0;
+        const maxRetries = 10;
+        const retryDelay = 1000; // 1 second
+
+        const updateBondingCurveIssuer = async () => {
+          const bondingCurve = await db
+            .selectFrom("bondingCurve")
+            .select(["id"])
+            .where("coinMetadata", "=", rs.coinMetadata!)
+            .executeTakeFirst();
+
+          if (bondingCurve) {
+            await db
+              .updateTable("bondingCurve")
+              .set({ issuer: address })
+              .where("id", "=", bondingCurve.id)
+              .execute();
+            return true;
+          }
+          return false;
+        };
+
+        // Try to update immediately first
+        const updated = await updateBondingCurveIssuer();
+
+        // If not found, retry with delay
+        if (!updated) {
+          setTimeout(async () => {
+            while (retryCount < maxRetries) {
+              try {
+                const success = await updateBondingCurveIssuer();
+                if (success) {
+                  console.log("Successfully updated bonding curve issuer");
+                  break;
+                }
+                retryCount++;
+                if (retryCount < maxRetries) {
+                  await new Promise((resolve) =>
+                    setTimeout(resolve, retryDelay)
+                  );
+                }
+              } catch (error) {
+                console.error(
+                  "Error in retry updating bonding curve issuer:",
+                  error
+                );
+                retryCount++;
+                if (retryCount < maxRetries) {
+                  await new Promise((resolve) =>
+                    setTimeout(resolve, retryDelay)
+                  );
+                }
+              }
+            }
+            if (retryCount >= maxRetries) {
+              console.error(
+                "Failed to update bonding curve issuer after max retries"
+              );
+            }
+          }, retryDelay);
+        }
       } catch (dbError) {
-        console.error("Error inserting coin-tribe relationship:", dbError);
-        // Don't fail the request if tribe insert fails
+        console.error("Error updating bonding curve issuer:", dbError);
+        // Don't fail the request if issuer update fails
       }
     }
 
