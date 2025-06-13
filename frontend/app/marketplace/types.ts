@@ -24,6 +24,7 @@ export interface Coin {
   suiPrice: number;
   balance: string;
   tribe?: string;
+  issuer?: string;
 }
 
 export interface CoinList {
