@@ -624,8 +624,6 @@ packages:
 
   coin-sdk@1.0.26:
     resolution: {integrity: sha512-tosMevRrHRoZhgJ2g+cSvevn1BkY8pCZc5dXDuBEvNCNgLZFBmhi1kzsIULj7DO4iQcpmq+5J0D3KojCxnzLRg==}
-  coin-sdk@1.0.26:
-    resolution: {integrity: sha512-tosMevRrHRoZhgJ2g+cSvevn1BkY8pCZc5dXDuBEvNCNgLZFBmhi1kzsIULj7DO4iQcpmq+5J0D3KojCxnzLRg==}
 
   color-convert@1.9.3:
     resolution: {integrity: sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg==}
@@ -2745,7 +2743,6 @@ snapshots:
 
   clone@2.1.2: {}
 
-  coin-sdk@1.0.26(graphql@16.10.0)(typescript@5.8.3):
   coin-sdk@1.0.26(graphql@16.10.0)(typescript@5.8.3):
     dependencies:
       '@flowx-finance/sdk': 1.2.2-3(graphql@16.10.0)(typescript@5.8.3)

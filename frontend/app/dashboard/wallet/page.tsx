@@ -33,6 +33,7 @@ export default function WalletPage() {
   const [modalType, setModalType] = useState<"success" | "error">("success");
   const [errorMessage, setErrorMessage] = useState("");
   const [loadingTokens, setLoadingTokens] = useState<Set<string>>(new Set());
+  const [generatedTweet, setGeneratedTweet] = useState<string>("");
 
   const currentAccount = useCurrentAccount();
   console.log("currentAccount", currentAccount);
@@ -150,30 +151,8 @@ export default function WalletPage() {
       }
 
       const { tweet } = await shillResponse.json();
+      setGeneratedTweet(tweet);
 
-      // Create form data for Twitter post
-      const formData = new FormData();
-      formData.append("text", tweet);
-      formData.append("walletAddress", currentAccount?.address || "");
-
-      // Add token logo if available
-      if (token.logo) {
-        const logoResponse = await fetch(token.logo);
-        const logoBlob = await logoResponse.blob();
-        formData.append("images", logoBlob, "token-logo.png");
-      }
-
-      // Post to Twitter
-      const tweetResponse = await fetch("/api/twitter/tweet", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!tweetResponse.ok) {
-        throw new Error("Failed to post tweet");
-      }
-
-      // Show success modal instead of alert
       // Convert token to asset format expected by modal
       const asset = {
         id: token.id || token.symbol,
@@ -190,6 +169,7 @@ export default function WalletPage() {
         value: token.value || 0,
         holdings: token.holdings || 0,
         address: token.address,
+        logo: token.logo || "/placeholder.svg",
       };
       setSelectedAsset(asset);
       setModalType("success");
@@ -204,8 +184,7 @@ export default function WalletPage() {
     } catch (error) {
       console.error("Error auto-shilling:", error);
 
-      // Show error modal instead of alert
-      // Convert token to asset format expected by modal
+      // Show error modal
       const asset = {
         id: token.id || token.symbol,
         symbol: token.symbol,
@@ -221,6 +200,7 @@ export default function WalletPage() {
         value: token.value || 0,
         holdings: token.holdings || 0,
         address: token.address,
+        logo: token.logo || "/placeholder.svg",
       };
       setSelectedAsset(asset);
       setModalType("error");
@@ -835,10 +815,52 @@ export default function WalletPage() {
             setIsAutoShillModalOpen(false);
             setSelectedAsset(null);
             setErrorMessage("");
+            setGeneratedTweet("");
           }}
           asset={selectedAsset}
           modalType={modalType}
           errorMessage={errorMessage}
+          generatedTweet={generatedTweet}
+          onPostToTwitter={async (editedTweet: string, videoFile?: File | null) => {
+            try {
+              // Create form data for Twitter post
+              const formData = new FormData();
+              formData.append("text", editedTweet);
+              formData.append("walletAddress", currentAccount?.address || "");
+
+              // Add token logo if available and no video
+              if (selectedAsset.logo && !videoFile) {
+                const logoResponse = await fetch(selectedAsset.logo);
+                const logoBlob = await logoResponse.blob();
+                formData.append("images", logoBlob, "token-logo.png");
+              }
+
+              // Add video if available
+              if (videoFile) {
+                formData.append("video", videoFile);
+              }
+
+              // Post to Twitter
+              const tweetResponse = await fetch("/api/twitter/tweet", {
+                method: "POST",
+                body: formData,
+              });
+
+              if (!tweetResponse.ok) {
+                throw new Error("Failed to post tweet");
+              }
+
+              setModalType("success");
+            } catch (error) {
+              console.error("Error posting to Twitter:", error);
+              setModalType("error");
+              setErrorMessage(
+                error instanceof Error
+                  ? error.message
+                  : "Failed to post to Twitter. Please try again."
+              );
+            }
+          }}
         />
       )}
     </div>
