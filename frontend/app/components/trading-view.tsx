@@ -61,6 +61,64 @@ const formatAmount = (value: number | string): string => {
   return num.toFixed(2).replace(/\.?0+$/, "");
 };
 
+// Helper function to get user's SUI balance
+const getUserSuiBalance = async (
+  client: SuiClient,
+  address: string
+): Promise<string> => {
+  try {
+    const balance = await client.getBalance({
+      owner: address,
+      coinType: "0x2::sui::SUI",
+    });
+    // Convert from mist to SUI (divide by 1e9)
+    return (parseFloat(balance.totalBalance) / 1e9).toString();
+  } catch (error) {
+    console.error("Error fetching SUI balance:", error);
+    return "0";
+  }
+};
+
+// Helper function to get user's token balance
+const getUserTokenBalance = async (
+  client: SuiClient,
+  address: string,
+  coinType: string
+): Promise<string> => {
+  try {
+    const balance = await client.getBalance({
+      owner: address,
+      coinType: coinType,
+    });
+    // Convert from smallest unit to human readable (divide by 1e9)
+    return (parseFloat(balance.totalBalance) / 1e9).toString();
+  } catch (error) {
+    console.error("Error fetching token balance:", error);
+    return "0";
+  }
+};
+
+// Helper function to calculate percentage amount
+const calculatePercentageAmount = (
+  totalAmount: string,
+  percentage: string
+): string => {
+  const total = parseFloat(totalAmount);
+  let percent = 0;
+
+  if (percentage === "all") {
+    percent = 1;
+  } else if (percentage === "half") {
+    percent = 0.5;
+  } else if (percentage.includes("%")) {
+    percent = parseFloat(percentage.replace("%", "")) / 100;
+  } else {
+    percent = parseFloat(percentage) / 100;
+  }
+
+  return (total * percent).toString();
+};
+
 export default function TradingView({
   tokenSymbol,
   tokenName,
@@ -364,7 +422,9 @@ export default function TradingView({
       await retrieveBondingCurveData(client);
     console.log("sellAmount", sellAmount);
     console.log("coinType", coinType);
-    const parsedAmount = BigInt(sellAmount) * BigInt(1000000000);
+    // Parse to integer first, then convert to BigInt with proper scaling
+    const numericAmount = Math.floor(parseFloat(sellAmount));
+    const parsedAmount = BigInt(numericAmount) * BigInt(1000000000);
     const tx = await bondingCurveSdk.buildSellTransaction({
       amount: parsedAmount,
       minSuiRequired: BigInt(0),
@@ -416,15 +476,138 @@ export default function TradingView({
 
     // Clear input
     setChatMessage("");
-    const result = await tradeAgent(chatMessage);
-    if (result.action === "BUY") {
-      setAmount(result.amount); // Update state for UI consistency
-      handleBuy(result.amount, result.coinName); // Pass amount and coinName directly to avoid async state issues
-    } else if (result.action === "SELL") {
-      setAmount(result.amount); // Update state for UI consistency
-      handleSell(result.amount, result.coinName); // Pass amount and coinName directly to avoid async state issues
-    } else {
-      setAmount("");
+
+    try {
+      const result = await tradeAgent(chatMessage);
+
+      if (result.action === "BUY") {
+        setAmount(result.amount);
+        handleBuy(result.amount, result.coinName);
+      } else if (result.action === "SELL") {
+        setAmount(result.amount);
+        handleSell(result.amount, result.coinName);
+      } else if (result.action === "BUY_ALL") {
+        if (!currentAccount?.address) {
+          setChatHistory((prevHistory) => [
+            ...prevHistory,
+            {
+              role: "bot",
+              message:
+                "Please connect your wallet to perform this transaction.",
+            },
+          ]);
+          return;
+        }
+
+        // Get user's SUI balance
+        const suiBalance = await getUserSuiBalance(
+          client,
+          currentAccount.address
+        );
+        const calculatedAmount = calculatePercentageAmount(
+          suiBalance,
+          result.amount
+        );
+
+        if (parseFloat(calculatedAmount) <= 0) {
+          setChatHistory((prevHistory) => [
+            ...prevHistory,
+            {
+              role: "bot",
+              message: `You don't have enough SUI to perform this transaction. Current balance: ${formatAmount(
+                suiBalance
+              )} SUI`,
+            },
+          ]);
+          return;
+        }
+
+        setChatHistory((prevHistory) => [
+          ...prevHistory,
+          {
+            role: "bot",
+            message: `Buying ${result.coinName} with ${formatAmount(
+              calculatedAmount
+            )} SUI (${result.amount} of balance)...`,
+          },
+        ]);
+
+        setAmount(calculatedAmount);
+        handleBuy(calculatedAmount, result.coinName);
+      } else if (result.action === "SELL_ALL") {
+        if (!currentAccount?.address) {
+          setChatHistory((prevHistory) => [
+            ...prevHistory,
+            {
+              role: "bot",
+              message:
+                "Please connect your wallet to perform this transaction.",
+            },
+          ]);
+          return;
+        }
+
+        // Get token type from bonding curve
+        const { coinType } = await retrieveBondingCurveData(client);
+        const tokenBalance = await getUserTokenBalance(
+          client,
+          currentAccount.address,
+          coinType
+        );
+        const calculatedAmount =
+          result.amount === "all"
+            ? tokenBalance
+            : calculatePercentageAmount(tokenBalance, result.amount);
+
+        if (parseFloat(calculatedAmount) <= 0) {
+          setChatHistory((prevHistory) => [
+            ...prevHistory,
+            {
+              role: "bot",
+              message: `You don't have any ${
+                result.coinName || tokenSymbol
+              } to sell. Current balance: ${formatAmount(
+                tokenBalance
+              )} ${tokenSymbol}`,
+            },
+          ]);
+          return;
+        }
+
+        setChatHistory((prevHistory) => [
+          ...prevHistory,
+          {
+            role: "bot",
+            message: `Selling ${formatAmount(calculatedAmount)} ${
+              result.coinName || tokenSymbol
+            }...`,
+          },
+        ]);
+
+        setAmount(calculatedAmount);
+        handleSell(calculatedAmount, result.coinName || tokenSymbol);
+      } else if (result.action === "GENERAL") {
+        setChatHistory((prevHistory) => [
+          ...prevHistory,
+          {
+            role: "bot",
+            message: result.message,
+          },
+        ]);
+        setAmount("");
+      } else {
+        setAmount("");
+      }
+    } catch (error) {
+      console.error("Error processing trade agent command:", error);
+      setChatHistory((prevHistory) => [
+        ...prevHistory,
+        {
+          role: "bot",
+          message:
+            "An error occurred while processing your command. Please try again.",
+        },
+      ]);
     }
   };
 

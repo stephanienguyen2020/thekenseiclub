@@ -1,5 +1,5 @@
 export async function tradeAgent(input: string): Promise<{
-  action: "BUY" | "SELL" | "GENERAL";
+  action: "BUY" | "SELL" | "BUY_ALL" | "SELL_ALL" | "GENERAL";
   amount: string;
   coinName: string;
   message: string;
