@@ -137,12 +137,7 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
             </Link>
           </>
         )}
-        <Link
-          href="/docs"
-          className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
-        >
-          Documentations
-        </Link>
+
         <Link
           href="/marketplace"
           className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
@@ -160,6 +155,12 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
           className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
         >
           Token Swap
+        </Link>
+        <Link
+          href="/docs"
+          className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
+        >
+          Documentations
         </Link>
         {currentAccount && (
           <div className="relative group">
