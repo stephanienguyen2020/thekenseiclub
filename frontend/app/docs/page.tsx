@@ -20,6 +20,7 @@ export default function Documentation() {
         "chatbot",
         "tweets",
         "token-launch",
+        "fee-sharing",
         "marketplace",
         "governance",
         "api",
@@ -85,6 +86,7 @@ export default function Documentation() {
                     { id: "chatbot", label: "Chat Bot" },
                     { id: "tweets", label: "My Tweets" },
                     { id: "token-launch", label: "Token Launch" },
+                    { id: "fee-sharing", label: "Fee Sharing" },
                     { id: "marketplace", label: "Marketplace" },
                     { id: "governance", label: "Governance" },
                     { id: "api", label: "API Reference" },
@@ -434,6 +436,138 @@ export default function Documentation() {
                   allocated to the liquidity pool
                 </li>
               </ul>
+            </section>
+
+            <section
+              id="fee-sharing"
+              className="border-4 border-black bg-[#00F5FF] p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+            >
+              <h2 className="text-3xl font-bold mb-4">Fee Sharing Mechanism</h2>
+              <p className="mb-4">
+                Creators earn from every trade. When the community trades your
+                token through our bonding curve system, you automatically
+                receive a share of the trading fees. No complex contracts, no
+                manual setup—just create, grow your community, and earn as they
+                engage.
+              </p>
+
+              <div className="bg-white text-black p-6 border-4 border-black mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <h3 className="text-2xl font-bold mb-4">How It Works</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div className="bg-[#c0ff00] p-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <h4 className="text-xl font-bold mb-2">
+                      🏦 Trading Pool (50%)
+                    </h4>
+                    <p className="text-sm">
+                      Maintains liquidity for seamless trading
+                    </p>
+                  </div>
+                  <div className="bg-[#FF9E00] p-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <h4 className="text-xl font-bold mb-2">
+                      💰 Creator Earnings (50%)
+                    </h4>
+                    <p className="text-sm">Direct revenue for token creators</p>
+                  </div>
+                </div>
+
+                {/* Fee Distribution Chart */}
+                <div className="bg-black text-white p-6 border-4 border-black mb-6">
+                  <h4 className="text-xl font-bold mb-4 text-center">
+                    Fee Distribution Breakdown
+                  </h4>
+                  <div className="flex justify-center items-center">
+                    <div className="relative w-64 h-64">
+                      {/* Pie Chart using CSS */}
+                      <div className="w-full h-full rounded-full bg-gradient-to-r from-[#c0ff00] via-[#c0ff00] to-[#FF9E00] border-4 border-white relative overflow-hidden">
+                        <div className="absolute top-0 left-1/2 w-1/2 h-full bg-[#FF9E00] origin-left transform"></div>
+                        <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-white rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
+                      </div>
+                      <div className="absolute -right-4 top-1/4 bg-[#c0ff00] text-black px-3 py-1 border-2 border-white font-bold text-sm">
+                        50% Pool
+                      </div>
+                      <div className="absolute -left-4 bottom-1/4 bg-[#FF9E00] text-black px-3 py-1 border-2 border-white font-bold text-sm">
+                        50% Creator
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <h3 className="text-2xl font-bold mb-2">
+                Automatic Revenue Generation
+              </h3>
+              <p className="mb-4">
+                Every trade generates a 1% fee that's automatically split. Your
+                earnings accumulate on-chain in real-time. More community
+                engagement means more trading volume, which means higher creator
+                earnings.
+              </p>
+
+              <div className="bg-white text-black p-4 border-l-4 border-[#00F5FF] mb-6">
+                <h4 className="font-bold mb-2">💡 Example Scenario</h4>
+                <p className="text-sm mb-2">
+                  Your token has $10,000 in daily trading volume:
+                </p>
+                <ul className="text-sm space-y-1 ml-4">
+                  <li>• Total fees collected: $100 (1% of volume)</li>
+                  <li>• Trading pool: $50 (maintains liquidity)</li>
+                  <li>
+                    • <strong>Your earnings: $50 per day</strong>
+                  </li>
+                </ul>
+              </div>
+
+              <h3 className="text-2xl font-bold mb-2">Instant Withdrawal</h3>
+              <p className="mb-4">
+                Your earnings accumulate on-chain and withdraw instantly. This
+                creates direct alignment: successful communities reward their
+                creators financially. Whether your token generates $100 or
+                $100,000 in trading volume, you earn from every transaction.
+              </p>
+
+              <div className="bg-[#9B5DE5] text-white p-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-6">
+                <h4 className="text-xl font-bold mb-2">📊 Revenue Tracking</h4>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="bg-white text-black p-3 border-2 border-black">
+                    <div className="text-2xl font-bold">15.3</div>
+                    <div className="text-xs">SUI Earned</div>
+                  </div>
+                  <div className="bg-white text-black p-3 border-2 border-black">
+                    <div className="text-2xl font-bold">247</div>
+                    <div className="text-xs">Total Trades</div>
+                  </div>
+                  <div className="bg-white text-black p-3 border-2 border-black">
+                    <div className="text-2xl font-bold">$1,247</div>
+                    <div className="text-xs">Volume Generated</div>
+                  </div>
+                </div>
+              </div>
+
+              <h3 className="text-2xl font-bold mb-2">
+                How to Access Your Earnings
+              </h3>
+              <p className="mb-4">Accessing your creator earnings is simple:</p>
+              <ol className="list-decimal pl-6 mb-4 space-y-2">
+                <li>Visit your token's page in the marketplace</li>
+                <li>
+                  Look for the "Creator Tools" section (visible only to you)
+                </li>
+                <li>View your accumulated fees</li>
+                <li>
+                  Click "Withdraw Fees" to transfer earnings to your wallet
+                </li>
+              </ol>
+
+              <div className="bg-black text-white p-4 border-4 border-white font-mono text-sm overflow-x-auto">
+                <div className="mb-2">
+                  🎯 <strong>Pro Tip:</strong> Build an active community to
+                  maximize trading volume and earnings!
+                </div>
+                <div>
+                  💡 <strong>Remember:</strong> No setup required - earnings
+                  start accumulating from your first trade.
+                </div>
+              </div>
             </section>
 
             <section
