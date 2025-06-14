@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { formatAddress } from "@mysten/sui/utils";
 import api from "@/lib/api";
 
 interface PostCardProps {
@@ -44,6 +45,11 @@ interface PostCardProps {
     views?: number;
   };
 }
+
+// Utility function to check if a string is a SUI address
+const isAddress = (str: string): boolean => {
+  return str.startsWith("0x") && str.length >= 42;
+};
 
 export default function PostCard({ post }: PostCardProps) {
   const [isLiked, setIsLiked] = useState(false);
@@ -140,7 +146,11 @@ export default function PostCard({ post }: PostCardProps) {
           <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-black">
             <Image
               src={post.user.avatar || "/placeholder.svg"}
-              alt={post.user.name}
+              alt={
+                isAddress(post.user.name)
+                  ? formatAddress(post.user.name)
+                  : post.user.name
+              }
               width={48}
               height={48}
               className="object-cover"
@@ -148,8 +158,17 @@ export default function PostCard({ post }: PostCardProps) {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-bold">{post.user.name}</h3>
-              <span className="text-gray-500 text-sm">@{post.user.handle}</span>
+              <h3 className="font-bold">
+                {isAddress(post.user.name)
+                  ? formatAddress(post.user.name)
+                  : post.user.name}
+              </h3>
+              <span className="text-gray-500 text-sm">
+                @
+                {isAddress(post.user.handle)
+                  ? formatAddress(post.user.handle)
+                  : post.user.handle}
+              </span>
               <span className="text-gray-400 text-sm flex items-center gap-1">
                 <Clock size={12} />
                 {post.timestamp}

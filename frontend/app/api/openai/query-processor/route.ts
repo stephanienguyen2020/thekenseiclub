@@ -27,11 +27,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (type === "query-type") {
-      // Determine if the query is about news or token trading
+      // Determine if the query is about news, token trading, or market analysis
       const queryTypePrompt = `
-You are an AI assistant that helps users with two types of queries:
+You are an AI assistant that helps users with three types of queries:
 1. News queries - where users ask for news or information about a topic
 2. Token trading queries - where users want to buy or sell tokens
+3. Market analysis queries - where users ask for market sentiments, whale movements, or technical analysis
 
 Your task is to analyze the user's input and determine which type of query it is.
 
@@ -49,9 +50,20 @@ Examples of token trading queries:
 - "Sell 15 tokens"
 - "Buy 100 PEPE"
 
+Examples of market analysis queries:
+- "Show whale movements for $SUI"
+- "What's the market sentiment for Bitcoin?"
+- "Analyze the price trend of Ethereum"
+- "Whale activity on Solana"
+- "Market fear and greed index"
+- "Show me large transactions for SUI"
+- "Hiển thị whale movements cho $SUI"
+- "Phân tích tâm lý thị trường cho SUI"
+- "Phân tích kỹ thuật của SUI"
+
 Respond with a JSON object with the following structure:
 {
-  "queryType": "NEWS" | "TOKEN_TRADING"
+  "queryType": "NEWS" | "TOKEN_TRADING" | "MARKET_ANALYSIS"
 }
 
 User input: "${userInput}"
@@ -108,6 +120,48 @@ User input: "${userInput}"
           {
             role: "user",
             content: extractionPrompt,
+          },
+        ],
+        response_format: { type: "json_object" },
+      });
+
+      const content = response.choices[0].message.content;
+      if (!content) {
+        throw new Error("No content received from OpenAI");
+      }
+
+      return NextResponse.json(JSON.parse(content));
+    } else if (type === "market-analysis") {
+      // Analyze market analysis queries
+      const analysisPrompt = `
+You are a market analysis AI. Analyze the user's request and determine what type of market analysis they want:
+
+Types:
+1. WHALE_MOVEMENTS - Large transactions, whale activity
+2. MARKET_SENTIMENT - Overall market mood, fear/greed
+3. TECHNICAL_ANALYSIS - Price trends, patterns, indicators
+4. GENERAL - General market analysis
+
+Also extract:
+- token/symbol if mentioned (e.g., SUI, BTC, ETH)
+- timeframe if mentioned (e.g., 24h, 7d, 1M)
+
+Respond with JSON:
+{
+  "analysisType": "WHALE_MOVEMENTS" | "MARKET_SENTIMENT" | "TECHNICAL_ANALYSIS" | "GENERAL",
+  "token": "extracted token symbol or null",
+  "timeframe": "extracted timeframe or 24h"
+}
+
+User input: "${userInput}"
+`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "user",
+            content: analysisPrompt,
           },
         ],
         response_format: { type: "json_object" },
