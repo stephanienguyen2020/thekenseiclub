@@ -135,14 +135,14 @@ export default function Navbar({ isAuthenticated = false }: NavbarProps) {
             >
               About Kensei
             </Link>
-            <Link
-              href="/docs"
-              className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
-            >
-              Documentations
-            </Link>
           </>
         )}
+        <Link
+          href="/docs"
+          className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
+        >
+          Documentations
+        </Link>
         <Link
           href="/marketplace"
           className="bg-[#0046F4] text-white px-4 py-1.5 rounded-full text-base hover:bg-opacity-90 transition-colors"
