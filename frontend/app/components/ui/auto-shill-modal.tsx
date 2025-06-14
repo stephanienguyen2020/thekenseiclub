@@ -12,7 +12,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
-import { Check, Upload } from "lucide-react";
+import { Check, Upload, Clock, ChevronDown } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 
 // Simple visually hidden component for accessibility
@@ -45,7 +45,10 @@ interface AutoShillModalProps {
   modalType?: "success" | "error";
   errorMessage?: string;
   generatedTweet?: string;
-  onPostToTwitter?: (editedTweet: string, videoFile?: File | null) => Promise<void>;
+  onPostToTwitter?: (
+    editedTweet: string,
+    videoFile?: File | null
+  ) => Promise<void>;
 }
 
 export function AutoShillModal({
@@ -65,6 +68,9 @@ export function AutoShillModal({
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [shillHours, setShillHours] = useState(0);
+  const [shillMinutes, setShillMinutes] = useState(30);
+  const [shillSeconds, setShillSeconds] = useState(0);
 
   // Reset states when modal is closed or tweet changes
   useEffect(() => {
@@ -77,7 +83,7 @@ export function AutoShillModal({
       setError(null);
       setVideoUrl("");
       setVideoBlob(null);
-      if (videoUrl.startsWith('blob:')) {
+      if (videoUrl.startsWith("blob:")) {
         URL.revokeObjectURL(videoUrl);
       }
     } else {
@@ -96,7 +102,9 @@ export function AutoShillModal({
         // Convert blob to File for upload if we have a video
         let videoFile: File | null = null;
         if (videoBlob) {
-          videoFile = new File([videoBlob], 'generated-video.mp4', { type: 'video/mp4' });
+          videoFile = new File([videoBlob], "generated-video.mp4", {
+            type: "video/mp4",
+          });
         }
         await onPostToTwitter(editedTweet, videoFile);
         setShowSuccess(true);
@@ -112,19 +120,19 @@ export function AutoShillModal({
   const handleGenerateVideo = async () => {
     setIsGeneratingVideo(true);
     setError(null);
-    
+
     try {
-      const response = await fetch('/api/veo/token-shill', {
-        method: 'POST',
+      const response = await fetch("/api/veo/token-shill", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ text: editedTweet }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate video');
+        throw new Error(errorData.error || "Failed to generate video");
       }
 
       // Store both the blob and create a URL for preview
@@ -134,7 +142,9 @@ export function AutoShillModal({
       setVideoUrl(videoUrl);
     } catch (error) {
       console.error("Error generating video:", error);
-      setError(error instanceof Error ? error.message : "Failed to generate video");
+      setError(
+        error instanceof Error ? error.message : "Failed to generate video"
+      );
     } finally {
       setIsGeneratingVideo(false);
     }
@@ -143,7 +153,7 @@ export function AutoShillModal({
   const handleVideoUpload = async (file: File) => {
     try {
       setError(null);
-      
+
       // Validate file size (max 100MB)
       if (file.size > 100 * 1024 * 1024) {
         throw new Error("Video file is too large. Maximum size is 100MB.");
@@ -161,7 +171,9 @@ export function AutoShillModal({
       setVideoUrl(videoUrl);
     } catch (error) {
       console.error("Error uploading video:", error);
-      setError(error instanceof Error ? error.message : "Failed to upload video");
+      setError(
+        error instanceof Error ? error.message : "Failed to upload video"
+      );
     }
   };
 
@@ -177,19 +189,16 @@ export function AutoShillModal({
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback(
-    async (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragging(false);
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
 
-      const file = e.dataTransfer.files[0];
-      if (file) {
-        await handleVideoUpload(file);
-      }
-    },
-    []
-  );
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      await handleVideoUpload(file);
+    }
+  }, []);
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -203,7 +212,7 @@ export function AutoShillModal({
 
   // Clean up video URL when modal is closed
   useEffect(() => {
-    if (!isOpen && videoUrl && videoUrl.startsWith('blob:')) {
+    if (!isOpen && videoUrl && videoUrl.startsWith("blob:")) {
       URL.revokeObjectURL(videoUrl);
     }
   }, [isOpen, videoUrl]);
@@ -220,6 +229,121 @@ export function AutoShillModal({
               <DialogDescription className="text-gray-600 font-medium">
                 Review and edit your tweet before posting
               </DialogDescription>
+
+              {/* Shill Timer Display */}
+              <div className="mt-4 p-4 bg-gradient-to-r from-[#c0ff00] to-[#a8e600] rounded-xl border-2 border-black">
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <Clock className="h-5 w-5 text-black" />
+                  <p className="text-sm font-bold text-black/70 uppercase tracking-wide">
+                    Set Shill Interval
+                  </p>
+                </div>
+
+                {/* Time Selectors */}
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  {/* Hours */}
+                  <div className="relative">
+                    <select
+                      value={shillHours}
+                      onChange={(e) => setShillHours(Number(e.target.value))}
+                      className="bg-black/10 border border-black/20 rounded px-2 py-1 text-black font-mono font-bold text-sm appearance-none pr-6 cursor-pointer"
+                    >
+                      {[...Array(24)].map((_, i) => (
+                        <option key={i} value={i}>
+                          {i.toString().padStart(2, "0")}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-1 top-1/2 transform -translate-y-1/2 h-3 w-3 text-black/50 pointer-events-none" />
+                  </div>
+                  <span className="font-bold text-black">:</span>
+
+                  {/* Minutes */}
+                  <div className="relative">
+                    <select
+                      value={shillMinutes}
+                      onChange={(e) => setShillMinutes(Number(e.target.value))}
+                      className="bg-black/10 border border-black/20 rounded px-2 py-1 text-black font-mono font-bold text-sm appearance-none pr-6 cursor-pointer"
+                    >
+                      {[...Array(60)].map((_, i) => (
+                        <option key={i} value={i}>
+                          {i.toString().padStart(2, "0")}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-1 top-1/2 transform -translate-y-1/2 h-3 w-3 text-black/50 pointer-events-none" />
+                  </div>
+                  <span className="font-bold text-black">:</span>
+
+                  {/* Seconds */}
+                  <div className="relative">
+                    <select
+                      value={shillSeconds}
+                      onChange={(e) => setShillSeconds(Number(e.target.value))}
+                      className="bg-black/10 border border-black/20 rounded px-2 py-1 text-black font-mono font-bold text-sm appearance-none pr-6 cursor-pointer"
+                    >
+                      {[...Array(60)].map((_, i) => (
+                        <option key={i} value={i}>
+                          {i.toString().padStart(2, "0")}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-1 top-1/2 transform -translate-y-1/2 h-3 w-3 text-black/50 pointer-events-none" />
+                  </div>
+                </div>
+
+                <p className="text-xs text-black/60 text-center mb-3">
+                  H : M : S
+                </p>
+
+                {/* Quick Preset Buttons */}
+                <div className="flex gap-2 justify-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShillHours(0);
+                      setShillMinutes(15);
+                      setShillSeconds(0);
+                    }}
+                    className="bg-black/20 hover:bg-black/30 text-black text-xs font-bold px-3 py-1 rounded transition-colors"
+                  >
+                    15m
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShillHours(0);
+                      setShillMinutes(30);
+                      setShillSeconds(0);
+                    }}
+                    className="bg-black/20 hover:bg-black/30 text-black text-xs font-bold px-3 py-1 rounded transition-colors"
+                  >
+                    30m
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShillHours(1);
+                      setShillMinutes(0);
+                      setShillSeconds(0);
+                    }}
+                    className="bg-black/20 hover:bg-black/30 text-black text-xs font-bold px-3 py-1 rounded transition-colors"
+                  >
+                    1h
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShillHours(2);
+                      setShillMinutes(0);
+                      setShillSeconds(0);
+                    }}
+                    className="bg-black/20 hover:bg-black/30 text-black text-xs font-bold px-3 py-1 rounded transition-colors"
+                  >
+                    2h
+                  </button>
+                </div>
+              </div>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="flex items-center gap-4 mb-4">
@@ -249,9 +373,7 @@ export function AutoShillModal({
                 <div className="flex items-center justify-between">
                   <Label className="font-bold text-black">Video</Label>
                   <div className="flex gap-2">
-                    <label
-                      className="bg-[#0046F4] text-white px-3 py-1 rounded-xl text-sm font-bold border-2 border-black hover:bg-[#0039C6] cursor-pointer flex items-center gap-1"
-                    >
+                    <label className="bg-[#0046F4] text-white px-3 py-1 rounded-xl text-sm font-bold border-2 border-black hover:bg-[#0039C6] cursor-pointer flex items-center gap-1">
                       <Upload size={14} />
                       Upload Video
                       <input
@@ -302,9 +424,7 @@ export function AutoShillModal({
                     </div>
                   )}
                 </div>
-                {error && (
-                  <p className="text-red-500 text-sm mt-2">{error}</p>
-                )}
+                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
               </div>
               <div className="flex justify-end gap-2">
                 <button
