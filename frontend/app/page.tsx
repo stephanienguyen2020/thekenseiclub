@@ -274,15 +274,15 @@ export default function Page() {
                     {/* Text overlay */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <h3 className="text-3xl md:text-4xl font-black text-white text-center leading-tight">
-                        INSTANT
+                        Fee
                         <br />
-                        LIQUIDITY
+                        Sharing
                       </h3>
                     </div>
                   </div>
                   <p className="text-center text-gray-700 max-w-xs mt-6">
-                    Every token on Kensei launches with bonding curve liquidity
-                    – just buy or sell from second one.
+                    Creators automatically earn 50% of trading fees. Your
+                    community trades, you profit—no setup required.
                   </p>
                 </div>
 
@@ -326,14 +326,14 @@ export default function Page() {
                     whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
                   >
                     <h3 className="text-3xl md:text-4xl font-black text-[#0039C6] text-center leading-tight">
-                      AI-POWERED
+                      BUILD SOCIAL
                       <br />
-                      GROWTH
+                      COMMUNITIES
                     </h3>
                   </motion.div>
                   <p className="text-center text-gray-700 max-w-xs mt-6">
-                    AutoShill spreads your coin. Agents track trends and whales.
-                    You focus on memes—we handle hype.
+                    Every token gets its own feed, governance, and tribal
+                    identity. Turn holders into engaged communities.
                   </p>
                 </div>
 
@@ -377,14 +377,14 @@ export default function Page() {
                     whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
                   >
                     <h3 className="text-3xl md:text-4xl font-black text-white text-center leading-tight">
-                      VOTE ON
+                      LAUNCH IN
                       <br />
-                      PROPOSALS
+                      SECONDS
                     </h3>
                   </motion.div>
                   <p className="text-center text-gray-700 max-w-xs mt-6">
-                    Decide what happens next—use your tokens to vote on treasury
-                    spends, burns, liquidity changes, and more.
+                    AI-powered token creation with instant bonding curve
+                    liquidity. From idea to tradeable in under a minute.
                   </p>
                 </div>
               </div>
