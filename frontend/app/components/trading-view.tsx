@@ -328,7 +328,8 @@ export default function TradingView({
       "SUI, Token:",
       coinName || "default"
     );
-    const parsedAmount = parseFloat(buyAmount) * 1000000000;
+    // Parse to integer first to avoid BigInt decimal conversion error
+    const parsedAmount = Math.floor(parseFloat(buyAmount) * 1000000000);
     const bondingTx = bondingCurveSdk.buildBuyTransaction({
       amount: BigInt(parsedAmount),
       minTokenRequired: BigInt(0),
