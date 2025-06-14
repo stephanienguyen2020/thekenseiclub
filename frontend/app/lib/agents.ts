@@ -7,16 +7,17 @@ export async function agent(input: string) {
 }
 
 /**
- * Processes a user query to determine if it's about news or token trading
+ * Processes a user query to determine if it's about news, token trading, or market analysis
  * @param userInput The user's message
  * @returns An object containing the query type and the result of processing the query
  */
 export async function processUserQuery(userInput: string) {
   // Define the prompt for GPT-4 to determine the query type
   const queryTypePrompt = `
-You are an AI assistant that helps users with two types of queries:
+You are an AI assistant that helps users with three types of queries:
 1. News queries - where users ask for news or information about a topic
 2. Token trading queries - where users want to buy or sell tokens
+3. Market analysis queries - where users ask for market sentiments, whale movements, or technical analysis
 
 Your task is to analyze the user's input and determine which type of query it is.
 
@@ -34,9 +35,17 @@ Examples of token trading queries:
 - "Sell 15 tokens"
 - "Buy 100 PEPE"
 
+Examples of market analysis queries:
+- "Show whale movements for $SUI"
+- "What's the market sentiment for Bitcoin?"
+- "Analyze the price trend of Ethereum"
+- "Whale activity on Solana"
+- "Market fear and greed index"
+- "Show me large transactions for SUI"
+
 Respond with a JSON object with the following structure:
 {
-  "queryType": "NEWS" | "TOKEN_TRADING"
+  "queryType": "NEWS" | "TOKEN_TRADING" | "MARKET_ANALYSIS"
 }
 
 User input: "${userInput}"
@@ -67,18 +76,227 @@ User input: "${userInput}"
         queryType: "NEWS",
         result: newsResult,
       };
-    } else {
+    } else if (queryTypeResult.queryType === "TOKEN_TRADING") {
       // If it's a token trading query, use the tradeAgent function
       const tradingResult = await tradeAgent(userInput);
       return {
         queryType: "TOKEN_TRADING",
         result: tradingResult,
       };
+    } else {
+      // If it's a market analysis query, use the marketAnalysisAgent function
+      const analysisResult = await marketAnalysisAgent(userInput);
+      return {
+        queryType: "MARKET_ANALYSIS",
+        result: analysisResult,
+      };
     }
   } catch (error) {
     console.error("Error processing user query:", error);
     throw error;
   }
+}
+
+/**
+ * Processes market analysis queries including whale movements and market sentiment
+ * @param userInput The user's message asking for market analysis
+ * @returns An object containing the analysis type and relevant data
+ */
+export async function marketAnalysisAgent(userInput: string) {
+  // Extract analysis type and parameters
+  const analysisPrompt = `
+You are a market analysis AI. Analyze the user's request and determine what type of market analysis they want:
+
+Types:
+1. WHALE_MOVEMENTS - Large transactions, whale activity
+2. MARKET_SENTIMENT - Overall market mood, fear/greed
+3. TECHNICAL_ANALYSIS - Price trends, patterns, indicators
+4. GENERAL - General market analysis
+
+Also extract:
+- token/symbol if mentioned (e.g., SUI, BTC, ETH)
+- timeframe if mentioned (e.g., 24h, 7d, 1M)
+
+Respond with JSON:
+{
+  "analysisType": "WHALE_MOVEMENTS" | "MARKET_SENTIMENT" | "TECHNICAL_ANALYSIS" | "GENERAL",
+  "token": "extracted token symbol or null",
+  "timeframe": "extracted timeframe or 24h"
+}
+
+User input: "${userInput}"
+`;
+
+  try {
+    const response = await fetch("/api/openai/query-processor", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userInput, type: "market-analysis" }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to analyze market query");
+    }
+
+    const analysisParams = await response.json();
+
+    // Based on analysis type, fetch relevant data
+    switch (analysisParams.analysisType) {
+      case "WHALE_MOVEMENTS":
+        return await getWhaleMovements(
+          analysisParams.token || "SUI",
+          analysisParams.timeframe || "24h"
+        );
+
+      case "MARKET_SENTIMENT":
+        return await getMarketSentiment(analysisParams.token || "SUI");
+
+      case "TECHNICAL_ANALYSIS":
+        return await getTechnicalAnalysis(
+          analysisParams.token || "SUI",
+          analysisParams.timeframe || "24h"
+        );
+
+      default:
+        return await getGeneralMarketAnalysis(analysisParams.token || "SUI");
+    }
+  } catch (error) {
+    console.error("Error in market analysis:", error);
+    throw error;
+  }
+}
+
+/**
+ * Fetches whale movements data for a specific token
+ */
+async function getWhaleMovements(token: string, timeframe: string) {
+  // Mock data for whale movements - in production, this would connect to real APIs
+  const mockWhaleData = [
+    {
+      txHash: "0x1234...abcd",
+      amount: "1,250,000",
+      amountUSD: "$2,875,000",
+      type: "BUY",
+      exchange: "Binance",
+      timestamp: "2 hours ago",
+      walletAddress: "0x789a...ef12",
+    },
+    {
+      txHash: "0x5678...cdef",
+      amount: "850,000",
+      amountUSD: "$1,955,000",
+      type: "SELL",
+      exchange: "Coinbase",
+      timestamp: "5 hours ago",
+      walletAddress: "0xabcd...1234",
+    },
+    {
+      txHash: "0x9abc...3456",
+      amount: "2,100,000",
+      amountUSD: "$4,830,000",
+      type: "TRANSFER",
+      exchange: "Unknown Wallet",
+      timestamp: "8 hours ago",
+      walletAddress: "0xdef0...5678",
+    },
+  ];
+
+  return {
+    analysisType: "WHALE_MOVEMENTS",
+    token: token.toUpperCase(),
+    timeframe,
+    data: mockWhaleData,
+    summary: `Found ${
+      mockWhaleData.length
+    } large transactions for ${token.toUpperCase()} in the last ${timeframe}. Total volume: $9.66M with mixed buy/sell pressure.`,
+  };
+}
+
+/**
+ * Fetches market sentiment data
+ */
+async function getMarketSentiment(token: string) {
+  // Mock sentiment data
+  const mockSentimentData = {
+    overallSentiment: "BULLISH",
+    fearGreedIndex: 72,
+    socialMentions: {
+      positive: 65,
+      negative: 25,
+      neutral: 10,
+    },
+    technicalIndicators: {
+      RSI: 58,
+      MACD: "BULLISH_CROSSOVER",
+      MovingAverages: "ABOVE_20_50_MA",
+    },
+    volume24h: "$125.6M",
+    priceChange24h: "+8.2%",
+  };
+
+  return {
+    analysisType: "MARKET_SENTIMENT",
+    token: token.toUpperCase(),
+    data: mockSentimentData,
+    summary: `${token.toUpperCase()} shows bullish sentiment with Fear & Greed Index at 72 (Greed). Social sentiment is 65% positive with strong technical indicators.`,
+  };
+}
+
+/**
+ * Fetches technical analysis data
+ */
+async function getTechnicalAnalysis(token: string, timeframe: string) {
+  const mockTechnicalData = {
+    currentPrice: "$2.30",
+    priceChange: "+8.2%",
+    support: "$2.15",
+    resistance: "$2.45",
+    volume: "$125.6M",
+    indicators: {
+      RSI: 58,
+      MACD: "BULLISH",
+      BollingerBands: "MIDDLE",
+      StochasticRSI: 0.72,
+    },
+    trend: "UPTREND",
+  };
+
+  return {
+    analysisType: "TECHNICAL_ANALYSIS",
+    token: token.toUpperCase(),
+    timeframe,
+    data: mockTechnicalData,
+    summary: `${token.toUpperCase()} is in an uptrend at $2.30 (+8.2%). Support at $2.15, resistance at $2.45. RSI at 58 suggests room for growth.`,
+  };
+}
+
+/**
+ * Fetches general market analysis
+ */
+async function getGeneralMarketAnalysis(token: string) {
+  const mockGeneralData = {
+    price: "$2.30",
+    marketCap: "$6.8B",
+    volume24h: "$125.6M",
+    circulatingSupply: "2.95B",
+    rank: 12,
+    priceChange: {
+      "1h": "+1.2%",
+      "24h": "+8.2%",
+      "7d": "+15.4%",
+      "30d": "+23.7%",
+    },
+  };
+
+  return {
+    analysisType: "GENERAL",
+    token: token.toUpperCase(),
+    data: mockGeneralData,
+    summary: `${token.toUpperCase()} is trading at $2.30 with a market cap of $6.8B (Rank #12). Strong performance: +8.2% (24h), +15.4% (7d), +23.7% (30d).`,
+  };
 }
 
 /**
