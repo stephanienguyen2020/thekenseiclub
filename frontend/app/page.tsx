@@ -274,9 +274,9 @@ export default function Page() {
                     {/* Text overlay */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <h3 className="text-3xl md:text-4xl font-black text-white text-center leading-tight">
-                        Fee
+                        FEE
                         <br />
-                        Sharing
+                        SHARING
                       </h3>
                     </div>
                   </div>
