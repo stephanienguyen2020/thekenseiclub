@@ -48,7 +48,14 @@ interface PostCardProps {
 
 // Utility function to check if a string is a SUI address
 const isAddress = (str: string): boolean => {
-  return str.startsWith("0x") && str.length >= 42;
+  if (!str || str.trim() === "") {
+    return false;
+  }
+  //check if str is a valid SUI address
+  if (str.startsWith("0x") && str.length >= 42) {
+    return true;
+  }
+  return false;
 };
 
 export default function PostCard({ post }: PostCardProps) {
